@@ -29,6 +29,15 @@ services:
     build: './client'
     ports:
       - "4000:80"
+  # BACKEND
+  api-financial-management:
+    build: './server'
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongodb
+    networks:
+      - nestjs-network
 networks:
   nestjs-network:
     driver: bridge

@@ -1,21 +1,19 @@
-FROM node:20 as build
+FROM node:alpine as build-stage
 
-WORKDIR /usr/local/app
+WORKDIR /app
 
-COPY ./ /usr/local/app/
+COPY package*.json /app/
 
-RUN npm update
+RUN npm install
 
-RUN npm install @types/node@14
+COPY . /app
 
-RUN npm install --legacy-peer-deps
+RUN npm run build --prod
 
-RUN npm run build
+FROM nginx:alpine
 
-FROM nginx:latest
-
-COPY nginx/nginx.conf /etc/nginx/
-
-COPY --from=build /usr/local/app/dist/app-financial-management /usr/share/nginx/html
+COPY --from=build-stage /app/dist/app-financial-management/browser /usr/share/nginx/html
 
 EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

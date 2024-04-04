@@ -1,8 +1,7 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, Inject, Input, OnInit, PLATFORM_ID, ViewChild } from "@angular/core";
-import { ChartConfiguration, ChartType } from 'chart.js';
+import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartData } from './../../../../node_modules/chart.js/dist/types/index.d';
 import { FinancialRelease } from './../../models/FinancialRelease';
 
 @Component({
