@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  # DATABASE
+  mongodb:
+    image: mongo:7.0.5
+    container_name: mongodb
+    restart: always
+    volumes:
+      - './db:/data/db'
+    ports:
+      - 27017:27017
+    networks:
+      - nestjs-network
+  # BACKUP SERVICE
+  mongo_backup:
+    build:
+      context: .
+      dockerfile: mongobackup.dockerfile
+    container_name: mongo_backup
+    depends_on:
+      - mongodb
+    volumes:
+      - './backups:/backups/data'
+    networks:
+      - nestjs-network
+  # FRONTEND
+  app-financial-management:
+    build: './client'
+    ports:
+      - "4000:80"
+networks:
+  nestjs-network:
+    driver: bridge
