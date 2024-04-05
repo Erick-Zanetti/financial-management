@@ -4,7 +4,7 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { FlexLayoutServerModule } from '@angular/flex-layout/server';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from "@angular/forms";
 import { MatButtonModule } from "@angular/material/button";
-import { DateAdapter, MatNativeDateModule, NativeDateAdapter } from "@angular/material/core";
+import { DateAdapter, MAT_DATE_FORMATS, MAT_NATIVE_DATE_FORMATS, MatNativeDateModule, NativeDateAdapter } from "@angular/material/core";
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -54,7 +54,8 @@ class ModalReleaseModuleDateAdapter extends NativeDateAdapter {
     MatNativeDateModule
   ],
   providers: [
-    { provide: DateAdapter, useClass: ModalReleaseModuleDateAdapter }
+    { provide: DateAdapter, useClass: ModalReleaseModuleDateAdapter },
+    { provide: MAT_DATE_FORMATS, useValue: MAT_NATIVE_DATE_FORMATS },
   ]
 })
 export class ModalReleaseComponentDialog implements OnInit {
