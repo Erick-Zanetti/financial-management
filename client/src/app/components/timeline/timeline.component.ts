@@ -59,7 +59,7 @@ export class TimelineComponent implements OnInit {
     this.events = this.releases.map(item => {
       return {
         description: this.currencyPipe.transform(item.value, 'BRL', 'symbol', '1.2-2') + '',
-        id: item._id,
+        id: item.id,
         itemPosition: item.type === 'E' ? NgxTimelineItemPosition.ON_RIGHT : NgxTimelineItemPosition.ON_LEFT,
         title: item.name,
         timestamp: item.date,
@@ -70,7 +70,7 @@ export class TimelineComponent implements OnInit {
   getTotalUnitNow(item: NgxTimelineEvent) {
     let achou = false;
     const items = this.releases.filter(i => {
-      if (i._id === item.id) {
+      if (i.id === item.id) {
         achou = true;
         return true;
       }

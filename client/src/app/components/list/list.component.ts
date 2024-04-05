@@ -74,6 +74,6 @@ export class ListComponent implements OnInit, AfterViewInit {
   }
 
   remove(row: FinancialRelease) {
-    this.onRemove.emit(row._id);
+    this.onRemove.emit(row.id);
   }
 }

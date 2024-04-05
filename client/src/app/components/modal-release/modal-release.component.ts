@@ -106,7 +106,7 @@ export class ModalReleaseComponentDialog implements OnInit {
   }
 
   private update(release: FinancialRelease) {
-    this.mainService.update(release._id, release).subscribe({
+    this.mainService.update(release.id, release).subscribe({
       complete: () => {
         this._snackBar.open('Lançamento atualizado com sucesso!', '', {
           duration: 5000

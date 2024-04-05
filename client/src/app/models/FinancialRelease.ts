@@ -2,7 +2,7 @@ import { FinancialReleaseType } from './FinancialReleaseType';
 import { Month } from './Month';
 
 export class FinancialRelease {
-  readonly _id!: string;
+  readonly id!: string;
   date: any;
   day: any;
 
