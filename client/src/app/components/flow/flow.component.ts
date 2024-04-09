@@ -152,4 +152,8 @@ export class FlowComponent implements OnInit {
       }
     });
   }
+
+  addAll() {
+
+  }
 }

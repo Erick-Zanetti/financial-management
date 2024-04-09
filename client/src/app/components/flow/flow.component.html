@@ -4,6 +4,7 @@
             <h2>Saldo: {{getBalance() | currency: 'BRL'}}</h2>
             <br>
             <button mat-stroked-button color="primary" (click)="exportData()">Exportar</button>
+            <button mat-stroked-button color="primary" (click)="addAll()">Lançamentos em lote</button>
         </div>
         <div fxFlex="50" fxFlex.lt-md="100">
             <div class="box-list">
