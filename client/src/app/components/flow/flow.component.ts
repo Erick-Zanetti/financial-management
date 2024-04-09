@@ -15,6 +15,7 @@ import { Month } from './../../models/Month';
 import { Receipt } from './../../models/Receipt';
 import { MainService } from './../../services/main.service';
 import { ModalConfirmationComponentDialog } from './../modal-confirmation/modal-confirmation.component';
+import {MatButton} from "@angular/material/button";
 
 @Component({
   selector: 'app-flow',
@@ -30,7 +31,8 @@ import { ModalConfirmationComponentDialog } from './../modal-confirmation/modal-
     PieChartComponent,
     BarChartComponent,
     MatSnackBarModule,
-    ModalConfirmationComponentDialog
+    ModalConfirmationComponentDialog,
+    MatButton
   ],
 })
 export class FlowComponent implements OnInit {
@@ -131,6 +133,21 @@ export class FlowComponent implements OnInit {
               duration: 5000
             });
           }
+        });
+      }
+    });
+  }
+
+  exportData() {
+    this.mainService.exportData(this._month.month, this._month.year).subscribe({
+      next: (res: any) => {
+        this._snackBar.open('Gerando o arquivo, será enviado para seu email', 'X', {
+          duration: 5000
+        });
+      },
+      error: (error: any) => {
+        this._snackBar.open('Falha ao exportar. Tente novamente', 'X', {
+          duration: 5000
         });
       }
     });

@@ -2,6 +2,8 @@
     <div fxLayout="row wrap" fxLayoutAlign="space-between start" fxLayoutGap="16px grid">
         <div fxFlex="100">
             <h2>Saldo: {{getBalance() | currency: 'BRL'}}</h2>
+            <br>
+            <button mat-stroked-button color="primary" (click)="exportData()">Exportar</button>
         </div>
         <div fxFlex="50" fxFlex.lt-md="100">
             <div class="box-list">

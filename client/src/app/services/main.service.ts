@@ -51,4 +51,8 @@ export class MainService {
     private getByType(month: number, year: number, type: FinancialReleaseType): Observable<FinancialRelease[]> {
         return this.http.get<FinancialRelease[]>(`${this.url}/by-type?type=${type}&month=${month}&year=${year}`);
     }
+
+  exportData(month: number, year: number) {
+    return this.http.post(`${this.url}/export?month=${month}&year=${year}`, {});
+  }
 }
