@@ -29,9 +29,6 @@ export class ListComponent implements OnInit, AfterViewInit {
   @Input()
   set list(list: FinancialRelease[]) {
     this._list = list;
-    this._list.forEach((item) => {
-      item.day = item.month.day;
-    });
     this.dataSource = new MatTableDataSource(this._list);
     this.dataSource.sort = this.sort;
   }

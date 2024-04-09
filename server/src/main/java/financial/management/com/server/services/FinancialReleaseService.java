@@ -15,9 +15,7 @@ public class FinancialReleaseService {
     private FinancialReleaseRepository financialReleaseRepository;
 
     public List<FinancialRelease> findByTypeAndName(FinancialReleaseType type, Integer month, Integer year) {
-        List<FinancialRelease> releases = financialReleaseRepository.findByType(type);
-        releases.removeIf(release -> !Objects.equals(release.getMonth().getMonth(), month) || !Objects.equals(release.getMonth().getYear(), year));
-        return releases;
+        return financialReleaseRepository.findByTypeAndMonthAndYear(type, month, year);
     }
 
     public List<FinancialRelease> findAll() {

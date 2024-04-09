@@ -57,8 +57,8 @@ export class FlowComponent implements OnInit {
   }
 
   searc() {
-    this.mainService.getExpenses(this._month).subscribe(res => this.expenses = res || []);
-    this.mainService.getReceipts(this._month).subscribe(res => this.receipts = res || []);
+    this.mainService.getExpenses(this._month.month, this._month.year).subscribe(res => this.expenses = res || []);
+    this.mainService.getReceipts(this._month.month, this._month.year).subscribe(res => this.receipts = res || []);
   }
 
   getBalance(): number {

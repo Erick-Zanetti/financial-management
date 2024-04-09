@@ -40,9 +40,9 @@ export class TimelineComponent implements OnInit {
   ngOnInit() { }
 
   searc() {
-    this.mainService.getReceipts(this._month).subscribe(res => {
+    this.mainService.getReceipts(this._month.month, this._month.year).subscribe(res => {
       this.releases = this.releases.concat(res);
-      this.mainService.getExpenses(this._month).subscribe(res => {
+      this.mainService.getExpenses(this._month.month, this._month.year).subscribe(res => {
         this.releases = this.releases.concat(res);
         this.convertItens();
       });
@@ -51,10 +51,13 @@ export class TimelineComponent implements OnInit {
 
   convertItens() {
     this.releases.forEach(item => {
-      item.date = new Date(this._month.year, this._month.month, item.month.day);
+      item.date = new Date(this._month.year, this._month.month, item.day);
     });
     this.releases.sort((a, b) => {
-      return a.date.getTime() - b.date.getTime();
+      if (a.date && b.date) {
+        return a.date.getTime() - b.date.getTime()
+      }
+      return 0;
     });
     this.events = this.releases.map(item => {
       return {

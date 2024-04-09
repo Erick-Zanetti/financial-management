@@ -1,5 +1,7 @@
 db/*
 !db/.gitkeep 
+rabbitmq/*
+!rabbitmq/.gitkeep 
 backups/*
 !backups/.gitkeep 
 .vs

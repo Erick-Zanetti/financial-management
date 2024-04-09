@@ -12,7 +12,6 @@ services:
       - 27018:27017
     networks:
       - nestjs-network
-  # BACKUP SERVICE
   mongo_backup:
     build:
       context: .
@@ -24,11 +23,20 @@ services:
       - './backups:/backups/data'
     networks:
       - nestjs-network
-  # FRONTEND
-  app-financial-management:
-    build: './client'
+
+  #RABBITMQ
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    container_name: rabbitmq
     ports:
-      - "4000:80"
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - "./rabbitmq:/var/lib/rabbitmq"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+
   # BACKEND
   api-financial-management:
     build: './server'
@@ -38,6 +46,14 @@ services:
       - mongodb
     networks:
       - nestjs-network
+
+  # FRONTEND
+  app-financial-management:
+    build: './client'
+    ports:
+      - "4000:80"
+    depends_on:
+      - api-financial-management
 networks:
   nestjs-network:
     driver: bridge

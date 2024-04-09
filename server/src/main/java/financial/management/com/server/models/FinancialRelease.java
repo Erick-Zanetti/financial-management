@@ -20,5 +20,7 @@ public class FinancialRelease {
     private String name;
     private Float value;
     private FinancialReleaseType type;
-    private FinancialReleaseMonth month;
+    private Integer year;
+    private Integer month;
+    private Integer day;
 }

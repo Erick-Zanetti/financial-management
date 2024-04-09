@@ -71,12 +71,13 @@ export class ModalReleaseComponentDialog implements OnInit {
 
   ngOnInit() {
     this.createForm();
+    console.log(this.data)
     if (!this.data.new) {
       this.form.get('name')?.setValue(this.data.release?.name);
       this.form.get('value')?.setValue(this.data.release?.value);
-      this.form.get('day')?.setValue(new Date(this.data?.month?.year, this.data?.month?.month, this.data?.release?.month?.day));
+      this.form.get('day')?.setValue(new Date(this.data.release?.year, this.data.release?.month, this.data.release?.day));
     } else {
-      this.form.get('day')?.setValue(new Date(this.data?.month?.year, this.data?.month?.month, 1));
+      this.form.get('day')?.setValue(new Date(this.data.month?.year, this.data.month?.month, 1));
     }
   }
 
@@ -92,7 +93,7 @@ export class ModalReleaseComponentDialog implements OnInit {
     if (this.form.valid) {
       const form = this.form.getRawValue();
       const release: FinancialRelease = Object.assign((this.data.release || {}), form, { month: this.data.month }, { type: this.data.type });
-      release.month.day = form.day.getDate();
+      release.day = form.day.getDate();
       if (this.data.new) {
         this.create(release);
       } else {
@@ -107,7 +108,8 @@ export class ModalReleaseComponentDialog implements OnInit {
   }
 
   private update(release: FinancialRelease) {
-    this.mainService.update(release.id, release).subscribe({
+    if (!release.id) return console.error('Id não informado');
+    this.mainService.update(release?.id, release).subscribe({
       complete: () => {
         this._snackBar.open('Lançamento atualizado com sucesso!', '', {
           duration: 5000

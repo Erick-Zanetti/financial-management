@@ -1,8 +1,7 @@
-import { FinancialReleaseType } from './../models/FinancialReleaseType';
-import { environment } from './../../environments/environment';
-import { FinancialRelease } from './../models/FinancialRelease';
-import { Month } from './../models/Month';
-import { Receipt } from './../models/Receipt';
+import { FinancialReleaseType } from '../models/FinancialReleaseType';
+import { environment } from '../../environments/environment';
+import { FinancialRelease } from '../models/FinancialRelease';
+import { Receipt } from '../models/Receipt';
 import { Injectable } from "@angular/core";
 import { Expense } from "../models/Expense";
 import { Observable, of } from 'rxjs';
@@ -41,15 +40,15 @@ export class MainService {
         return this.http.delete(`${this.url}/${id}`);
     }
 
-    getExpenses(month: Month): Observable<Expense[]> {
-        return this.getByType(month, FinancialReleaseType.Expense);
+    getExpenses(month: number, year: number): Observable<Expense[]> {
+        return this.getByType(month, year, FinancialReleaseType.Expense);
     }
 
-    getReceipts(month: Month): Observable<Receipt[]> {
-        return this.getByType(month, FinancialReleaseType.Receipt);
+    getReceipts(month: number, year: number): Observable<Receipt[]> {
+        return this.getByType(month, year, FinancialReleaseType.Receipt);
     }
 
-    private getByType(month: Month, type: FinancialReleaseType): Observable<FinancialRelease[]> {
-        return this.http.get<FinancialRelease[]>(`${this.url}/by-type?type=${type}&month=${month.month}&year=${month.year}`);
+    private getByType(month: number, year: number, type: FinancialReleaseType): Observable<FinancialRelease[]> {
+        return this.http.get<FinancialRelease[]>(`${this.url}/by-type?type=${type}&month=${month}&year=${year}`);
     }
 }
