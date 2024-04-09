@@ -11,18 +11,28 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
 
     @Bean
-    Queue queue() {
-        return new Queue("releases", false);
+    TopicExchange exchangRelease() {
+        return new TopicExchange("releases");
     }
 
     @Bean
-    TopicExchange exchange() {
-        return new TopicExchange("exports");
+    Queue queueExports() {
+        return new Queue("exports-releases", false);
     }
 
     @Bean
-    Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with("releases-exports");
+    Binding bindinExports(Queue queueExports, TopicExchange exchangRelease) {
+        return BindingBuilder.bind(queueExports).to(exchangRelease).with("releases-exports-releases");
+    }
+
+    @Bean
+    Queue queueParcels() {
+        return new Queue("parcels-releases", false);
+    }
+
+    @Bean
+    Binding bindinParcels(Queue queueParcels, TopicExchange exchangRelease) {
+        return BindingBuilder.bind(queueParcels).to(exchangRelease).with("releases-parcels-releases");
     }
 }
 

@@ -70,4 +70,11 @@ public class FinancialReleaseController {
         financialReleaseService.export(month, year);
     }
 
+    @PostMapping("create-by-parcels/{parcels}")
+    @Operation(summary = "Create financial release by parcels", description = "Create a new financial release by parcels")
+    @ApiResponse(responseCode = "200", description = "Financial release created")
+    public void createByParcels(@RequestBody FinancialRelease financialRelease, @PathVariable Integer parcels) {
+        financialReleaseService.createByParcels(financialRelease, parcels);
+    }
+
 }

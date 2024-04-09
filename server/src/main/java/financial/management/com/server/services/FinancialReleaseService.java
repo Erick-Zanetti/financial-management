@@ -5,6 +5,7 @@ import financial.management.com.server.enums.FinancialReleaseType;
 import financial.management.com.server.repositories.FinancialReleaseRepository;
 import financial.management.com.server.utils.EmailSender;
 import financial.management.com.server.utils.ExcelExporterFinancialRelease;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -43,7 +44,7 @@ public class FinancialReleaseService {
     }
 
     public void export(Integer month, Integer year) {
-        messageSenderService.sendReleaseMessage(year + "-" + month, "exports", "releases-exports");
+        messageSenderService.sendReleaseMessage(year + "-" + month, "releases", "releases-exports-releases");
     }
 
     public void exportAndSendToEmail(String message) throws IOException {
@@ -59,6 +60,26 @@ public class FinancialReleaseService {
             sender.sendEmailWithAttachment("erick.98zanetti.98@gmail.com", "erick.dev.98@gmail.com", "smtp.gmail.com", path);
 
 
+        }
+    }
+
+    public void createByParcels(FinancialRelease financialRelease, Integer parcels) {
+        for (int i = 1; i <= parcels; i++) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("id", financialRelease.getValue());
+            jsonObject.put("name", financialRelease.getName() + " " + i + "/" + parcels);
+            jsonObject.put("value", financialRelease.getValue());
+            jsonObject.put("type", financialRelease.getType());
+            jsonObject.put("year", financialRelease.getYear());
+            jsonObject.put("month", financialRelease.getMonth());
+            jsonObject.put("day", financialRelease.getDay());
+            messageSenderService.sendReleaseMessage(jsonObject.toString(), "releases", "releases-parcels-releases");
+
+            financialRelease.setMonth(financialRelease.getMonth() + 1);
+            if (financialRelease.getMonth() > 11) {
+                financialRelease.setMonth(0);
+                financialRelease.setYear(financialRelease.getYear() + 1);
+            }
         }
     }
 }
