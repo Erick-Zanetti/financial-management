@@ -11,7 +11,7 @@ services:
     ports:
       - 27018:27017
     networks:
-      - nestjs-network
+      - main-network
   mongo_backup:
     build:
       context: .
@@ -22,7 +22,7 @@ services:
     volumes:
       - './backups:/backups/data'
     networks:
-      - nestjs-network
+      - main-network
 
   #RABBITMQ
   rabbitmq:
@@ -36,6 +36,8 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=guest
       - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - main-network
 
   # BACKEND
   api-financial-management:
@@ -45,7 +47,7 @@ services:
     depends_on:
       - mongodb
     networks:
-      - nestjs-network
+      - main-network
 
   # FRONTEND
   app-financial-management:
@@ -55,5 +57,5 @@ services:
     depends_on:
       - api-financial-management
 networks:
-  nestjs-network:
+  main-network:
     driver: bridge
