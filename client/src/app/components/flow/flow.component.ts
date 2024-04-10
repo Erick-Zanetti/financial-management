@@ -2,11 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component, Input, OnInit } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FlexLayoutServerModule } from '@angular/flex-layout/server';
+import { MatButton } from "@angular/material/button";
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { BarChartComponent } from '../bar-chart/bar-chart.component';
 import { ListComponent } from '../list/list.component';
 import { ModalReleaseComponentDialog } from '../modal-release/modal-release.component';
+import { ModalReleasesParcelComponent } from '../modal-releases-parcel/modal-releases-parcel.component';
 import { PieChartComponent } from '../pie-chart/pie-chart.component';
 import { Expense } from './../../models/Expense';
 import { FinancialRelease } from './../../models/FinancialRelease';
@@ -15,7 +17,6 @@ import { Month } from './../../models/Month';
 import { Receipt } from './../../models/Receipt';
 import { MainService } from './../../services/main.service';
 import { ModalConfirmationComponentDialog } from './../modal-confirmation/modal-confirmation.component';
-import {MatButton} from "@angular/material/button";
 
 @Component({
   selector: 'app-flow',
@@ -154,6 +155,16 @@ export class FlowComponent implements OnInit {
   }
 
   addAll() {
-
+    const dialogRef = this.dialog.open(ModalReleasesParcelComponent, {
+      width: '320px',
+      data: {
+        month: this._month,
+      }
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.searc();
+      }
+    });
   }
 }

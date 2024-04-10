@@ -96,10 +96,10 @@ class FinancialReleaseServiceTest {
 
         financialReleaseService.createByParcels(financialRelease, 2);
 
-        verify(messageSenderService, times(1)).sendReleaseMessage(json, "releases", "releases-parcels-releases");
+        verify(messageSenderService, times(1)).sendReleaseMessage(json, "releases", "releases-installments-releases");
         financialRelease.setMonth(2);
         String json2 = mapper.writeValueAsString(financialRelease);
-        verify(messageSenderService, times(1)).sendReleaseMessage(json2, "releases", "releases-parcels-releases");
+        verify(messageSenderService, times(1)).sendReleaseMessage(json2, "releases", "releases-installments-releases");
 
         assertEquals(2, financialRelease.getMonth());
         assertEquals(2020, financialRelease.getYear());

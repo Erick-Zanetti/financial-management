@@ -70,11 +70,11 @@ public class FinancialReleaseController {
         financialReleaseService.export(month, year);
     }
 
-    @PostMapping("create-by-parcels/{parcels}")
-    @Operation(summary = "Create financial release by parcels", description = "Create a new financial release by parcels")
+    @PostMapping("create-by-installments/{installments}")
+    @Operation(summary = "Create financial release by installments", description = "Create a new financial release by installments")
     @ApiResponse(responseCode = "200", description = "Financial release created")
-    public void createByParcels(@RequestBody FinancialRelease financialRelease, @PathVariable Integer parcels) throws JsonProcessingException {
-        financialReleaseService.createByParcels(financialRelease, parcels);
+    public void createByParcels(@RequestBody FinancialRelease financialRelease, @PathVariable Integer installments) throws JsonProcessingException {
+        financialReleaseService.createByParcels(financialRelease, installments);
     }
 
 }

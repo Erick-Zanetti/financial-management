@@ -27,12 +27,12 @@ public class RabbitMQConfig {
 
     @Bean
     Queue queueParcels() {
-        return new Queue("parcels-releases", false);
+        return new Queue("installments-releases", false);
     }
 
     @Bean
     Binding bindinParcels(Queue queueParcels, TopicExchange exchangRelease) {
-        return BindingBuilder.bind(queueParcels).to(exchangRelease).with("releases-parcels-releases");
+        return BindingBuilder.bind(queueParcels).to(exchangRelease).with("releases-installments-releases");
     }
 }
 

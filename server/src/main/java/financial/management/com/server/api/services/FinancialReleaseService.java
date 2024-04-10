@@ -72,11 +72,11 @@ public class FinancialReleaseService {
         return new EmailSender();
     }
 
-    public void createByParcels(FinancialRelease financialRelease, Integer parcels) throws JsonProcessingException {
-        for (int i = 1; i <= parcels; i++) {
+    public void createByParcels(FinancialRelease financialRelease, Integer installments) throws JsonProcessingException {
+        for (int i = 1; i <= installments; i++) {
             ObjectMapper mapper = new ObjectMapper();
             mapper.writeValueAsString(financialRelease);
-            messageSenderService.sendReleaseMessage(mapper.writeValueAsString(financialRelease), "releases", "releases-parcels-releases");
+            messageSenderService.sendReleaseMessage(mapper.writeValueAsString(financialRelease), "releases", "releases-installments-releases");
 
             financialRelease.setMonth(financialRelease.getMonth() + 1);
             if (financialRelease.getMonth() > 11) {

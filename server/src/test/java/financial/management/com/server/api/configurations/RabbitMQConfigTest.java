@@ -48,7 +48,7 @@ class RabbitMQConfigTest {
         ApplicationContext ctx = new AnnotationConfigApplicationContext(RabbitMQConfig.class);
         Queue queue = ctx.getBean("queueParcels", Queue.class);
         assertNotNull(queue);
-        assertEquals("parcels-releases", queue.getName());
+        assertEquals("installments-releases", queue.getName());
         assertFalse(queue.isDurable());
     }
 
@@ -57,7 +57,7 @@ class RabbitMQConfigTest {
         ApplicationContext ctx = new AnnotationConfigApplicationContext(RabbitMQConfig.class);
         Binding binding = ctx.getBean("bindinParcels", Binding.class);
         assertNotNull(binding);
-        assertEquals("parcels-releases", binding.getDestination());
-        assertEquals("releases-parcels-releases", binding.getRoutingKey());
+        assertEquals("installments-releases", binding.getDestination());
+        assertEquals("releases-installments-releases", binding.getRoutingKey());
     }
 }

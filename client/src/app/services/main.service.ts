@@ -1,11 +1,11 @@
-import { FinancialReleaseType } from '../models/FinancialReleaseType';
-import { environment } from '../../environments/environment';
-import { FinancialRelease } from '../models/FinancialRelease';
-import { Receipt } from '../models/Receipt';
-import { Injectable } from "@angular/core";
-import { Expense } from "../models/Expense";
-import { Observable, of } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from "@angular/core";
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { Expense } from "../models/Expense";
+import { FinancialRelease } from '../models/FinancialRelease';
+import { FinancialReleaseType } from '../models/FinancialReleaseType';
+import { Receipt } from '../models/Receipt';
 
 @Injectable({
     providedIn: 'root'
@@ -55,4 +55,8 @@ export class MainService {
   exportData(month: number, year: number) {
     return this.http.post(`${this.url}/export?month=${month}&year=${year}`, {});
   }
+
+    createByinstallments(release: FinancialRelease, installments: number) {
+        return this.http.post(`${this.url}/create-by-installments?installments=${installments}`, release);
+    }
 }

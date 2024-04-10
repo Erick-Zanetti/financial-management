@@ -21,7 +21,7 @@ public class ReleaseMessageListener {
         financialReleaseService.exportAndSendToEmail(message);
     }
 
-    @RabbitListener(queues = "parcels-releases")
+    @RabbitListener(queues = "installments-releases")
     public void receiveMessageParcelsReleases(String message) throws IOException {
         System.out.println("Received <" + message + ">");
         ObjectMapper mapper = new ObjectMapper();
