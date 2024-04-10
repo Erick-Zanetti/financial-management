@@ -1,4 +1,4 @@
-package financial.management.com.server.utils;
+package financial.management.com.server.api.utils;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;

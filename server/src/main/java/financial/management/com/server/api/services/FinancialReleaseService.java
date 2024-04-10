@@ -1,11 +1,12 @@
-package financial.management.com.server.services;
+package financial.management.com.server.api.services;
 
-import financial.management.com.server.models.FinancialRelease;
-import financial.management.com.server.enums.FinancialReleaseType;
-import financial.management.com.server.repositories.FinancialReleaseRepository;
-import financial.management.com.server.utils.EmailSender;
-import financial.management.com.server.utils.ExcelExporterFinancialRelease;
-import org.json.JSONObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import financial.management.com.server.api.enums.FinancialReleaseType;
+import financial.management.com.server.api.models.FinancialRelease;
+import financial.management.com.server.api.repositories.FinancialReleaseRepository;
+import financial.management.com.server.api.utils.EmailSender;
+import financial.management.com.server.api.utils.ExcelExporterFinancialRelease;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -53,27 +54,29 @@ public class FinancialReleaseService {
         Integer month = Integer.parseInt(messageParts[1]);
         List<FinancialRelease> releases = financialReleaseRepository.findByMonthAndYear(month, year);
         if (Objects.nonNull(releases) && !releases.isEmpty()) {
-            ExcelExporterFinancialRelease exporter = new ExcelExporterFinancialRelease();
+            ExcelExporterFinancialRelease exporter = createExcelExporter();
             String fileName = String.format("financial-releases-%d-%d.xlsx", month, year);
             Path path = exporter.exportListToExcel(releases, fileName);
-            EmailSender sender = new EmailSender();
+            EmailSender sender = createEmailSender();
             sender.sendEmailWithAttachment("erick.98zanetti.98@gmail.com", "erick.dev.98@gmail.com", "smtp.gmail.com", path);
 
 
         }
     }
 
-    public void createByParcels(FinancialRelease financialRelease, Integer parcels) {
+    public ExcelExporterFinancialRelease createExcelExporter() {
+        return new ExcelExporterFinancialRelease();
+    }
+
+    public EmailSender createEmailSender() {
+        return new EmailSender();
+    }
+
+    public void createByParcels(FinancialRelease financialRelease, Integer parcels) throws JsonProcessingException {
         for (int i = 1; i <= parcels; i++) {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("id", financialRelease.getValue());
-            jsonObject.put("name", financialRelease.getName() + " " + i + "/" + parcels);
-            jsonObject.put("value", financialRelease.getValue());
-            jsonObject.put("type", financialRelease.getType());
-            jsonObject.put("year", financialRelease.getYear());
-            jsonObject.put("month", financialRelease.getMonth());
-            jsonObject.put("day", financialRelease.getDay());
-            messageSenderService.sendReleaseMessage(jsonObject.toString(), "releases", "releases-parcels-releases");
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.writeValueAsString(financialRelease);
+            messageSenderService.sendReleaseMessage(mapper.writeValueAsString(financialRelease), "releases", "releases-parcels-releases");
 
             financialRelease.setMonth(financialRelease.getMonth() + 1);
             if (financialRelease.getMonth() > 11) {

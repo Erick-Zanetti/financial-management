@@ -1,4 +1,4 @@
-package financial.management.com.server.services;
+package financial.management.com.server.api.services;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,4 +1,4 @@
-package financial.management.com.server.configuration;
+package financial.management.com.server.api.configurations;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;

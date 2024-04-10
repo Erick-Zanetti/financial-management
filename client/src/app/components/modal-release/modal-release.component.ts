@@ -92,7 +92,7 @@ export class ModalReleaseComponentDialog implements OnInit {
   save() {
     if (this.form.valid) {
       const form = this.form.getRawValue();
-      const release: FinancialRelease = Object.assign((this.data.release || {}), form, { month: this.data.month }, { type: this.data.type });
+      const release: FinancialRelease = Object.assign((this.data.release || {}), form, { month: this.data.month.month, year: this.data.month.year }, { type: this.data.type });
       release.day = form.day.getDate();
       if (this.data.new) {
         this.create(release);

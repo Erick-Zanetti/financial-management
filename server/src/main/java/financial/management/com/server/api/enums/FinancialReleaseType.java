@@ -1,4 +1,4 @@
-package financial.management.com.server.enums;
+package financial.management.com.server.api.enums;
 
 public enum FinancialReleaseType {
     R("R"),

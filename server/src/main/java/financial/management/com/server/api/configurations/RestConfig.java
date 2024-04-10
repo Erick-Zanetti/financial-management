@@ -1,4 +1,4 @@
-package financial.management.com.server.configuration;
+package financial.management.com.server.api.configurations;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

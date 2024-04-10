@@ -1,4 +1,4 @@
-package financial.management.com.server.configuration;
+package financial.management.com.server.api.configurations;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletResponse;

@@ -1,15 +1,15 @@
-package financial.management.com.server.controllers;
+package financial.management.com.server.api.controllers;
 
-import financial.management.com.server.models.FinancialRelease;
-import financial.management.com.server.enums.FinancialReleaseType;
-import financial.management.com.server.services.FinancialReleaseService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import financial.management.com.server.api.enums.FinancialReleaseType;
+import financial.management.com.server.api.models.FinancialRelease;
+import financial.management.com.server.api.services.FinancialReleaseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -73,7 +73,7 @@ public class FinancialReleaseController {
     @PostMapping("create-by-parcels/{parcels}")
     @Operation(summary = "Create financial release by parcels", description = "Create a new financial release by parcels")
     @ApiResponse(responseCode = "200", description = "Financial release created")
-    public void createByParcels(@RequestBody FinancialRelease financialRelease, @PathVariable Integer parcels) {
+    public void createByParcels(@RequestBody FinancialRelease financialRelease, @PathVariable Integer parcels) throws JsonProcessingException {
         financialReleaseService.createByParcels(financialRelease, parcels);
     }
 
