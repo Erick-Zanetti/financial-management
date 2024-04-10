@@ -95,10 +95,10 @@ export class ModalReleasesParcelComponent implements OnInit {
       const release: FinancialRelease = {} as FinancialRelease;
       release.name = form.name;
       release.value = form.value;
-      release.day = form.day;
+      release.day = form.day.getDate();
       release.type = form.type;
-      release.month = this.data.month;
-      release.year = this.data.year;
+      release.month = this.data.month.month;
+      release.year = this.data.month.year;
 
       this.mainService.createByinstallments(release, form.installments).subscribe({
         complete: () => {

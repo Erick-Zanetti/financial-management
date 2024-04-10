@@ -57,6 +57,6 @@ export class MainService {
   }
 
     createByinstallments(release: FinancialRelease, installments: number) {
-        return this.http.post(`${this.url}/create-by-installments?installments=${installments}`, release);
+      return this.http.post(`${this.url}/create-by-installments/${installments}`, release);
     }
 }

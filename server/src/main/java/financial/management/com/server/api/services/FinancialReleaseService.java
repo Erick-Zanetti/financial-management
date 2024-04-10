@@ -74,6 +74,8 @@ public class FinancialReleaseService {
 
     public void createByParcels(FinancialRelease financialRelease, Integer installments) throws JsonProcessingException {
         for (int i = 1; i <= installments; i++) {
+            financialRelease.setName(financialRelease.getName() + " " + i + "/" + installments);
+
             ObjectMapper mapper = new ObjectMapper();
             mapper.writeValueAsString(financialRelease);
             messageSenderService.sendReleaseMessage(mapper.writeValueAsString(financialRelease), "releases", "releases-installments-releases");
