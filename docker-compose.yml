@@ -12,18 +12,6 @@ services:
       - 27018:27017
     networks:
       - main-network
-  mongo_backup:
-    build:
-      context: .
-      dockerfile: mongobackup.dockerfile
-    container_name: mongo_backup
-    depends_on:
-      - mongodb
-    volumes:
-      - './backups:/backups/data'
-    networks:
-      - main-network
-
   #RABBITMQ
   rabbitmq:
     image: "rabbitmq:3-management"
@@ -46,6 +34,8 @@ services:
       - "3000:3000"
     depends_on:
       - mongodb
+    volumes:
+      - './backups:/backups/data'
     networks:
       - main-network
 
