@@ -5,6 +5,7 @@ FROM jelastic/maven:3.9.6-openjdk-22.ea-b28 as build
 WORKDIR /app
 COPY src ./src
 COPY pom.xml .
+COPY src/main/resources/application-prod.properties src/main/resources/application-prod.properties
 
 # Construir a aplicação e o pacote JAR
 RUN mvn clean package -DskipTests
@@ -27,6 +28,7 @@ WORKDIR /app
 
 # Copiar o JAR da fase de compilação para a fase de execução
 COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/src/main/resources/application-prod.properties ./application-prod.properties
 
 # Expor a porta que a aplicação utiliza
 EXPOSE 8080

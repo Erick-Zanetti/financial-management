@@ -24,6 +24,7 @@ public class FinancialReleaseController {
     @Operation(summary = "Find financial release by type", description = "Returns a list of financial release by type")
     @ApiResponse(responseCode = "200", description = "Financial release found")
     public List<FinancialRelease> findByTypeAndName(@RequestParam FinancialReleaseType type, @RequestParam Integer month, @RequestParam Integer year) {
+        System.out.println("type: " + type + " month: " + month + " year: " + year);
         return financialReleaseService.findByTypeAndName(type, month, year);
     }
 
