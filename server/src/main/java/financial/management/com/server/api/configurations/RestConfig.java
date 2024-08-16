@@ -16,6 +16,7 @@ public class RestConfig {
         config.setAllowCredentials(true);
         config.addAllowedOrigin("http://localhost:4200");
         config.addAllowedOrigin("http://localhost:4000");
+        config.addAllowedOrigin("http://192.168.2.177:4000");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);

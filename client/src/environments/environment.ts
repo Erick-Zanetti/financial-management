@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  financialManagementApi: 'http://localhost:3000/financial-release'
+  financialManagementApi: 'http://192.168.2.177:3000/financial-release'
 };
 
 /*

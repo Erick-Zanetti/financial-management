@@ -60,8 +60,9 @@ export class TimelineComponent implements OnInit {
       return 0;
     });
     this.events = this.releases.map(item => {
+      const typeSymbol = item.type === 'E' ? '- ' : '+ ';
       return {
-        description: this.currencyPipe.transform(item.value, 'BRL', 'symbol', '1.2-2') + '',
+        description: typeSymbol + this.currencyPipe.transform(item.value, 'BRL', 'symbol', '1.2-2') + '',
         id: item.id,
         itemPosition: item.type === 'E' ? NgxTimelineItemPosition.ON_RIGHT : NgxTimelineItemPosition.ON_LEFT,
         title: item.name,

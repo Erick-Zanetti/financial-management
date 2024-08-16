@@ -12,5 +12,12 @@ h2 {
 .box-list {
     border: solid 1px $border-color;
     border-radius: 8px;
-    padding: 16px;
+    padding: 8px 16px;
+}
+
+@media screen and (max-width: 768px) {
+    .flow-container {
+        padding: 16px 8px 64px
+    }
+    
 }

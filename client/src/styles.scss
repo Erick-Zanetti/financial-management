@@ -20,6 +20,12 @@ body {
   height: 100%;
   margin: 0;
 }
+.desktop-show {
+  display: block !important;
+}
+.mobile-show {
+  display: none !important;
+}
 ngx-timeline {
   .center-icon-container .icon {
     background: #3f51b5 !important;
@@ -65,4 +71,40 @@ hr {
     border: 0;
     width: 100%;
     height: 1px;
+}
+
+@media screen and (max-width: 768px) {
+  .desktop-show {
+      display: none !important;
+  }
+  .mobile-show {
+      display: inherit !important;
+  }
+  .items-container {
+    min-width: 260px !important;
+  }
+  .col-right.col-period {
+    flex: 45 45 0 !important
+  }
+  ngx-timeline {
+    .col-left {
+      .event {
+        color: #000 !important;
+        background: #fff !important;
+      }
+      .arrow.right {
+        border-left-color: #fff !important;
+      }
+    }
+
+    .col-right {
+      .event {
+        color: #000 !important;
+        background: #fff !important;
+      }
+      .arrow.left {
+        border-right-color: #fff !important;
+      }
+    }
+  }
 }

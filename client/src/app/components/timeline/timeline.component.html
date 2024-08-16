@@ -2,8 +2,8 @@
   <ngx-timeline [events]="events" [langCode]="'pt'" [reverseOrder]="false" [enableAnimation]="false" [dateInstantCustomTemplate]="dateInstantCustomTemplate"></ngx-timeline>
 
   <ng-template #dateInstantCustomTemplate let-item=item>
-    <span>
+    <div class="balance">
       {{getTotalUnitNow(item) | currency: 'BRL'}}
-    </span>
+    </div>
   </ng-template>
 </div>

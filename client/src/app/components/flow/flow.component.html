@@ -3,8 +3,14 @@
         <div fxFlex="100">
             <h2>Saldo: {{getBalance() | currency: 'BRL'}}</h2>
             <br>
-            <button mat-stroked-button color="primary" (click)="exportData()">Exportar</button>
-            <button mat-stroked-button color="primary" (click)="addAll()">Lançamentos em lote</button>
+            <div fxLayout="row wrap" fxLayoutAlign="start start" fxLayoutGap="16px grid">
+                <div>
+                    <button mat-stroked-button color="primary" (click)="exportData()">Exportar</button>
+                </div>
+                <div>
+                    <button mat-stroked-button color="primary" (click)="addAll()">Lançamentos em lote</button>
+                </div>
+            </div>
         </div>
         <div fxFlex="50" fxFlex.lt-md="100">
             <div class="box-list">

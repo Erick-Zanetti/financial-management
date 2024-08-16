@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   # DATABASE
   mongodb:
@@ -30,6 +28,7 @@ services:
   # BACKEND
   api-financial-management:
     build: './server'
+    container_name: financial-management-server
     ports:
       - "3000:3000"
     depends_on:
@@ -42,6 +41,7 @@ services:
   # FRONTEND
   app-financial-management:
     build: './client'
+    container_name: financial-management-client
     ports:
       - "4000:80"
     depends_on:
