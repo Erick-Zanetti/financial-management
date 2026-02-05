@@ -1,0 +1,14 @@
+.container {
+  max-width: 768px;
+  margin: auto;
+}
+.balance {
+  width: 80px;
+  text-align: right;
+}
+@media screen and (max-width: 768px) {
+  .container {
+    width: calc(100% - 32px);
+  }
+
+}
