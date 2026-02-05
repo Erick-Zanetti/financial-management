@@ -8,7 +8,6 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { BarChartComponent } from '../bar-chart/bar-chart.component';
 import { ListComponent } from '../list/list.component';
 import { ModalReleaseComponentDialog } from '../modal-release/modal-release.component';
-import { ModalReleasesParcelComponent } from '../modal-releases-parcel/modal-releases-parcel.component';
 import { PieChartComponent } from '../pie-chart/pie-chart.component';
 import { Expense } from './../../models/Expense';
 import { FinancialRelease } from './../../models/FinancialRelease';
@@ -17,6 +16,8 @@ import { Month } from './../../models/Month';
 import { Receipt } from './../../models/Receipt';
 import { MainService } from './../../services/main.service';
 import { ModalConfirmationComponentDialog } from './../modal-confirmation/modal-confirmation.component';
+import { MatSelectModule } from '@angular/material/select';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-flow',
@@ -26,12 +27,14 @@ import { ModalConfirmationComponentDialog } from './../modal-confirmation/modal-
   imports: [
     CommonModule,
     ListComponent,
+    FormsModule,
     FlexLayoutModule,
     FlexLayoutServerModule,
     ModalReleaseComponentDialog,
     PieChartComponent,
     BarChartComponent,
     MatSnackBarModule,
+    MatSelectModule,
     ModalConfirmationComponentDialog,
     MatButton
   ],
@@ -40,6 +43,8 @@ export class FlowComponent implements OnInit {
 
   expenses: Expense[] = [];
   receipts: Receipt[] = [];
+
+  person: string = '';
 
   private _month!: Month;
   @Input()
@@ -65,7 +70,15 @@ export class FlowComponent implements OnInit {
   }
 
   getBalance(): number {
-    return this.sumList(this.receipts) - this.sumList(this.expenses);
+    let receipts: FinancialRelease[] = JSON.parse(JSON.stringify(this.receipts));
+    let expenses: FinancialRelease[] = JSON.parse(JSON.stringify(this.expenses));
+
+    if (!!this.person) {
+      receipts = receipts.filter(t => t.person === this.person);
+      expenses = expenses.filter(t => t.person === this.person);
+    }
+
+    return this.sumList(receipts) - this.sumList(expenses);
   }
 
   private sumList(list: FinancialRelease[]): number {
@@ -135,35 +148,6 @@ export class FlowComponent implements OnInit {
             });
           }
         });
-      }
-    });
-  }
-
-  exportData() {
-    this.mainService.exportData(this._month.month, this._month.year).subscribe({
-      next: (res: any) => {
-        this._snackBar.open('Gerando o arquivo, será enviado para seu email', 'X', {
-          duration: 5000
-        });
-      },
-      error: (error: any) => {
-        this._snackBar.open('Falha ao exportar. Tente novamente', 'X', {
-          duration: 5000
-        });
-      }
-    });
-  }
-
-  addAll() {
-    const dialogRef = this.dialog.open(ModalReleasesParcelComponent, {
-      width: '320px',
-      data: {
-        month: this._month,
-      }
-    });
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.searc();
       }
     });
   }

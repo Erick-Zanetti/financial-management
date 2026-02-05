@@ -1,10 +1,12 @@
 import { FinancialReleaseType } from './FinancialReleaseType';
+import { Person } from './Person';
 
 export class FinancialRelease {
   id: string | null
   name: string;
   value: number;
   type: FinancialReleaseType;
+  person: Person;
   year: number;
   month: number;
   day: number;
@@ -16,6 +18,7 @@ export class FinancialRelease {
     name: string,
     value: number,
     type: FinancialReleaseType,
+    person: Person,
     year: number,
     month: number,
     day: number | null
@@ -24,6 +27,7 @@ export class FinancialRelease {
     this.name = name;
     this.value = value;
     this.type = type;
+    this.person = person;
     this.year = year;
     this.month = month;
     this.day = day || 1;

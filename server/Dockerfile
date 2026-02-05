@@ -1,35 +1,44 @@
-# Fase de compilação
-FROM jelastic/maven:3.9.6-openjdk-22.ea-b28 as build
+FROM node:20-alpine AS builder
 
-# Copiar os arquivos de fonte para o container
-WORKDIR /app
-COPY src ./src
-COPY pom.xml .
-
-# Construir a aplicação e o pacote JAR
-RUN mvn clean package -DskipTests
-
-# Fase de execução
-FROM openjdk:22-jdk-slim
-
-# Instalar o Mongo
-RUN apt-get update && apt-get install -y wget && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-ARG MONGO_TOOLS_VERSION=100.9.4
-ENV MONGO_TOOLS_URL=https://fastdl.mongodb.org/tools/db/mongodb-database-tools-debian10-x86_64-${MONGO_TOOLS_VERSION}.deb
-
-RUN wget -q ${MONGO_TOOLS_URL} -O mongodb-database-tools.deb
-
-RUN apt-get update && apt-get install -f ./mongodb-database-tools.deb -y && rm mongodb-database-tools.deb && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Definir o diretório de trabalho
 WORKDIR /app
 
-# Copiar o JAR da fase de compilação para a fase de execução
-COPY --from=build /app/target/*.jar app.jar
+# Copy package files
+COPY package*.json ./
 
-# Expor a porta que a aplicação utiliza
-EXPOSE 8080
+# Install all dependencies (including devDependencies for build)
+RUN npm ci
 
-# Comando para iniciar a aplicação
-CMD ["java", "-jar", "app.jar", "--spring.profiles.active=prod"]
+# Copy source code
+COPY . .
+
+# Build TypeScript
+RUN npm run build
+
+# Production stage
+FROM node:20-alpine
+
+# Install mongodb-tools for mongodump
+RUN apk add --no-cache mongodb-tools
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install production dependencies only
+RUN npm ci --omit=dev
+
+# Copy built files from builder
+COPY --from=builder /app/dist ./dist
+
+# Copy environment file
+COPY .env.production .env.production
+
+# Expose port
+EXPOSE 3000
+
+# Set environment to production
+ENV NODE_ENV=production
+
+# Start the server
+CMD ["node", "dist/server.js"]

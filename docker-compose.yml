@@ -1,8 +1,8 @@
 services:
   # DATABASE
-  mongodb:
+  mongodb-fm:
     image: mongo:7.0.5
-    container_name: mongodb
+    container_name: mongodb-fm
     restart: always
     volumes:
       - './db:/data/db'
@@ -10,29 +10,15 @@ services:
       - 27019:27017
     networks:
       - main-network
-  #RABBITMQ
-  rabbitmq:
-    image: "rabbitmq:3-management"
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes:
-      - "./rabbitmq:/var/lib/rabbitmq"
-    environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
-    networks:
-      - main-network
 
   # BACKEND
   api-financial-management:
-    build: './server'
+    build: './server-node'
     container_name: api-financial-management
     ports:
       - "3000:3000"
     depends_on:
-      - mongodb
+      - mongodb-fm
     volumes:
       - './backups:/backups/data'
     networks:

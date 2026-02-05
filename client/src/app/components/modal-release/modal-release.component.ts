@@ -10,6 +10,7 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import moment from "moment";
 import { CurrencyMaskModule } from 'ng2-currency-mask';
@@ -51,7 +52,8 @@ class ModalReleaseModuleDateAdapter extends NativeDateAdapter {
     CurrencyMaskModule,
     MatSnackBarModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    MatSelectModule,
   ],
   providers: [
     { provide: DateAdapter, useClass: ModalReleaseModuleDateAdapter },
@@ -71,10 +73,10 @@ export class ModalReleaseComponentDialog implements OnInit {
 
   ngOnInit() {
     this.createForm();
-    console.log(this.data)
     if (!this.data.new) {
       this.form.get('name')?.setValue(this.data.release?.name);
       this.form.get('value')?.setValue(this.data.release?.value);
+      this.form.get('person')?.setValue(this.data.release?.person);
       this.form.get('day')?.setValue(new Date(this.data.release?.year, this.data.release?.month, this.data.release?.day));
     } else {
       this.form.get('day')?.setValue(new Date(this.data.month?.year, this.data.month?.month, 1));
@@ -86,6 +88,7 @@ export class ModalReleaseComponentDialog implements OnInit {
       name: new FormControl('', [Validators.required, Validators.maxLength(30)]),
       value: new FormControl(0, [Validators.required, Validators.min(0)]),
       day: new FormControl(null, [Validators.required, Validators.min(1), Validators.max(31)]),
+      person: new FormControl(null, [Validators.required, Validators.min(1), Validators.max(31)]),
     });
   }
 

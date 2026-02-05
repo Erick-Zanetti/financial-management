@@ -1,6 +1,7 @@
 import { Month } from './Month';
 import { FinancialRelease } from './FinancialRelease';
 import { FinancialReleaseType } from './FinancialReleaseType';
+import { Person } from './Person';
 
 export class Expense extends FinancialRelease {
 
@@ -10,6 +11,7 @@ export class Expense extends FinancialRelease {
       name,
       value,
       FinancialReleaseType.Expense,
+      Person.ERICK,
       month.year,
       month.month,
       null
