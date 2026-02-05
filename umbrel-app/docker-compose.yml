@@ -3,7 +3,7 @@ version: "3.7"
 services:
   app_proxy:
     environment:
-      APP_HOST: ${COMPOSE_PROJECT_NAME:-financial-management}_app_1
+      APP_HOST: financial-management_app_1
       APP_PORT: 4200
 
   mongodb:

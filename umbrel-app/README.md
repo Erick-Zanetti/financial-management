@@ -2,11 +2,36 @@
 
 Use o app só na sua VPS/Umbrel, sem publicar imagens em nenhum registry.
 
-## App integrado na interface do Umbrel
+## Instalacao: clone + build local (recomendado)
 
-Para o app aparecer na App Store do Umbrel e na lista de apps, use o **Community App Store** e siga o guia:
+Nao e preciso publicar imagens. O Umbrel faz o build a partir do codigo.
 
-**[INSTALAR-NO-UMBREL.md](./INSTALAR-NO-UMBREL.md)** – passos exatos (criar store, pasta do app com codigo, adicionar store no Umbrel, instalar).
+### 1. No seu Umbrel (SSH na VPS)
+
+Clone o repositorio inteiro no diretorio de apps do Umbrel:
+
+```bash
+cd ~/umbrel/app-data
+git clone https://github.com/SEU_USUARIO/financial-management.git
+cd financial-management
+```
+
+Se o app for instalado como "custom app" pelo Umbrel apontando para esse repo, use o **path** do app para o diretorio clonado (depende de como seu Umbrel instala por Git).
+
+### 2. Usando o Community App Store
+
+1. Instale o community-app-store no Umbrel (se ainda nao tiver):
+```bash
+curl -sL https://raw.githubusercontent.com/getumbrel/umbrel-community-app-store/master/install.sh | bash
+```
+
+2. No servidor, clone o **repositorio completo** (nao so a pasta umbrel-app):
+```bash
+cd ~/umbrel/app-stores/
+git clone https://github.com/SEU_USUARIO/financial-management.git
+```
+
+3. Registre o app apontando para a pasta do repo (onde esta o `umbrel-app/` e tambem `client/` e `server-node/`). O compose usa build local a partir da raiz do clone.
 
 ### 3. Rodar manualmente na VPS (fora do app store)
 
