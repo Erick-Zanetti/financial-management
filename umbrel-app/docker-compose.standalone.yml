@@ -19,7 +19,7 @@ services:
 
   api:
     build:
-      context: ..
+      context: .
       dockerfile: server-node/Dockerfile
     restart: on-failure
     stop_grace_period: 1m
@@ -37,7 +37,7 @@ services:
 
   app:
     build:
-      context: ..
+      context: .
       dockerfile: client/Dockerfile
     restart: on-failure
     stop_grace_period: 1m
