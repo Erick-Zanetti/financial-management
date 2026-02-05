@@ -1,19 +1,31 @@
-FROM node:alpine as build-stage
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json /app/
+COPY package*.json ./
+RUN npm ci
 
-RUN npm install
+COPY . .
+RUN npm run build
 
-COPY . /app
+FROM node:20-alpine AS runner
 
-RUN npm run build --prod
+WORKDIR /app
 
-FROM nginx:alpine
+ENV NODE_ENV=production
 
-COPY --from=build-stage /app/dist/app-financial-management/browser /usr/share/nginx/html
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-EXPOSE 80
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 
-CMD ["nginx", "-g", "daemon off;"]
+USER nextjs
+
+EXPOSE 4200
+
+ENV PORT=4200
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]
