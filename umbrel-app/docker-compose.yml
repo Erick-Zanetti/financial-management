@@ -1,0 +1,48 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: financial-management_app_1
+      APP_PORT: 4200
+
+  mongodb:
+    image: mongo:7.0.5@sha256:a3c3da65cd5f6f9fc579a7bab99a59580f41b3c3f3e9b9f8e1d6f91c1b1f3c1a
+    restart: on-failure
+    stop_grace_period: 1m
+    volumes:
+      - ${APP_DATA_DIR}/data/db:/data/db
+    networks:
+      default:
+        aliases:
+          - financial-management_mongodb_1
+
+  api:
+    image: ghcr.io/erickmxzx/financial-management-api:latest
+    restart: on-failure
+    stop_grace_period: 1m
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://financial-management_mongodb_1:27017/financial-management
+    depends_on:
+      - mongodb
+    networks:
+      default:
+        aliases:
+          - financial-management_api_1
+
+  app:
+    image: ghcr.io/erickmxzx/financial-management-app:latest
+    restart: on-failure
+    stop_grace_period: 1m
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://${DEVICE_HOSTNAME}:3010/financial-release
+    ports:
+      - "3010:3000"
+    depends_on:
+      - api
+    networks:
+      default:
+        aliases:
+          - financial-management_app_1

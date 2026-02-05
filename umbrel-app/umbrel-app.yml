@@ -1,0 +1,26 @@
+manifestVersion: 1
+id: financial-management
+category: finance
+name: Financial Management
+version: "1.0.0"
+tagline: Gerencie suas financas pessoais de forma simples
+description: >-
+  Aplicativo de gerenciamento financeiro pessoal para controlar receitas,
+  despesas e visualizar seu fluxo de caixa. Permite categorizar lancamentos,
+  acompanhar saldos mensais e ter uma visao clara das suas financas.
+developer: Erick
+website: https://github.com/erickmxzx/financial-management
+dependencies: []
+repo: https://github.com/erickmxzx/financial-management
+support: https://github.com/erickmxzx/financial-management/issues
+port: 4200
+gallery:
+  - 1.png
+  - 2.png
+  - 3.png
+releaseNotes: >-
+  Versao inicial com suporte a lancamentos financeiros, categorias e
+  visualizacao de fluxo mensal.
+path: ""
+defaultUsername: ""
+defaultPassword: ""
