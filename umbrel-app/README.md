@@ -1,102 +1,81 @@
-# Financial Management - umbrelOS App
+# Financial Management - App no Umbrel (uso na sua VPS)
 
-Este diretorio contem os arquivos necessarios para instalar o Financial Management como um app nativo no umbrelOS.
+Use o app só na sua VPS/Umbrel, sem publicar imagens em nenhum registry.
 
-## Opcao 1: Community App Store (Recomendado para uso pessoal)
+## Instalacao: clone + build local (recomendado)
 
-A forma mais simples e usar o **community-app-store** do umbrelOS.
+Nao e preciso publicar imagens. O Umbrel faz o build a partir do codigo.
 
-### Passo 1: Instalar o Community App Store
+### 1. No seu Umbrel (SSH na VPS)
 
-1. Acesse o terminal do umbrelOS (via SSH)
-2. Execute:
+Clone o repositorio inteiro no diretorio de apps do Umbrel:
+
+```bash
+cd ~/umbrel/app-data
+git clone https://github.com/SEU_USUARIO/financial-management.git
+cd financial-management
+```
+
+Se o app for instalado como "custom app" pelo Umbrel apontando para esse repo, use o **path** do app para o diretorio clonado (depende de como seu Umbrel instala por Git).
+
+### 2. Usando o Community App Store
+
+1. Instale o community-app-store no Umbrel (se ainda nao tiver):
 ```bash
 curl -sL https://raw.githubusercontent.com/getumbrel/umbrel-community-app-store/master/install.sh | bash
 ```
 
-### Passo 2: Adicionar seu app
-
-1. Clone este repositorio no umbrelOS:
+2. No servidor, clone o **repositorio completo** (nao so a pasta umbrel-app):
 ```bash
 cd ~/umbrel/app-stores/
 git clone https://github.com/SEU_USUARIO/financial-management.git
 ```
 
-2. Copie a pasta do app:
+3. Registre o app apontando para a pasta do repo (onde esta o `umbrel-app/` e tambem `client/` e `server-node/`). O compose usa build local a partir da raiz do clone.
+
+### 3. Rodar manualmente na VPS (fora do app store)
+
+Se preferir subir o stack sem passar pela loja do Umbrel:
+
 ```bash
-cp -r financial-management/umbrel-app ~/umbrel/app-stores/community/financial-management
+cd /caminho/para/financial-management
+docker compose -f umbrel-app/docker-compose.yml --project-directory . up -d --build
 ```
 
-3. Reinicie o umbrelOS ou atualize os apps
+O frontend fica atras do proxy do Umbrel (porta 4200). A API fica exposta em `http://SEU_HOST:3010` para o browser chamar. Variaveis `${APP_DATA_DIR}` e `${DEVICE_HOSTNAME}` precisam estar definidas (no Umbrel sao injetadas automaticamente). Para rodar manualmente, crie um `.env` na pasta do projeto:
+
+```bash
+APP_DATA_DIR=./umbrel-data
+DEVICE_HOSTNAME=localhost
+```
+
+Ajuste `DEVICE_HOSTNAME` para o hostname ou IP da sua VPS se acessar de outro dispositivo.
 
 ---
 
-## Opcao 2: Instalacao Manual (mais simples)
+## Opcao alternativa: Dockge/Portainer
 
-### Passo 1: Buildar e publicar as imagens Docker
+Para rodar como stack sem integrar na UI do Umbrel:
 
-Primeiro, publique as imagens no GitHub Container Registry:
+1. Instale **Dockge** (ou Portainer) pela App Store do Umbrel.
+2. Clone o repo em algum lugar acessivel pelo Dockge.
+3. Crie um novo stack e use o `docker-compose.yml` da **raiz** do projeto (nao o de umbrel-app). Esse compose usa `server-node` e `client` com build local.
+4. No .env da raiz, defina por exemplo:
+   - `API_URL=http://IP_DA_VPS:3000`
+   - O client usa `NEXT_PUBLIC_API_URL` no build; no compose da raiz use `NEXT_PUBLIC_API_URL=http://IP_DA_VPS:3000/financial-release` (ou o IP/hostname que o browser vai usar para acessar a API).
 
-```bash
-# Login no GitHub Container Registry
-echo $GITHUB_TOKEN | docker login ghcr.io -u SEU_USUARIO --password-stdin
-
-# Build e push da API
-cd server-node
-docker build -t ghcr.io/SEU_USUARIO/financial-management-api:latest .
-docker push ghcr.io/SEU_USUARIO/financial-management-api:latest
-
-# Build e push do App
-cd ../client
-docker build -t ghcr.io/SEU_USUARIO/financial-management-app:latest .
-docker push ghcr.io/SEU_USUARIO/financial-management-app:latest
-```
-
-### Passo 2: Copiar para o umbrelOS
-
-```bash
-# No umbrelOS
-sudo mkdir -p /home/umbrel/umbrel/app-data/financial-management
-sudo cp -r umbrel-app/* /home/umbrel/umbrel/app-data/financial-management/
-```
-
-### Passo 3: Registrar o app
-
-Adicione ao arquivo de apps do umbrelOS ou use o Portainer/Dockge.
+O app fica em `http://IP_DA_VPS:4200`.
 
 ---
 
-## Opcao 3: Usar Dockge/Portainer (Mais Facil)
+## Variaveis do Umbrel
 
-Se voce so quer rodar o app sem aparecer na interface do umbrelOS:
+O Umbrel injeta:
+- `${APP_DATA_DIR}` – dados persistentes (ex.: MongoDB)
+- `${DEVICE_HOSTNAME}` – hostname do dispositivo (para o frontend chamar a API)
 
-1. Instale **Dockge** pela App Store do umbrelOS
-2. Crie um novo stack com o conteudo do `docker-compose.yml` da raiz do projeto
-3. Configure o `.env` com o IP da sua VPS
-4. Clique em "Deploy"
+## Portas
 
-O app estara acessivel em `http://SEU_IP:4200`
-
----
-
-## Estrutura dos Arquivos
-
-```
-umbrel-app/
-├── docker-compose.yml  # Configuracao dos containers
-├── umbrel-app.yml      # Manifesto do app
-├── icon.svg            # Icone 256x256
-└── README.md           # Este arquivo
-```
-
-## Variaveis de Ambiente Disponiveis
-
-O umbrelOS fornece automaticamente:
-- `${APP_DATA_DIR}` - Diretorio de dados persistentes
-- `${DEVICE_HOSTNAME}` - Hostname do dispositivo
-
-## Portas Utilizadas
-
-- **4200**: Frontend (Next.js)
-- **3010**: API (Node.js) - exposta para o frontend acessar
-- **27017**: MongoDB (apenas interno)
+- **4200**: frontend (Next.js), usada pelo app_proxy do Umbrel
+- **3010**: API no host (o browser acessa por aqui)
+- **27017**: MongoDB (só na rede interna)
