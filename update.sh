@@ -7,6 +7,8 @@ APP_DIR="${UMBREL_ROOT}/app-data/${APP_ID}"
 
 cd "$APP_DIR"
 
+JWT_SECRET=$(docker exec umbrel cat /data/secrets/jwt 2>/dev/null || echo "")
+
 run_app_script() {
   local cmd="$1"
   docker exec \
@@ -17,6 +19,7 @@ run_app_script() {
     -e BITCOIN_NETWORK=mainnet \
     -e TOR_PROXY_IP=10.21.21.11 \
     -e TOR_PROXY_PORT=9050 \
+    -e JWT_SECRET="$JWT_SECRET" \
     umbrel /opt/umbreld/source/modules/apps/legacy-compat/app-script "$cmd" "$APP_ID"
 }
 

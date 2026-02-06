@@ -3,6 +3,7 @@
 import { useParams } from 'next/navigation';
 import { useExpenses, useReceipts } from '@/hooks/use-releases';
 import { usePersonPreference } from '@/hooks/use-person-preference';
+import { useSettings } from '@/providers/settings-provider';
 import { BalanceCard } from '@/components/dashboard/balance-card';
 import { PersonFilter } from '@/components/dashboard/person-filter';
 import { PersonSelectionModal } from '@/components/dashboard/person-selection-modal';
@@ -14,6 +15,7 @@ export default function DashboardPage() {
   const params = useParams();
   const year = Number(params.year);
   const month = Number(params.month);
+  const { t } = useSettings();
 
   const { filterValue, defaultPerson, preference, setPreference, needsSelection, isLoaded } =
     usePersonPreference();
@@ -55,7 +57,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ReleaseList
-          title="Receitas"
+          title={t('receipts')}
           type={FinancialReleaseType.Receipt}
           releases={filteredReceipts}
           month={month}
@@ -67,7 +69,7 @@ export default function DashboardPage() {
         />
 
         <ReleaseList
-          title="Despesas"
+          title={t('expenses')}
           type={FinancialReleaseType.Expense}
           releases={filteredExpenses}
           month={month}

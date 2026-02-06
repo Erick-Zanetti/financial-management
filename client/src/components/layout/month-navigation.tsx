@@ -2,13 +2,14 @@
 
 import { useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { getMonthLabel } from '@/lib/months';
 import { useMonthNavigation } from '@/hooks/use-month-navigation';
+import { useSettings } from '@/providers/settings-provider';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 
 export function MonthNavigation() {
   const { months, currentYear, currentMonth, navigateToMonth } = useMonthNavigation();
+  const { getMonthLabel } = useSettings();
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLButtonElement>(null);
 

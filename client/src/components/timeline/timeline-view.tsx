@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useExpenses, useReceipts } from '@/hooks/use-releases';
 import { FinancialRelease, FinancialReleaseType } from '@/types/financial-release';
-import { formatCurrency } from '@/lib/format';
+import { useSettings } from '@/providers/settings-provider';
 import { cn } from '@/lib/utils';
 
 interface TimelineViewProps {
@@ -16,6 +16,7 @@ interface TimelineViewProps {
 export function TimelineView({ month, year }: TimelineViewProps) {
   const { data: expenses = [], isLoading: loadingExpenses } = useExpenses(month, year);
   const { data: receipts = [], isLoading: loadingReceipts } = useReceipts(month, year);
+  const { t, formatCurrency } = useSettings();
 
   const isLoading = loadingExpenses || loadingReceipts;
 
@@ -45,7 +46,7 @@ export function TimelineView({ month, year }: TimelineViewProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-medium">Linha do tempo</CardTitle>
+          <CardTitle className="text-lg font-medium">{t('timeline')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -62,11 +63,11 @@ export function TimelineView({ month, year }: TimelineViewProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-medium">Linha do tempo</CardTitle>
+          <CardTitle className="text-lg font-medium">{t('timeline')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center text-muted-foreground py-8">
-            Nenhum lançamento para este mês
+            {t('noReleasesThisMonth')}
           </div>
         </CardContent>
       </Card>
@@ -76,7 +77,7 @@ export function TimelineView({ month, year }: TimelineViewProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg font-medium">Linha do tempo</CardTitle>
+        <CardTitle className="text-lg font-medium">{t('timeline')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="relative">
@@ -93,6 +94,9 @@ export function TimelineView({ month, year }: TimelineViewProps) {
                   release={release}
                   isReceipt={isReceipt}
                   balance={balance}
+                  formatCurrencyFn={formatCurrency}
+                  dayLabel={t('day')}
+                  balanceLabel={t('balance')}
                 />
               );
             })}
@@ -107,9 +111,12 @@ interface TimelineItemProps {
   release: FinancialRelease;
   isReceipt: boolean;
   balance: number;
+  formatCurrencyFn: (value: number) => string;
+  dayLabel: string;
+  balanceLabel: string;
 }
 
-function TimelineItem({ release, isReceipt, balance }: TimelineItemProps) {
+function TimelineItem({ release, isReceipt, balance, formatCurrencyFn, dayLabel, balanceLabel }: TimelineItemProps) {
   return (
     <div className="relative pl-10">
       <div
@@ -123,7 +130,7 @@ function TimelineItem({ release, isReceipt, balance }: TimelineItemProps) {
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">
-              Dia {release.day}
+              {dayLabel} {release.day}
             </span>
             <span className="font-medium">{release.name}</span>
           </div>
@@ -136,12 +143,12 @@ function TimelineItem({ release, isReceipt, balance }: TimelineItemProps) {
             )}
           >
             {isReceipt ? '+ ' : '- '}
-            {formatCurrency(release.value)}
+            {formatCurrencyFn(release.value)}
           </div>
         </div>
 
         <div className="text-right">
-          <div className="text-xs text-muted-foreground">Saldo</div>
+          <div className="text-xs text-muted-foreground">{balanceLabel}</div>
           <div
             className={cn(
               'text-lg font-bold',
@@ -150,7 +157,7 @@ function TimelineItem({ release, isReceipt, balance }: TimelineItemProps) {
                 : 'text-red-600 dark:text-red-400'
             )}
           >
-            {formatCurrency(balance)}
+            {formatCurrencyFn(balance)}
           </div>
         </div>
       </div>
