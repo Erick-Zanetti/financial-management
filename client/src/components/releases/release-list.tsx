@@ -14,9 +14,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FinancialRelease, FinancialReleaseType } from '@/types/financial-release';
-import { formatCurrency } from '@/lib/format';
+import { FinancialRelease, FinancialReleaseType, Person } from '@/types/financial-release';
+import { useSettings } from '@/providers/settings-provider';
 import { cn } from '@/lib/utils';
+import { PieChart } from '@/components/charts/pie-chart';
 import { ReleaseDialog } from './release-dialog';
 import { DeleteDialog } from './delete-dialog';
 
@@ -28,6 +29,8 @@ interface ReleaseListProps {
   year: number;
   isLoading?: boolean;
   variant: 'receipt' | 'expense';
+  defaultPerson?: Person;
+  onPersonCreated?: (person: Person) => void;
 }
 
 export function ReleaseList({
@@ -38,11 +41,15 @@ export function ReleaseList({
   year,
   isLoading,
   variant,
+  defaultPerson,
+  onPersonCreated,
 }: ReleaseListProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingRelease, setEditingRelease] = useState<FinancialRelease | null>(null);
   const [deletingRelease, setDeletingRelease] = useState<FinancialRelease | null>(null);
+
+  const { t, formatCurrency } = useSettings();
 
   const total = releases.reduce((sum, r) => sum + r.value, 0);
 
@@ -79,7 +86,7 @@ export function ReleaseList({
           <CardTitle className="text-lg font-medium">{title}</CardTitle>
           <Button size="sm" onClick={() => setDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">Adicionar</span>
+            <span className="hidden sm:inline">{t('add')}</span>
           </Button>
         </CardHeader>
         <CardContent>
@@ -91,17 +98,17 @@ export function ReleaseList({
             </div>
           ) : releases.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
-              Sem dados
+              {t('noData')}
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-12">Dia</TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead>Pessoa</TableHead>
-                    <TableHead className="text-right">Valor</TableHead>
+                    <TableHead className="w-12">{t('day')}</TableHead>
+                    <TableHead>{t('description')}</TableHead>
+                    <TableHead>{t('person')}</TableHead>
+                    <TableHead className="text-right">{t('value')}</TableHead>
                     <TableHead className="w-20"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -142,7 +149,7 @@ export function ReleaseList({
                 <TableFooter>
                   <TableRow>
                     <TableCell colSpan={3} className="font-medium">
-                      Total
+                      {t('total')}
                     </TableCell>
                     <TableCell className="text-right font-bold">
                       {formatCurrency(total)}
@@ -153,6 +160,7 @@ export function ReleaseList({
               </Table>
             </div>
           )}
+          <PieChart data={releases} />
         </CardContent>
       </Card>
 
@@ -163,6 +171,8 @@ export function ReleaseList({
         month={month}
         year={year}
         release={editingRelease}
+        defaultPerson={defaultPerson}
+        onPersonCreated={onPersonCreated}
       />
 
       <DeleteDialog

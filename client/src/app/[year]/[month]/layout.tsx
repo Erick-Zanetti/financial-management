@@ -11,7 +11,7 @@ export default async function MonthLayout({ children, params }: MonthLayoutProps
   return (
     <div>
       <SubNavigation year={Number(year)} month={Number(month)} />
-      <div className="container py-6 px-4">{children}</div>
+      <div className="container mx-auto py-6 px-4">{children}</div>
     </div>
   );
 }

@@ -33,7 +33,12 @@ async function fetchApi<T>(endpoint: string, options: FetchOptions = {}): Promis
     return {} as T;
   }
 
-  return response.json();
+  const text = await response.text();
+  if (!text) {
+    return {} as T;
+  }
+
+  return JSON.parse(text);
 }
 
 export const apiClient = {

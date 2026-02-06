@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { LayoutList, History } from 'lucide-react';
+import { useSettings } from '@/providers/settings-provider';
 
 interface SubNavigationProps {
   year: number;
@@ -13,16 +14,17 @@ interface SubNavigationProps {
 export function SubNavigation({ year, month }: SubNavigationProps) {
   const pathname = usePathname();
   const isTimeline = pathname.includes('/timeline');
+  const { t } = useSettings();
 
   const tabs = [
     {
-      label: 'Lançamentos',
+      label: t('releases'),
       href: `/${year}/${month}`,
       icon: LayoutList,
       active: !isTimeline,
     },
     {
-      label: 'Linha do tempo',
+      label: t('timeline'),
       href: `/${year}/${month}/timeline`,
       icon: History,
       active: isTimeline,

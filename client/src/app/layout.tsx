@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/providers/theme-provider';
+import { SettingsProvider } from '@/providers/settings-provider';
 import { QueryProvider } from '@/providers/query-provider';
 import { Header } from '@/components/layout/header';
 import { MonthNavigation } from '@/components/layout/month-navigation';
@@ -23,14 +24,16 @@ export default function RootLayout({
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider>
-          <QueryProvider>
-            <div className="min-h-screen bg-background">
-              <Header />
-              <MonthNavigation />
-              <main>{children}</main>
-            </div>
-            <Toaster />
-          </QueryProvider>
+          <SettingsProvider>
+            <QueryProvider>
+              <div className="min-h-screen bg-background">
+                <Header />
+                <MonthNavigation />
+                <main>{children}</main>
+              </div>
+              <Toaster />
+            </QueryProvider>
+          </SettingsProvider>
         </ThemeProvider>
       </body>
     </html>

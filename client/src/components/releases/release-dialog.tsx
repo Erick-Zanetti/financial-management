@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -28,19 +28,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { FinancialRelease, FinancialReleaseType, Person } from '@/types/financial-release';
 import { useCreateRelease, useUpdateRelease } from '@/hooks/use-releases';
-import { getMonthLabel } from '@/lib/months';
-
-const formSchema = z.object({
-  name: z.string().min(1, 'Descrição é obrigatória').max(30, 'Máximo 30 caracteres'),
-  value: z.number().min(0.01, 'Valor deve ser maior que zero'),
-  day: z.number().min(1, 'Dia inválido').max(31, 'Dia inválido'),
-  person: z.nativeEnum(Person, { message: 'Pessoa é obrigatória' }),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+import { useSettings } from '@/providers/settings-provider';
 
 interface ReleaseDialogProps {
   open: boolean;
@@ -49,6 +44,8 @@ interface ReleaseDialogProps {
   month: number;
   year: number;
   release?: FinancialRelease | null;
+  defaultPerson?: Person;
+  onPersonCreated?: (person: Person) => void;
 }
 
 export function ReleaseDialog({
@@ -58,10 +55,23 @@ export function ReleaseDialog({
   month,
   year,
   release,
+  defaultPerson,
+  onPersonCreated,
 }: ReleaseDialogProps) {
   const isEditing = !!release;
   const createMutation = useCreateRelease();
   const updateMutation = useUpdateRelease();
+  const [displayValue, setDisplayValue] = useState('');
+  const { t, getMonthLabel, formatDisplayValue } = useSettings();
+
+  const formSchema = z.object({
+    name: z.string().min(1, t('descriptionRequired')).max(30, t('maxChars')),
+    value: z.number().min(0.01, t('valueMustBePositive')),
+    day: z.number().min(1, t('invalidDay')).max(31, t('invalidDay')),
+    person: z.nativeEnum(Person, { message: t('personRequired') }),
+  });
+
+  type FormValues = z.infer<typeof formSchema>;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -82,16 +92,18 @@ export function ReleaseDialog({
           day: release.day,
           person: release.person,
         });
+        setDisplayValue(formatDisplayValue(release.value));
       } else {
         form.reset({
           name: '',
           value: 0,
           day: 1,
-          person: undefined,
+          person: defaultPerson,
         });
+        setDisplayValue('');
       }
     }
-  }, [open, release, form]);
+  }, [open, release, form, defaultPerson, formatDisplayValue]);
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -105,7 +117,7 @@ export function ReleaseDialog({
             year,
           },
         });
-        toast.success('Lançamento atualizado com sucesso!');
+        toast.success(t('releaseUpdated'));
       } else {
         await createMutation.mutateAsync({
           ...values,
@@ -113,11 +125,14 @@ export function ReleaseDialog({
           month,
           year,
         });
-        toast.success('Lançamento salvo com sucesso!');
+        toast.success(t('releaseSaved'));
+        if (onPersonCreated) {
+          onPersonCreated(values.person);
+        }
       }
       onOpenChange(false);
     } catch {
-      toast.error('Falha ao salvar. Tente novamente.');
+      toast.error(t('saveFailed'));
     }
   };
 
@@ -127,10 +142,10 @@ export function ReleaseDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle className="flex justify-between items-center">
-            <span>{isEditing ? 'Editar' : 'Adicionar'}</span>
-            <span className="text-sm font-normal text-muted-foreground">
-              {getMonthLabel(month)}/{year}
+          <DialogTitle>
+            {isEditing ? t('edit') : t('add')}
+            <span className="text-sm font-normal text-muted-foreground ml-2">
+              — {getMonthLabel(month)}/{year}
             </span>
           </DialogTitle>
         </DialogHeader>
@@ -142,11 +157,11 @@ export function ReleaseDialog({
               name="person"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Pessoa</FormLabel>
+                  <FormLabel>{t('person')}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma pessoa" />
+                        <SelectValue placeholder={t('selectPerson')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -163,11 +178,37 @@ export function ReleaseDialog({
               control={form.control}
               name="day"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Dia</FormLabel>
-                  <FormControl>
-                    <Input type="number" min={1} max={31} {...field} />
-                  </FormControl>
+                <FormItem className="flex flex-col">
+                  <FormLabel>{t('day')}</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'w-full justify-start text-left font-normal',
+                            !field.value && 'text-muted-foreground'
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {field.value ? `${t('dayPrefix')} ${field.value}` : t('selectDay')}
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={new Date(year, month - 1, field.value)}
+                        onSelect={(date) => {
+                          if (date) {
+                            field.onChange(date.getDate());
+                          }
+                        }}
+                        month={new Date(year, month - 1)}
+                        disableNavigation
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
@@ -178,10 +219,10 @@ export function ReleaseDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Descrição</FormLabel>
+                  <FormLabel>{t('description')}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Descrição"
+                      placeholder={t('descriptionPlaceholder')}
                       maxLength={30}
                       {...field}
                     />
@@ -199,14 +240,26 @@ export function ReleaseDialog({
               name="value"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Valor</FormLabel>
+                  <FormLabel>{t('value')}</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
+                      type="text"
+                      inputMode="numeric"
                       placeholder="0,00"
-                      {...field}
+                      value={displayValue}
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, '');
+                        const cents = parseInt(digits, 10) || 0;
+                        const numeric = cents / 100;
+                        if (cents === 0) {
+                          setDisplayValue('');
+                          field.onChange(0);
+                        } else {
+                          setDisplayValue(formatDisplayValue(numeric));
+                          field.onChange(numeric);
+                        }
+                      }}
+                      onBlur={field.onBlur}
                     />
                   </FormControl>
                   <FormMessage />
@@ -220,10 +273,10 @@ export function ReleaseDialog({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
               >
-                Cancelar
+                {t('cancel')}
               </Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? 'Salvando...' : 'Salvar'}
+                {isPending ? t('saving') : t('save')}
               </Button>
             </DialogFooter>
           </form>

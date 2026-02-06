@@ -10,7 +10,7 @@ import {
   Legend,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatCurrency } from '@/lib/format';
+import { useSettings } from '@/providers/settings-provider';
 
 interface BarChartProps {
   receipts: number;
@@ -18,11 +18,16 @@ interface BarChartProps {
 }
 
 export function BarChart({ receipts, expenses }: BarChartProps) {
+  const { t, formatCurrency } = useSettings();
+
+  const receiptsLabel = t('receipts');
+  const expensesLabel = t('expenses');
+
   const data = [
     {
-      name: 'Resumo',
-      Receitas: receipts,
-      Despesas: expenses,
+      name: t('summary'),
+      [receiptsLabel]: receipts,
+      [expensesLabel]: expenses,
     },
   ];
 
@@ -30,7 +35,7 @@ export function BarChart({ receipts, expenses }: BarChartProps) {
     <Card>
       <CardHeader>
         <CardTitle className="text-lg font-medium">
-          Receitas vs Despesas
+          {t('receiptsVsExpenses')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -44,21 +49,28 @@ export function BarChart({ receipts, expenses }: BarChartProps) {
               <XAxis type="number" tickFormatter={(v) => formatCurrency(v)} />
               <YAxis type="category" dataKey="name" hide />
               <Tooltip
+                cursor={{ fill: 'hsl(var(--muted))' }}
                 formatter={(value) => formatCurrency(Number(value))}
                 contentStyle={{
                   backgroundColor: 'hsl(var(--background))',
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '6px',
                 }}
+                itemStyle={{
+                  color: 'hsl(var(--foreground))',
+                }}
+                labelStyle={{
+                  color: 'hsl(var(--foreground))',
+                }}
               />
               <Legend />
               <Bar
-                dataKey="Receitas"
+                dataKey={receiptsLabel}
                 fill="#4caf50"
                 radius={[0, 4, 4, 0]}
               />
               <Bar
-                dataKey="Despesas"
+                dataKey={expensesLabel}
                 fill="#f44336"
                 radius={[0, 4, 4, 0]}
               />

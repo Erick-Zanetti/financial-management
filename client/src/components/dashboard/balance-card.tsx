@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatCurrency } from '@/lib/format';
+import { useSettings } from '@/providers/settings-provider';
 import { cn } from '@/lib/utils';
 
 interface BalanceCardProps {
@@ -11,10 +11,12 @@ interface BalanceCardProps {
 }
 
 export function BalanceCard({ balance, isLoading }: BalanceCardProps) {
+  const { t, formatCurrency } = useSettings();
+
   return (
     <Card className="w-full sm:w-auto">
       <CardContent className="pt-6">
-        <div className="text-sm text-muted-foreground mb-1">Saldo</div>
+        <div className="text-sm text-muted-foreground mb-1">{t('balance')}</div>
         {isLoading ? (
           <Skeleton className="h-8 w-32" />
         ) : (

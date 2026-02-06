@@ -13,6 +13,7 @@ import {
 import { toast } from 'sonner';
 import { FinancialRelease } from '@/types/financial-release';
 import { useDeleteRelease } from '@/hooks/use-releases';
+import { useSettings } from '@/providers/settings-provider';
 
 interface DeleteDialogProps {
   open: boolean;
@@ -30,16 +31,17 @@ export function DeleteDialog({
   year,
 }: DeleteDialogProps) {
   const deleteMutation = useDeleteRelease();
+  const { t } = useSettings();
 
   const handleDelete = async () => {
     if (!release?.id) return;
 
     try {
       await deleteMutation.mutateAsync({ id: release.id, month, year });
-      toast.success('Lançamento removido com sucesso!');
+      toast.success(t('releaseDeleted'));
       onOpenChange(false);
     } catch {
-      toast.error('Falha ao remover. Tente novamente.');
+      toast.error(t('deleteFailed'));
     }
   };
 
@@ -47,19 +49,19 @@ export function DeleteDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+          <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Deseja realmente remover esse lançamento?
+            {t('deleteConfirmation')}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Não</AlertDialogCancel>
+          <AlertDialogCancel>{t('no')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
             disabled={deleteMutation.isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {deleteMutation.isPending ? 'Removendo...' : 'Sim'}
+            {deleteMutation.isPending ? t('removing') : t('yes')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

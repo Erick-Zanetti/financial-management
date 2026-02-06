@@ -21,7 +21,11 @@ export function TimelineView({ month, year }: TimelineViewProps) {
 
   const sortedReleases = useMemo(() => {
     const all = [...expenses, ...receipts];
-    return all.sort((a, b) => a.day - b.day);
+    return all.sort((a, b) => {
+      if (a.day !== b.day) return a.day - b.day;
+      if (a.type === b.type) return 0;
+      return a.type === FinancialReleaseType.Receipt ? -1 : 1;
+    });
   }, [expenses, receipts]);
 
   const getRunningBalance = (index: number) => {
