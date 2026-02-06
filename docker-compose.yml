@@ -11,27 +11,25 @@ services:
       - main-network
 
   # BACKEND
-  app-financial-management:
-    build: './client'
-    container_name: financial-management_app
+  api-financial-management:
+    build: './server-node'
+    container_name: financial-management_api
     environment:
-      - NEXT_PUBLIC_API_URL=/api/financial-release
-      - INTERNAL_API_URL=http://api-financial-management:3000
-    ports:
-      - "${APP_PORT:-4200}:4200"
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongodb-fm:27017/financial-management
     depends_on:
-      - api-financial-management
+      - mongodb-fm
     networks:
       - main-network
     restart: on-failure
-
 
   # FRONTEND
   app-financial-management:
     build: './client'
     container_name: financial-management_app
     environment:
-      - NEXT_PUBLIC_API_URL=http://api-financial-management:3000/financial-release
+      - NEXT_PUBLIC_API_URL=/api/financial-release
+      - INTERNAL_API_URL=http://api-financial-management:3000
     ports:
       - "${APP_PORT:-4200}:4200"
     depends_on:
