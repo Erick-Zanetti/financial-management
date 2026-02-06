@@ -1,0 +1,20 @@
+manifestVersion: 1.1
+id: financial-management
+name: Financial Management
+tagline: Portal web próprio para controle financeiro
+icon: https://i.imgur.com/SEU_ICONE.png
+category: productivity
+version: "1.0.0"
+port: 4200
+description: Aplicação web para controle financeiro pessoal. Gerencie lançamentos, visualize saldo por período, filtros por pessoa e timeline de movimentações. Stack Next.js e API Node.js com MongoDB.
+developer: Erick
+website: https://github.com/Erick-Zanetti/financial-management
+submitter: Erick
+submission: ""
+repo: https://github.com/Erick-Zanetti/financial-management
+support: https://github.com/Erick-Zanetti/financial-management/issues
+gallery: []
+dependencies: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""
