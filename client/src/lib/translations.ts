@@ -59,6 +59,10 @@ export const pt = {
   releaseDeleted: 'Lançamento removido com sucesso!',
   deleteFailed: 'Falha ao remover. Tente novamente.',
 
+  // Clone
+  clone: 'Clonar',
+  releaseCloned: 'Lançamento clonado para o próximo mês!',
+
   // Timeline
   noReleasesThisMonth: 'Nenhum lançamento para este mês',
 
@@ -143,6 +147,10 @@ export const en: Record<keyof typeof pt, string> = {
   removing: 'Removing...',
   releaseDeleted: 'Release removed successfully!',
   deleteFailed: 'Failed to remove. Try again.',
+
+  // Clone
+  clone: 'Clone',
+  releaseCloned: 'Release cloned to next month!',
 
   // Timeline
   noReleasesThisMonth: 'No releases for this month',

@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Copy } from 'lucide-react';
+import { toast } from 'sonner';
+import { useCreateRelease } from '@/hooks/use-releases';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -50,10 +52,30 @@ export function ReleaseList({
   const [deletingRelease, setDeletingRelease] = useState<FinancialRelease | null>(null);
 
   const { t, formatCurrency } = useSettings();
+  const createMutation = useCreateRelease();
 
   const total = releases.reduce((sum, r) => sum + r.value, 0);
 
   const sortedReleases = [...releases].sort((a, b) => a.day - b.day);
+
+  const handleClone = async (release: FinancialRelease) => {
+    const nextMonth = month === 12 ? 1 : month + 1;
+    const nextYear = month === 12 ? year + 1 : year;
+    try {
+      await createMutation.mutateAsync({
+        name: release.name,
+        value: release.value,
+        type: release.type,
+        person: release.person,
+        day: release.day,
+        month: nextMonth,
+        year: nextYear,
+      });
+      toast.success(t('releaseCloned'));
+    } catch {
+      toast.error(t('saveFailed'));
+    }
+  };
 
   const handleEdit = (release: FinancialRelease) => {
     setEditingRelease(release);
@@ -132,6 +154,15 @@ export function ReleaseList({
                             onClick={() => handleEdit(release)}
                           >
                             <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleClone(release)}
+                            title={t('clone')}
+                          >
+                            <Copy className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
