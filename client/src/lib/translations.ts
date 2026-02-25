@@ -59,6 +59,16 @@ export const pt = {
   releaseDeleted: 'Lançamento removido com sucesso!',
   deleteFailed: 'Falha ao remover. Tente novamente.',
 
+  // Status (settled)
+  status: 'Status',
+  pending: 'Pendente',
+  received: 'Recebido',
+  paid: 'Pago',
+  settledSuccess: 'Lançamento efetivado!',
+  unsettledSuccess: 'Lançamento revertido para pendente!',
+  cannotEditSettled: 'Desmarque para editar',
+  cannotDeleteSettled: 'Desmarque para remover',
+
   // Clone
   clone: 'Clonar',
   releaseCloned: 'Lançamento clonado para o próximo mês!',
@@ -147,6 +157,16 @@ export const en: Record<keyof typeof pt, string> = {
   removing: 'Removing...',
   releaseDeleted: 'Release removed successfully!',
   deleteFailed: 'Failed to remove. Try again.',
+
+  // Status (settled)
+  status: 'Status',
+  pending: 'Pending',
+  received: 'Received',
+  paid: 'Paid',
+  settledSuccess: 'Release settled!',
+  unsettledSuccess: 'Release reverted to pending!',
+  cannotEditSettled: 'Unsettle to edit',
+  cannotDeleteSettled: 'Unsettle to delete',
 
   // Clone
   clone: 'Clone',

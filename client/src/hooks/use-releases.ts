@@ -59,6 +59,23 @@ export function useUpdateRelease() {
   });
 }
 
+export function useToggleSettled() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, settled }: { id: string; settled: boolean; month: number; year: number }) =>
+      releasesApi.update(id, { settled }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['expenses', variables.month, variables.year]
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['receipts', variables.month, variables.year]
+      });
+    },
+  });
+}
+
 export function useDeleteRelease() {
   const queryClient = useQueryClient();
 

@@ -18,6 +18,7 @@ export interface FinancialRelease {
   month: number;
   day: number;
   date?: Date;
+  settled?: boolean;
 }
 
 export interface Month {

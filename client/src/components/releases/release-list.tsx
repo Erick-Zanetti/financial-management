@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Plus, Pencil, Trash2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
-import { useCreateRelease } from '@/hooks/use-releases';
+import { useCreateRelease, useToggleSettled } from '@/hooks/use-releases';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +15,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FinancialRelease, FinancialReleaseType, Person } from '@/types/financial-release';
 import { useSettings } from '@/providers/settings-provider';
@@ -33,6 +40,7 @@ interface ReleaseListProps {
   variant: 'receipt' | 'expense';
   defaultPerson?: Person;
   onPersonCreated?: (person: Person) => void;
+  allMonthSettled?: boolean;
 }
 
 export function ReleaseList({
@@ -45,6 +53,7 @@ export function ReleaseList({
   variant,
   defaultPerson,
   onPersonCreated,
+  allMonthSettled = false,
 }: ReleaseListProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -53,10 +62,36 @@ export function ReleaseList({
 
   const { t, formatCurrency } = useSettings();
   const createMutation = useCreateRelease();
+  const toggleSettledMutation = useToggleSettled();
 
-  const total = releases.reduce((sum, r) => sum + r.value, 0);
+  const activeReleases = allMonthSettled
+    ? releases
+    : releases.filter((r) => !r.settled);
+  const total = activeReleases.reduce((sum, r) => sum + r.value, 0);
+
+  const pieData = allMonthSettled
+    ? releases
+    : releases.filter((r) => !r.settled);
 
   const sortedReleases = [...releases].sort((a, b) => a.day - b.day);
+
+  const settledLabel = variant === 'receipt' ? t('received') : t('paid');
+
+  const handleToggleSettled = async (release: FinancialRelease) => {
+    if (!release.id) return;
+    const newSettled = !release.settled;
+    try {
+      await toggleSettledMutation.mutateAsync({
+        id: release.id,
+        settled: newSettled,
+        month,
+        year,
+      });
+      toast.success(newSettled ? t('settledSuccess') : t('unsettledSuccess'));
+    } catch {
+      toast.error(t('saveFailed'));
+    }
+  };
 
   const handleClone = async (release: FinancialRelease) => {
     const nextMonth = month === 12 ? 1 : month + 1;
@@ -131,51 +166,77 @@ export function ReleaseList({
                     <TableHead>{t('description')}</TableHead>
                     <TableHead>{t('person')}</TableHead>
                     <TableHead className="text-right">{t('value')}</TableHead>
+                    <TableHead className="w-28">{t('status')}</TableHead>
                     <TableHead className="w-20"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedReleases.map((release) => (
-                    <TableRow key={release.id}>
-                      <TableCell className="font-medium">{release.day}</TableCell>
-                      <TableCell>{release.name}</TableCell>
-                      <TableCell className="capitalize">
-                        {release.person.toLowerCase()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(release.value)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => handleEdit(release)}
+                  {sortedReleases.map((release) => {
+                    const isSettled = !!release.settled;
+                    return (
+                      <TableRow key={release.id} className={cn(isSettled && 'opacity-60')}>
+                        <TableCell className={cn('font-medium', isSettled && 'line-through')}>
+                          {release.day}
+                        </TableCell>
+                        <TableCell className={cn(isSettled && 'line-through')}>
+                          {release.name}
+                        </TableCell>
+                        <TableCell className={cn('capitalize', isSettled && 'line-through')}>
+                          {release.person.toLowerCase()}
+                        </TableCell>
+                        <TableCell className={cn('text-right', isSettled && 'line-through')}>
+                          {formatCurrency(release.value)}
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={isSettled ? 'settled' : 'pending'}
+                            onValueChange={() => handleToggleSettled(release)}
                           >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => handleClone(release)}
-                            title={t('clone')}
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => handleDelete(release)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            <SelectTrigger className="h-7 text-xs w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">{t('pending')}</SelectItem>
+                              <SelectItem value="settled">{settledLabel}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => handleEdit(release)}
+                              disabled={isSettled}
+                              title={isSettled ? t('cannotEditSettled') : undefined}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => handleClone(release)}
+                              title={t('clone')}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => handleDelete(release)}
+                              disabled={isSettled}
+                              title={isSettled ? t('cannotDeleteSettled') : undefined}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
                 <TableFooter>
                   <TableRow>
@@ -186,12 +247,13 @@ export function ReleaseList({
                       {formatCurrency(total)}
                     </TableCell>
                     <TableCell></TableCell>
+                    <TableCell></TableCell>
                   </TableRow>
                 </TableFooter>
               </Table>
             </div>
           )}
-          <PieChart data={releases} />
+          <PieChart data={pieData} />
         </CardContent>
       </Card>
 

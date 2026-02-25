@@ -43,6 +43,9 @@ import {
  *           type: integer
  *           minimum: 1
  *           maximum: 31
+ *         settled:
+ *           type: boolean
+ *           default: false
  */
 
 export interface FinancialReleaseDocument
@@ -66,6 +69,7 @@ const financialReleaseSchema = new Schema<FinancialReleaseDocument>(
     year: { type: Number, required: true },
     month: { type: Number, required: true, min: 1, max: 12 },
     day: { type: Number, required: true, min: 1, max: 31 },
+    settled: { type: Boolean, default: false },
   },
   {
     collection: 'financialreleases',

@@ -13,6 +13,7 @@ export const createFinancialReleaseSchema = z.object({
   year: z.number().int().min(2000).max(2100),
   month: z.number().int().min(1).max(12),
   day: z.number().int().min(1).max(31),
+  settled: z.boolean().optional().default(false),
 });
 
 export const updateFinancialReleaseSchema =

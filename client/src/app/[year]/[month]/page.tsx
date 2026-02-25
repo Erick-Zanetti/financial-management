@@ -40,8 +40,20 @@ export default function DashboardPage() {
     ? receipts.filter((r) => r.person === filterValue)
     : receipts;
 
-  const totalExpenses = filteredExpenses.reduce((sum, e) => sum + e.value, 0);
-  const totalReceipts = filteredReceipts.reduce((sum, r) => sum + r.value, 0);
+  const hasTransactions = filteredExpenses.length > 0 || filteredReceipts.length > 0;
+  const allMonthSettled = hasTransactions &&
+    filteredExpenses.every((e) => e.settled) &&
+    filteredReceipts.every((r) => r.settled);
+
+  const activeExpenses = allMonthSettled
+    ? filteredExpenses
+    : filteredExpenses.filter((e) => !e.settled);
+  const activeReceipts = allMonthSettled
+    ? filteredReceipts
+    : filteredReceipts.filter((r) => !r.settled);
+
+  const totalExpenses = activeExpenses.reduce((sum, e) => sum + e.value, 0);
+  const totalReceipts = activeReceipts.reduce((sum, r) => sum + r.value, 0);
   const balance = totalReceipts - totalExpenses;
 
   const isLoading = loadingExpenses || loadingReceipts || !isLoaded;
@@ -66,6 +78,7 @@ export default function DashboardPage() {
           variant="receipt"
           defaultPerson={defaultPerson}
           onPersonCreated={handlePersonCreated}
+          allMonthSettled={allMonthSettled}
         />
 
         <ReleaseList
@@ -78,6 +91,7 @@ export default function DashboardPage() {
           variant="expense"
           defaultPerson={defaultPerson}
           onPersonCreated={handlePersonCreated}
+          allMonthSettled={allMonthSettled}
         />
       </div>
 

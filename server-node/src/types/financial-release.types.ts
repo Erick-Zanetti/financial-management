@@ -17,6 +17,7 @@ export interface IFinancialRelease {
   year: number;
   month: number;
   day: number;
+  settled?: boolean;
 }
 
 export interface IFinancialReleaseFilter {

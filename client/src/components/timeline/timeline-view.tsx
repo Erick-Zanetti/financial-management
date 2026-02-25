@@ -29,10 +29,13 @@ export function TimelineView({ month, year }: TimelineViewProps) {
     });
   }, [expenses, receipts]);
 
+  const allSettled = sortedReleases.length > 0 && sortedReleases.every((r) => r.settled);
+
   const getRunningBalance = (index: number) => {
     let balance = 0;
     for (let i = 0; i <= index; i++) {
       const release = sortedReleases[i];
+      if (!allSettled && release.settled) continue;
       if (release.type === FinancialReleaseType.Receipt) {
         balance += release.value;
       } else {
@@ -87,12 +90,14 @@ export function TimelineView({ month, year }: TimelineViewProps) {
             {sortedReleases.map((release, index) => {
               const isReceipt = release.type === FinancialReleaseType.Receipt;
               const balance = getRunningBalance(index);
+              const isSettled = !!release.settled;
 
               return (
                 <TimelineItem
                   key={release.id}
                   release={release}
                   isReceipt={isReceipt}
+                  isSettled={isSettled}
                   balance={balance}
                   formatCurrencyFn={formatCurrency}
                   dayLabel={t('day')}
@@ -110,15 +115,16 @@ export function TimelineView({ month, year }: TimelineViewProps) {
 interface TimelineItemProps {
   release: FinancialRelease;
   isReceipt: boolean;
+  isSettled: boolean;
   balance: number;
   formatCurrencyFn: (value: number) => string;
   dayLabel: string;
   balanceLabel: string;
 }
 
-function TimelineItem({ release, isReceipt, balance, formatCurrencyFn, dayLabel, balanceLabel }: TimelineItemProps) {
+function TimelineItem({ release, isReceipt, isSettled, balance, formatCurrencyFn, dayLabel, balanceLabel }: TimelineItemProps) {
   return (
-    <div className="relative pl-10">
+    <div className={cn('relative pl-10', isSettled && 'opacity-60')}>
       <div
         className={cn(
           'absolute left-2 top-2 h-4 w-4 rounded-full border-2 bg-background',
@@ -128,7 +134,7 @@ function TimelineItem({ release, isReceipt, balance, formatCurrencyFn, dayLabel,
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border p-4 bg-card">
         <div className="flex-1">
-          <div className="flex items-center gap-2">
+          <div className={cn('flex items-center gap-2', isSettled && 'line-through')}>
             <span className="text-sm text-muted-foreground">
               {dayLabel} {release.day}
             </span>
@@ -137,6 +143,7 @@ function TimelineItem({ release, isReceipt, balance, formatCurrencyFn, dayLabel,
           <div
             className={cn(
               'text-lg font-semibold',
+              isSettled && 'line-through',
               isReceipt
                 ? 'text-emerald-600 dark:text-emerald-400'
                 : 'text-red-600 dark:text-red-400'
