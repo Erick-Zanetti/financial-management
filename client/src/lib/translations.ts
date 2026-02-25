@@ -9,6 +9,7 @@ export const pt = {
   timeline: 'Linha do tempo',
 
   // Dashboard
+  currentBalance: 'Saldo Atual',
   balance: 'Saldo',
   receipts: 'Receitas',
   expenses: 'Despesas',
@@ -108,6 +109,7 @@ export const en: Record<keyof typeof pt, string> = {
   timeline: 'Timeline',
 
   // Dashboard
+  currentBalance: 'Current Balance',
   balance: 'Balance',
   receipts: 'Income',
   expenses: 'Expenses',

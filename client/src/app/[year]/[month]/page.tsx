@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useExpenses, useReceipts } from '@/hooks/use-releases';
 import { usePersonPreference } from '@/hooks/use-person-preference';
@@ -9,13 +10,37 @@ import { PersonFilter } from '@/components/dashboard/person-filter';
 import { PersonSelectionModal } from '@/components/dashboard/person-selection-modal';
 import { ReleaseList } from '@/components/releases/release-list';
 import { BarChart } from '@/components/charts/bar-chart';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { FinancialReleaseType, Person } from '@/types/financial-release';
+
+const CURRENT_BALANCE_KEY = 'financial-management-current-balance';
 
 export default function DashboardPage() {
   const params = useParams();
   const year = Number(params.year);
   const month = Number(params.month);
-  const { t } = useSettings();
+  const { t, formatDisplayValue, parseCurrency } = useSettings();
+
+  const now = new Date();
+  const isCurrentMonth = month === now.getMonth() + 1 && year === now.getFullYear();
+
+  const [displayBalance, setDisplayBalance] = useState('');
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(CURRENT_BALANCE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const now = new Date();
+        if (parsed.month === now.getMonth() + 1 && parsed.year === now.getFullYear()) {
+          setDisplayBalance(formatDisplayValue(parsed.value));
+        } else {
+          localStorage.removeItem(CURRENT_BALANCE_KEY);
+        }
+      }
+    } catch {}
+  }, [formatDisplayValue]);
 
   const { filterValue, defaultPerson, preference, setPreference, needsSelection, isLoaded } =
     usePersonPreference();
@@ -63,7 +88,33 @@ export default function DashboardPage() {
       <PersonSelectionModal open={needsSelection} onSelect={setPreference} />
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <BalanceCard balance={balance} isLoading={isLoading} />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          {isCurrentMonth && (
+            <Card className="w-full sm:w-auto">
+              <CardContent className="pt-6">
+                <div className="text-sm text-muted-foreground mb-1">{t('currentBalance')}</div>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0,00"
+                  value={displayBalance}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    setDisplayBalance(raw);
+                    const numeric = parseCurrency(raw);
+                    const now = new Date();
+                    localStorage.setItem(
+                      CURRENT_BALANCE_KEY,
+                      JSON.stringify({ month: now.getMonth() + 1, year: now.getFullYear(), value: numeric })
+                    );
+                  }}
+                  className="text-2xl font-bold w-40"
+                />
+              </CardContent>
+            </Card>
+          )}
+          <BalanceCard balance={balance} isLoading={isLoading} />
+        </div>
         <PersonFilter value={filterValue} onChange={handleFilterChange} />
       </div>
 
