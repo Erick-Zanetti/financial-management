@@ -12,6 +12,8 @@ import { ReleaseList } from '@/components/releases/release-list';
 import { BarChart } from '@/components/charts/bar-chart';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Check } from 'lucide-react';
 import { FinancialReleaseType, Person } from '@/types/financial-release';
 
 const CURRENT_BALANCE_KEY = 'financial-management-current-balance';
@@ -20,12 +22,13 @@ export default function DashboardPage() {
   const params = useParams();
   const year = Number(params.year);
   const month = Number(params.month);
-  const { t, formatDisplayValue, parseCurrency } = useSettings();
+  const { t, formatDisplayValue } = useSettings();
 
   const now = new Date();
   const isCurrentMonth = month === now.getMonth() + 1 && year === now.getFullYear();
 
   const [displayBalance, setDisplayBalance] = useState('');
+  const [currentBalanceNumeric, setCurrentBalanceNumeric] = useState(0);
 
   useEffect(() => {
     try {
@@ -35,6 +38,7 @@ export default function DashboardPage() {
         const now = new Date();
         if (parsed.month === now.getMonth() + 1 && parsed.year === now.getFullYear()) {
           setDisplayBalance(formatDisplayValue(parsed.value));
+          setCurrentBalanceNumeric(parsed.value);
         } else {
           localStorage.removeItem(CURRENT_BALANCE_KEY);
         }
@@ -79,7 +83,7 @@ export default function DashboardPage() {
 
   const totalExpenses = activeExpenses.reduce((sum, e) => sum + e.value, 0);
   const totalReceipts = activeReceipts.reduce((sum, r) => sum + r.value, 0);
-  const balance = totalReceipts - totalExpenses;
+  const balance = currentBalanceNumeric + totalReceipts - totalExpenses;
 
   const isLoading = loadingExpenses || loadingReceipts || !isLoaded;
 
@@ -93,23 +97,35 @@ export default function DashboardPage() {
             <Card className="w-full sm:w-auto">
               <CardContent className="pt-6">
                 <div className="text-sm text-muted-foreground mb-1">{t('currentBalance')}</div>
-                <Input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="0,00"
-                  value={displayBalance}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    setDisplayBalance(raw);
-                    const numeric = parseCurrency(raw);
-                    const now = new Date();
-                    localStorage.setItem(
-                      CURRENT_BALANCE_KEY,
-                      JSON.stringify({ month: now.getMonth() + 1, year: now.getFullYear(), value: numeric })
-                    );
-                  }}
-                  className="text-2xl font-bold w-40"
-                />
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="0,00"
+                    value={displayBalance}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '');
+                      const cents = parseInt(digits, 10) || 0;
+                      const numeric = cents / 100;
+                      if (cents === 0) {
+                        setDisplayBalance('');
+                        setCurrentBalanceNumeric(0);
+                      } else {
+                        setDisplayBalance(formatDisplayValue(numeric));
+                        setCurrentBalanceNumeric(numeric);
+                      }
+                      const now = new Date();
+                      localStorage.setItem(
+                        CURRENT_BALANCE_KEY,
+                        JSON.stringify({ month: now.getMonth() + 1, year: now.getFullYear(), value: numeric })
+                      );
+                    }}
+                    className="text-2xl font-bold w-40"
+                  />
+                  <Button variant="ghost" size="icon" className="shrink-0" tabIndex={-1}>
+                    <Check className="h-5 w-5 text-muted-foreground" />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
