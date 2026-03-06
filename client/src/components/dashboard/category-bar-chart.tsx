@@ -56,12 +56,16 @@ export function CategoryBarChart({ chartData, categories, title }: CategoryBarCh
                       }}
                     >
                       <p className="font-medium mb-1">{label}</p>
-                      {nonZero.map((entry) => (
-                        <div key={entry.dataKey as string} className="mb-0.5">
-                          <span style={{ color: entry.color }}>{entry.name}:</span>{' '}
-                          {formatCurrency(Number(entry.value))}
-                        </div>
-                      ))}
+                      {nonZero.map((entry) => {
+                        const monthTotal = nonZero.reduce((s, p) => s + Number(p.value), 0);
+                        const pct = monthTotal > 0 ? ((Number(entry.value) / monthTotal) * 100).toFixed(1) : '0';
+                        return (
+                          <div key={entry.dataKey as string} className="mb-0.5">
+                            <span style={{ color: entry.color }}>{entry.name}:</span>{' '}
+                            {formatCurrency(Number(entry.value))} ({pct}%)
+                          </div>
+                        );
+                      })}
                     </div>
                   );
                 }}

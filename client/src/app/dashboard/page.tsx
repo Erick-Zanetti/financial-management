@@ -85,7 +85,6 @@ export default function DashboardPage() {
     <div className="max-w-7xl mx-auto py-6 px-4 md:px-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <MonthlyLineChart data={monthlyTotals} />
-        <SavingsTrendChart data={savingsTrend} />
         <CategoryDonutChart
           incomeData={incomeDistribution}
           expenseData={expenseDistribution}
@@ -102,6 +101,9 @@ export default function DashboardPage() {
           categories={expenseCategoryPerMonth.categories}
           title={`${t('expenses')} — ${t('dashboardCategoryBreakdown')}`}
         />
+        <div className="lg:col-span-2">
+          <SavingsTrendChart data={savingsTrend} />
+        </div>
       </div>
     </div>
   );

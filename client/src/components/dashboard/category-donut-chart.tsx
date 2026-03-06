@@ -58,6 +58,8 @@ function DonutHalf({ data, title }: { data: CategorySlice[]; title: string }) {
             content={({ active, payload }) => {
               if (!active || !payload?.length) return null;
               const entry = payload[0];
+              const total = data.reduce((s, d) => s + d.value, 0);
+              const pct = total > 0 ? ((Number(entry.value) / total) * 100).toFixed(1) : '0';
               return (
                 <div
                   className="rounded-lg border px-3 py-2 text-sm backdrop-blur-lg"
@@ -68,7 +70,7 @@ function DonutHalf({ data, title }: { data: CategorySlice[]; title: string }) {
                   }}
                 >
                   <p className="font-medium">{entry.name}</p>
-                  <p>{formatCurrency(Number(entry.value))}</p>
+                  <p>{formatCurrency(Number(entry.value))} ({pct}%)</p>
                 </div>
               );
             }}
