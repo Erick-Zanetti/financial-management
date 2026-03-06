@@ -15,6 +15,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { FinancialReleaseType, Person } from '@/types/financial-release';
+import { SubNavigation, SubTab } from '@/components/layout/sub-navigation';
+import { TimelineView } from '@/components/timeline/timeline-view';
 
 const CURRENT_BALANCE_KEY = 'financial-management-current-balance';
 
@@ -23,6 +25,8 @@ export default function DashboardPage() {
   const year = Number(params.year);
   const month = Number(params.month);
   const { t, formatDisplayValue } = useSettings();
+
+  const [activeTab, setActiveTab] = useState<SubTab>('releases');
 
   const now = new Date();
   const isCurrentMonth = month === now.getMonth() + 1 && year === now.getFullYear();
@@ -88,81 +92,93 @@ export default function DashboardPage() {
   const isLoading = loadingExpenses || loadingReceipts || !isLoaded;
 
   return (
-    <div className="space-y-6">
-      <PersonSelectionModal open={needsSelection} onSelect={setPreference} />
+    <div className="space-y-0">
+      <div className="-mx-4 -mt-6">
+        <SubNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+      </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          {isCurrentMonth && (
-            <Card className="w-full sm:w-auto">
-              <CardContent className="pt-6">
-                <div className="text-sm text-muted-foreground mb-1">{t('currentBalance')}</div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="0,00"
-                    value={displayBalance}
-                    onChange={(e) => {
-                      const digits = e.target.value.replace(/\D/g, '');
-                      const cents = parseInt(digits, 10) || 0;
-                      const numeric = cents / 100;
-                      if (cents === 0) {
-                        setDisplayBalance('');
-                        setCurrentBalanceNumeric(0);
-                      } else {
-                        setDisplayBalance(formatDisplayValue(numeric));
-                        setCurrentBalanceNumeric(numeric);
-                      }
-                      const now = new Date();
-                      localStorage.setItem(
-                        CURRENT_BALANCE_KEY,
-                        JSON.stringify({ month: now.getMonth() + 1, year: now.getFullYear(), value: numeric })
-                      );
-                    }}
-                    className="text-2xl font-bold w-40"
-                  />
-                  <Button variant="ghost" size="icon" className="shrink-0" tabIndex={-1}>
-                    <Check className="h-5 w-5 text-muted-foreground" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          <BalanceCard balance={balance} isLoading={isLoading} />
+      {activeTab === 'releases' ? (
+        <div className="space-y-6 pt-6">
+          <PersonSelectionModal open={needsSelection} onSelect={setPreference} />
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              {isCurrentMonth && (
+                <Card className="w-full sm:w-auto">
+                  <CardContent className="pt-6">
+                    <div className="text-sm text-muted-foreground mb-1">{t('currentBalance')}</div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="0,00"
+                        value={displayBalance}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, '');
+                          const cents = parseInt(digits, 10) || 0;
+                          const numeric = cents / 100;
+                          if (cents === 0) {
+                            setDisplayBalance('');
+                            setCurrentBalanceNumeric(0);
+                          } else {
+                            setDisplayBalance(formatDisplayValue(numeric));
+                            setCurrentBalanceNumeric(numeric);
+                          }
+                          const now = new Date();
+                          localStorage.setItem(
+                            CURRENT_BALANCE_KEY,
+                            JSON.stringify({ month: now.getMonth() + 1, year: now.getFullYear(), value: numeric })
+                          );
+                        }}
+                        className="text-2xl font-bold w-40"
+                      />
+                      <Button variant="ghost" size="icon" className="shrink-0" tabIndex={-1}>
+                        <Check className="h-5 w-5 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              <BalanceCard balance={balance} isLoading={isLoading} />
+            </div>
+            <PersonFilter value={filterValue} onChange={handleFilterChange} />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ReleaseList
+              title={t('receipts')}
+              type={FinancialReleaseType.Receipt}
+              releases={filteredReceipts}
+              month={month}
+              year={year}
+              isLoading={loadingReceipts}
+              variant="receipt"
+              defaultPerson={defaultPerson}
+              onPersonCreated={handlePersonCreated}
+              allMonthSettled={allMonthSettled}
+            />
+
+            <ReleaseList
+              title={t('expenses')}
+              type={FinancialReleaseType.Expense}
+              releases={filteredExpenses}
+              month={month}
+              year={year}
+              isLoading={loadingExpenses}
+              variant="expense"
+              defaultPerson={defaultPerson}
+              onPersonCreated={handlePersonCreated}
+              allMonthSettled={allMonthSettled}
+            />
+          </div>
+
+          <BarChart receipts={totalReceipts} expenses={totalExpenses} />
         </div>
-        <PersonFilter value={filterValue} onChange={handleFilterChange} />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ReleaseList
-          title={t('receipts')}
-          type={FinancialReleaseType.Receipt}
-          releases={filteredReceipts}
-          month={month}
-          year={year}
-          isLoading={loadingReceipts}
-          variant="receipt"
-          defaultPerson={defaultPerson}
-          onPersonCreated={handlePersonCreated}
-          allMonthSettled={allMonthSettled}
-        />
-
-        <ReleaseList
-          title={t('expenses')}
-          type={FinancialReleaseType.Expense}
-          releases={filteredExpenses}
-          month={month}
-          year={year}
-          isLoading={loadingExpenses}
-          variant="expense"
-          defaultPerson={defaultPerson}
-          onPersonCreated={handlePersonCreated}
-          allMonthSettled={allMonthSettled}
-        />
-      </div>
-
-      <BarChart receipts={totalReceipts} expenses={totalExpenses} />
+      ) : (
+        <div className="pt-6">
+          <TimelineView month={month} year={year} />
+        </div>
+      )}
     </div>
   );
 }

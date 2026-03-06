@@ -8,7 +8,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 
 export function MonthNavigation() {
-  const { months, currentYear, currentMonth, navigateToMonth } = useMonthNavigation();
+  const { months, currentYear, currentMonth, navigateToMonth, isLoading } = useMonthNavigation();
   const { getMonthLabel } = useSettings();
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLButtonElement>(null);
@@ -29,7 +29,19 @@ export function MonthNavigation() {
 
       container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
     }
-  }, [currentYear, currentMonth]);
+  }, [currentYear, currentMonth, months]);
+
+  if (isLoading && months.length <= 1) {
+    return (
+      <div className="border-b bg-muted/30">
+        <div className="flex px-4 py-2 gap-1">
+          <Button variant="default" size="sm" className="flex-shrink-0 opacity-50" disabled>
+            {getMonthLabel(currentMonth)}/{currentYear}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="border-b bg-muted/30">

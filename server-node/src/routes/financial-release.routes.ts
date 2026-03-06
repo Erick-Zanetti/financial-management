@@ -27,6 +27,32 @@ router.get(
 
 /**
  * @swagger
+ * /financial-release/available-months:
+ *   get:
+ *     summary: Get all year/month combinations that have financial releases
+ *     tags: [Financial Release]
+ *     responses:
+ *       200:
+ *         description: List of available year/month pairs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   year:
+ *                     type: integer
+ *                   month:
+ *                     type: integer
+ */
+router.get(
+  '/available-months',
+  asyncHandler(financialReleaseController.findAvailableMonths.bind(financialReleaseController)),
+);
+
+/**
+ * @swagger
  * /financial-release/by-type:
  *   get:
  *     summary: Find releases by type, month, and year

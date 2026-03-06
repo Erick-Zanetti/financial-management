@@ -1,12 +1,10 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { useParams } from 'next/navigation';
-import { TimelineView } from '@/components/timeline/timeline-view';
+interface TimelineRedirectProps {
+  params: Promise<{ year: string; month: string }>;
+}
 
-export default function TimelinePage() {
-  const params = useParams();
-  const year = Number(params.year);
-  const month = Number(params.month);
-
-  return <TimelineView month={month} year={year} />;
+export default async function TimelineRedirect({ params }: TimelineRedirectProps) {
+  const { year, month } = await params;
+  redirect(`/${year}/${month}`);
 }

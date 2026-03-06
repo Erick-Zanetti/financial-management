@@ -23,6 +23,11 @@ export class FinancialReleaseController {
     res.json(release);
   }
 
+  async findAvailableMonths(_req: Request, res: Response): Promise<void> {
+    const months = await financialReleaseService.findAvailableMonths();
+    res.json(months);
+  }
+
   async findByType(req: Request, res: Response): Promise<void> {
     const filter = filterByTypeSchema.parse(req.query);
     const releases =

@@ -44,6 +44,14 @@ export class FinancialReleaseService {
     );
   }
 
+  async findAvailableMonths(): Promise<{ year: number; month: number }[]> {
+    return FinancialRelease.aggregate([
+      { $group: { _id: { year: '$year', month: '$month' } } },
+      { $sort: { '_id.year': 1, '_id.month': 1 } },
+      { $project: { _id: 0, year: '$_id.year', month: '$_id.month' } },
+    ]);
+  }
+
   async delete(id: string): Promise<boolean> {
     const result = await FinancialRelease.findByIdAndDelete(id);
     return result !== null;

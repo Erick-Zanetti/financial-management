@@ -7,6 +7,13 @@ import {
   UpdateFinancialRelease
 } from '@/types/financial-release';
 
+export function useAvailableMonths() {
+  return useQuery({
+    queryKey: ['available-months'],
+    queryFn: () => releasesApi.getAvailableMonths(),
+  });
+}
+
 export function useExpenses(month: number, year: number) {
   return useQuery({
     queryKey: ['expenses', month, year],
@@ -32,6 +39,9 @@ export function useCreateRelease() {
       });
       queryClient.invalidateQueries({
         queryKey: ['receipts', variables.month, variables.year]
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['available-months']
       });
     },
   });
@@ -88,6 +98,9 @@ export function useDeleteRelease() {
       });
       queryClient.invalidateQueries({
         queryKey: ['receipts', variables.month, variables.year]
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['available-months']
       });
     },
   });

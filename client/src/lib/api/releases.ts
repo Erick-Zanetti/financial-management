@@ -7,6 +7,9 @@ import {
 } from '@/types/financial-release';
 
 export const releasesApi = {
+  getAvailableMonths: () =>
+    apiClient.get<{ year: number; month: number }[]>('/available-months'),
+
   getAll: () =>
     apiClient.get<FinancialRelease[]>(''),
 

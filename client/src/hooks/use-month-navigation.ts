@@ -2,13 +2,19 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
-import { generateMonths, getCurrentMonthIndex } from '@/lib/months';
+import { buildDynamicMonths, getCurrentMonthIndex } from '@/lib/months';
+import { useAvailableMonths } from '@/hooks/use-releases';
 
 export function useMonthNavigation() {
   const params = useParams();
   const router = useRouter();
 
-  const months = useMemo(() => generateMonths(14), []);
+  const { data: availableMonths, isLoading } = useAvailableMonths();
+
+  const months = useMemo(
+    () => buildDynamicMonths(availableMonths ?? []),
+    [availableMonths]
+  );
 
   const currentYear = params.year ? Number(params.year) : new Date().getFullYear();
   const currentMonth = params.month ? Number(params.month) : new Date().getMonth() + 1;
@@ -20,9 +26,8 @@ export function useMonthNavigation() {
     return index >= 0 ? index : getCurrentMonthIndex(months);
   }, [months, currentYear, currentMonth]);
 
-  const navigateToMonth = (year: number, month: number, tab?: string) => {
-    const path = tab ? `/${year}/${month}/${tab}` : `/${year}/${month}`;
-    router.push(path);
+  const navigateToMonth = (year: number, month: number) => {
+    router.push(`/${year}/${month}`);
   };
 
   return {
@@ -31,5 +36,6 @@ export function useMonthNavigation() {
     currentMonth,
     currentIndex,
     navigateToMonth,
+    isLoading,
   };
 }
