@@ -58,6 +58,11 @@ const financialReleaseSchema = new Schema<FinancialReleaseDocument>(
       enum: Object.values(FinancialReleaseType),
       required: true,
     },
+    category: {
+      type: Schema.Types.ObjectId,
+      ref: 'Category',
+      required: true,
+    },
     person: {
       type: String,
       required: false,

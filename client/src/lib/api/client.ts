@@ -1,13 +1,14 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/financial-release';
+const API_BASE_URL = API_URL.replace(/\/financial-release$/, '');
 
 interface FetchOptions extends RequestInit {
   params?: Record<string, string | number>;
 }
 
-async function fetchApi<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
+async function fetchApi<T>(baseUrl: string, endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { params, ...fetchOptions } = options;
 
-  let url = `${API_URL}${endpoint}`;
+  let url = `${baseUrl}${endpoint}`;
 
   if (params) {
     const searchParams = new URLSearchParams();
@@ -26,7 +27,9 @@ async function fetchApi<T>(endpoint: string, options: FetchOptions = {}): Promis
   });
 
   if (!response.ok) {
-    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    const error = new Error(`API Error: ${response.status} ${response.statusText}`);
+    (error as Error & { status: number }).status = response.status;
+    throw error;
   }
 
   if (response.status === 204) {
@@ -41,16 +44,22 @@ async function fetchApi<T>(endpoint: string, options: FetchOptions = {}): Promis
   return JSON.parse(text);
 }
 
-export const apiClient = {
-  get: <T>(endpoint: string, params?: Record<string, string | number>) =>
-    fetchApi<T>(endpoint, { method: 'GET', params }),
+export { API_BASE_URL };
 
-  post: <T>(endpoint: string, data: unknown) =>
-    fetchApi<T>(endpoint, { method: 'POST', body: JSON.stringify(data) }),
+export function createApiClient(baseUrl: string) {
+  return {
+    get: <T>(endpoint: string, params?: Record<string, string | number>) =>
+      fetchApi<T>(baseUrl, endpoint, { method: 'GET', params }),
 
-  patch: <T>(endpoint: string, data: unknown) =>
-    fetchApi<T>(endpoint, { method: 'PATCH', body: JSON.stringify(data) }),
+    post: <T>(endpoint: string, data: unknown) =>
+      fetchApi<T>(baseUrl, endpoint, { method: 'POST', body: JSON.stringify(data) }),
 
-  delete: <T>(endpoint: string) =>
-    fetchApi<T>(endpoint, { method: 'DELETE' }),
-};
+    patch: <T>(endpoint: string, data: unknown) =>
+      fetchApi<T>(baseUrl, endpoint, { method: 'PATCH', body: JSON.stringify(data) }),
+
+    delete: <T>(endpoint: string) =>
+      fetchApi<T>(baseUrl, endpoint, { method: 'DELETE' }),
+  };
+}
+
+export const apiClient = createApiClient(API_URL);

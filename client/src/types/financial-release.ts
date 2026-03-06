@@ -8,6 +8,7 @@ export interface FinancialRelease {
   name: string;
   value: number;
   type: FinancialReleaseType;
+  category: { id: string; name: string };
   person?: string;
   year: number;
   month: number;
@@ -21,5 +22,5 @@ export interface Month {
   month: number;
 }
 
-export type CreateFinancialRelease = Omit<FinancialRelease, 'id'>;
+export type CreateFinancialRelease = Omit<FinancialRelease, 'id' | 'category'> & { category: string };
 export type UpdateFinancialRelease = Partial<CreateFinancialRelease>;

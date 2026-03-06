@@ -10,11 +10,11 @@ import {
 
 export class FinancialReleaseService {
   async findAll(): Promise<FinancialReleaseDocument[]> {
-    return FinancialRelease.find().sort({ year: -1, month: -1, day: -1 });
+    return FinancialRelease.find().populate('category', 'name').sort({ year: -1, month: -1, day: -1 });
   }
 
   async findById(id: string): Promise<FinancialReleaseDocument | null> {
-    return FinancialRelease.findById(id);
+    return FinancialRelease.findById(id).populate('category', 'name');
   }
 
   async findByTypeAndMonthAndYear(
@@ -24,13 +24,14 @@ export class FinancialReleaseService {
       type: filter.type,
       month: filter.month,
       year: filter.year,
-    }).sort({ day: 1 });
+    }).populate('category', 'name').sort({ day: 1 });
   }
 
   async create(
     data: CreateFinancialReleaseDto,
   ): Promise<FinancialReleaseDocument> {
-    return new FinancialRelease(data).save();
+    const release = await new FinancialRelease(data).save();
+    return release.populate('category', 'name');
   }
 
   async update(
@@ -41,7 +42,7 @@ export class FinancialReleaseService {
       id,
       { $set: data },
       { new: true, runValidators: true },
-    );
+    ).populate('category', 'name');
   }
 
   async findAvailableMonths(): Promise<{ year: number; month: number }[]> {

@@ -1,10 +1,12 @@
 import { createApp } from './app';
 import { connectDatabase } from './config/database.config';
+import { runMigrations } from './migrations/run-migrations';
 import { config } from './config';
 import { logger } from './config/logger.config';
 
 const startServer = async (): Promise<void> => {
   await connectDatabase();
+  await runMigrations();
 
   const app = createApp();
 

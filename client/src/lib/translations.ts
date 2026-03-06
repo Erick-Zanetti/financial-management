@@ -67,6 +67,20 @@ export const pt = {
   cannotEditSettled: 'Desmarque para editar',
   cannotDeleteSettled: 'Desmarque para remover',
 
+  // Categories
+  category: 'Categoria',
+  categoryName: 'Nome da categoria',
+  categoryRequired: 'Categoria é obrigatória',
+  categoryCreated: 'Categoria criada com sucesso!',
+  categoryUpdated: 'Categoria atualizada com sucesso!',
+  categoryDeleted: 'Categoria removida com sucesso!',
+  categoryDeleteFailed: 'Falha ao remover categoria.',
+  categoryInUse: 'Categoria em uso, não pode ser removida.',
+  confirmDeleteCategory: 'Deseja realmente remover esta categoria?',
+  categoryNameRequired: 'Nome é obrigatório',
+  editCategory: 'Editar categoria',
+  addCategory: 'Adicionar categoria',
+
   // Clone
   clone: 'Clonar',
   releaseCloned: 'Lançamento clonado para o próximo mês!',
@@ -163,6 +177,20 @@ export const en: Record<keyof typeof pt, string> = {
   unsettledSuccess: 'Release reverted to pending!',
   cannotEditSettled: 'Unsettle to edit',
   cannotDeleteSettled: 'Unsettle to delete',
+
+  // Categories
+  category: 'Category',
+  categoryName: 'Category name',
+  categoryRequired: 'Category is required',
+  categoryCreated: 'Category created successfully!',
+  categoryUpdated: 'Category updated successfully!',
+  categoryDeleted: 'Category deleted successfully!',
+  categoryDeleteFailed: 'Failed to delete category.',
+  categoryInUse: 'Category is in use and cannot be deleted.',
+  confirmDeleteCategory: 'Do you really want to remove this category?',
+  categoryNameRequired: 'Name is required',
+  editCategory: 'Edit category',
+  addCategory: 'Add category',
 
   // Clone
   clone: 'Clone',

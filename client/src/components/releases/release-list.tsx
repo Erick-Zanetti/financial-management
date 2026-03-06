@@ -84,6 +84,7 @@ export function ReleaseList({
         name: release.name,
         value: release.value,
         type: release.type,
+        category: release.category?.id,
         day: release.day,
         month: nextMonth,
         year: nextYear,
@@ -147,6 +148,7 @@ export function ReleaseList({
                     <TableHead className="w-10 text-center">{t('status')}</TableHead>
                     <TableHead className="w-12">{t('day')}</TableHead>
                     <TableHead>{t('description')}</TableHead>
+                    <TableHead>{t('category')}</TableHead>
                     <TableHead className="text-right">{t('value')}</TableHead>
                     <TableHead className="w-20"></TableHead>
                   </TableRow>
@@ -170,6 +172,9 @@ export function ReleaseList({
                         </TableCell>
                         <TableCell className={cn(isSettled && 'line-through')}>
                           {release.name}
+                        </TableCell>
+                        <TableCell className={cn('text-muted-foreground', isSettled && 'line-through')}>
+                          {release.category?.name}
                         </TableCell>
                         <TableCell className={cn('text-right', isSettled && 'line-through')}>
                           {formatCurrency(release.value)}

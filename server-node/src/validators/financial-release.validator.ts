@@ -7,6 +7,7 @@ export const createFinancialReleaseSchema = z.object({
   type: z.nativeEnum(FinancialReleaseType, {
     errorMap: () => ({ message: 'Type must be R (Receipt) or E (Expense)' }),
   }),
+  category: z.string().min(1, 'Category is required'),
   person: z.string().optional(),
   year: z.number().int().min(2000).max(2100),
   month: z.number().int().min(1).max(12),

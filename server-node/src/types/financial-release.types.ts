@@ -8,6 +8,7 @@ export interface IFinancialRelease {
   name: string;
   value: number;
   type: FinancialReleaseType;
+  category: unknown;
   person?: string;
   year: number;
   month: number;
