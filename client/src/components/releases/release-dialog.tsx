@@ -132,7 +132,7 @@ export function ReleaseDialog({
         </SheetHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 mt-8">
             <FormField
               control={form.control}
               name="day"
@@ -145,7 +145,7 @@ export function ReleaseDialog({
                           <button
                             type="button"
                             className={cn(
-                              'flex h-12 w-full items-center rounded-md border border-input bg-transparent px-3 pt-5 pb-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring text-left',
+                              'flex h-12 w-full items-center rounded-lg border border-input bg-transparent px-3 pt-5 pb-1 text-sm shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary text-left',
                               !field.value && 'text-muted-foreground'
                             )}
                           >

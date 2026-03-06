@@ -115,12 +115,12 @@ export function ReleaseList({
   };
 
   const borderColor = variant === 'receipt'
-    ? 'border-l-emerald-500'
-    : 'border-l-red-500';
+    ? 'border-t-emerald-500'
+    : 'border-t-red-500';
 
   return (
     <>
-      <Card className={cn('border-l-4', borderColor)}>
+      <Card className={cn('border-t-2', borderColor)}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-lg font-medium">{title}</CardTitle>
           <Button size="sm" onClick={() => setDialogOpen(true)}>
@@ -175,7 +175,7 @@ export function ReleaseList({
                           {formatCurrency(release.value)}
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-1">
+                          <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -198,7 +198,7 @@ export function ReleaseList({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              className="h-8 w-8 hover:text-destructive hover:bg-destructive/10"
                               onClick={() => handleDelete(release)}
                               disabled={isSettled}
                               title={isSettled ? t('cannotDeleteSettled') : undefined}

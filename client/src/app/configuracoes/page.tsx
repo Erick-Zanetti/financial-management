@@ -19,8 +19,8 @@ export default function ConfiguracoesPage() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="container mx-auto py-6 px-4">
-      <div className="max-w-md space-y-4">
+    <div className="max-w-lg mx-auto py-8 px-4">
+      <div className="space-y-4">
         <Card>
           <CardContent className="pt-6 space-y-4">
             <FloatingSelect value={language} onValueChange={(v) => setLanguage(v as Language)}>

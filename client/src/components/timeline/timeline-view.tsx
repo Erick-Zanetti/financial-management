@@ -85,13 +85,13 @@ export function TimelineView({ month, year, currentBalance = 0 }: TimelineViewPr
       </CardHeader>
       <CardContent>
         <div className="relative">
-          <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
+          <div className="absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-primary/40 via-primary/20 to-transparent" />
 
           <div className="space-y-4">
             {currentBalance > 0 && (
               <div className="relative pl-10">
-                <div className="absolute left-2 top-2 h-4 w-4 rounded-full border-2 bg-background border-blue-500" />
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border border-blue-500/30 p-4 bg-card">
+                <div className="absolute left-2 top-2 h-4 w-4 rounded-full border-2 bg-background border-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border border-blue-500/30 p-4 bg-card/80 backdrop-blur-sm">
                   <div className="flex-1">
                     <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                       {t('currentBalance')}
@@ -100,7 +100,7 @@ export function TimelineView({ month, year, currentBalance = 0 }: TimelineViewPr
                   <div className="text-right">
                     <div
                       className={cn(
-                        'text-lg font-bold',
+                        'text-lg font-bold tabular-nums',
                         currentBalance >= 0
                           ? 'text-blue-600 dark:text-blue-400'
                           : 'text-red-600 dark:text-red-400'
@@ -153,11 +153,13 @@ function TimelineItem({ release, isReceipt, isSettled, balance, formatCurrencyFn
       <div
         className={cn(
           'absolute left-2 top-2 h-4 w-4 rounded-full border-2 bg-background',
-          isReceipt ? 'border-emerald-500' : 'border-red-500'
+          isReceipt
+            ? 'border-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]'
+            : 'border-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]'
         )}
       />
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border p-4 bg-card">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border p-4 bg-card/80 backdrop-blur-sm">
         <div className="flex-1">
           <div className={cn('flex items-center gap-2', isSettled && 'line-through')}>
             <span className="text-sm text-muted-foreground">
@@ -183,7 +185,7 @@ function TimelineItem({ release, isReceipt, isSettled, balance, formatCurrencyFn
           <div className="text-xs text-muted-foreground">{balanceLabel}</div>
           <div
             className={cn(
-              'text-lg font-bold',
+              'text-lg font-bold tabular-nums tracking-tight',
               balance >= 0
                 ? 'text-emerald-600 dark:text-emerald-400'
                 : 'text-red-600 dark:text-red-400'

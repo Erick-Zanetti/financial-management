@@ -105,9 +105,9 @@ export function CumulativeLineChart({ receipts, expenses }: CumulativeLineChartP
                   if (!active || !payload?.length) return null;
                   return (
                     <div
-                      className="rounded-md border px-3 py-2 text-sm"
+                      className="rounded-lg border px-3 py-2 text-sm backdrop-blur-lg"
                       style={{
-                        backgroundColor: 'hsl(var(--background))',
+                        backgroundColor: 'hsl(var(--background) / 0.95)',
                         borderColor: 'hsl(var(--border))',
                         color: 'hsl(var(--foreground))',
                       }}
@@ -140,7 +140,7 @@ export function CumulativeLineChart({ receipts, expenses }: CumulativeLineChartP
                 name={receiptsLabel}
                 type="monotone"
                 dataKey="receipts"
-                stroke="#4caf50"
+                stroke="#10b981"
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
@@ -149,7 +149,7 @@ export function CumulativeLineChart({ receipts, expenses }: CumulativeLineChartP
                 name={expensesLabel}
                 type="monotone"
                 dataKey="expenses"
-                stroke="#f44336"
+                stroke="#ef4444"
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}

@@ -46,10 +46,10 @@ export default function LancamentosPage() {
   const isLoading = loadingExpenses || loadingReceipts;
 
   return (
-    <div className="mx-auto py-6 px-4">
+    <div className="max-w-7xl mx-auto py-6 px-4 md:px-6">
       {activeTab === 'releases' ? (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in-up">
             <SummaryCard
               title={t('totalBalance')}
               value={balance}

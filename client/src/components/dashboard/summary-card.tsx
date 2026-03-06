@@ -33,6 +33,13 @@ export function SummaryCard({
           ? 'text-emerald-600 dark:text-emerald-400'
           : 'text-red-600 dark:text-red-400';
 
+  const gradientClass =
+    variant === 'income'
+      ? 'gradient-emerald-subtle'
+      : variant === 'expense'
+        ? 'bg-gradient-to-br from-red-500/5 to-red-600/[0.03]'
+        : 'bg-gradient-to-br from-primary/5 to-cyan-500/[0.03]';
+
   const showComparison =
     previousValue !== undefined && previousValue !== 0;
 
@@ -49,20 +56,20 @@ export function SummaryCard({
     : 'text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-950';
 
   return (
-    <Card className={className}>
-      <CardContent className="pt-6">
-        <div className="text-sm text-muted-foreground mb-1">{title}</div>
+    <Card className={cn(gradientClass, className)}>
+      <CardContent className="pt-5">
+        <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">{title}</div>
         {isLoading ? (
           <Skeleton className="h-8 w-32" />
         ) : (
           <>
-            <div className={cn('text-2xl font-bold', valueColor)}>
+            <div className={cn('text-3xl font-bold tracking-tight tabular-nums', valueColor)}>
               {formatCurrency(Math.abs(value))}
             </div>
             {showComparison && (
               <div
                 className={cn(
-                  'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium mt-2',
+                  'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold mt-2',
                   badgeColor
                 )}
               >

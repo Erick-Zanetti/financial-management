@@ -11,22 +11,22 @@ import {
 } from '@/components/ui/tooltip';
 
 const COLORS = [
-  '#7986cb',
-  '#4fc3f7',
-  '#e57373',
-  '#4db6ac',
-  '#ba68c8',
-  '#f06292',
-  '#9575cd',
-  '#4dd0e1',
-  '#81c784',
-  '#dce775',
-  '#aed581',
-  '#fff176',
-  '#ffb74d',
-  '#ffd54f',
-  '#64b5f6',
-  '#ff8a65',
+  '#10b981',
+  '#06b6d4',
+  '#8b5cf6',
+  '#f59e0b',
+  '#ec4899',
+  '#14b8a6',
+  '#6366f1',
+  '#f97316',
+  '#22d3ee',
+  '#a855f7',
+  '#84cc16',
+  '#e879f9',
+  '#2dd4bf',
+  '#fb923c',
+  '#818cf8',
+  '#34d399',
 ];
 
 interface PieChartProps {
@@ -48,9 +48,9 @@ export function PieChart({ data }: PieChartProps) {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="pt-4 space-y-2">
+      <div className="pt-4 space-y-3">
         {/* Stacked bar */}
-        <div className="flex w-full h-8 rounded-md overflow-hidden">
+        <div className="flex w-full h-8 rounded-lg overflow-hidden shadow-inner">
           {items.map((item, index) => {
             const pct = (item.value / total) * 100;
             return (
@@ -75,7 +75,7 @@ export function PieChart({ data }: PieChartProps) {
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap gap-x-3 gap-y-1">
+        <div className="flex flex-wrap gap-x-4 gap-y-1.5">
           {items.map((item, index) => (
             <div key={item.id || index} className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <div
@@ -83,7 +83,7 @@ export function PieChart({ data }: PieChartProps) {
                 style={{ backgroundColor: COLORS[index % COLORS.length] }}
               />
               <span className="truncate max-w-[120px]">{item.name}</span>
-              <span className="tabular-nums">{((item.value / total) * 100).toFixed(0)}%</span>
+              <span className="tabular-nums font-medium">{((item.value / total) * 100).toFixed(0)}%</span>
             </div>
           ))}
         </div>

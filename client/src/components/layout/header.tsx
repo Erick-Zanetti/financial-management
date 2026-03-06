@@ -25,8 +25,8 @@ export function Header() {
   const pageTitle = usePageTitle();
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-14 items-center justify-between px-4">
+    <header className="sticky top-0 z-30 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl">
+      <div className="flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -36,9 +36,9 @@ export function Header() {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <Wallet className="h-6 w-6 md:hidden" />
+          <Wallet className="h-6 w-6 md:hidden text-primary" />
           <span className="font-semibold md:hidden">{t('appTitle')}</span>
-          <h1 className="hidden md:block text-lg font-semibold">{pageTitle}</h1>
+          <h1 className="hidden md:block text-lg font-semibold tracking-tight">{pageTitle}</h1>
         </div>
         <Button
           variant="ghost"
