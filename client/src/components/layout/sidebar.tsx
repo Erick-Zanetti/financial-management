@@ -20,9 +20,10 @@ const menuItems = [
   { icon: Settings, labelKey: 'settings' as const, href: '/configuracoes' },
 ];
 
-function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarContent({ onNavigate, forceExpanded }: { onNavigate?: () => void; forceExpanded?: boolean }) {
   const pathname = usePathname();
-  const { expanded, toggle } = useSidebar();
+  const { expanded: sidebarExpanded, toggle } = useSidebar();
+  const expanded = forceExpanded ?? sidebarExpanded;
   const { t } = useSettings();
 
   return (
@@ -110,7 +111,7 @@ export function Sidebar() {
             onClick={() => setMobileOpen(false)}
           />
           <aside className="fixed left-0 top-0 z-50 h-full w-60 flex flex-col bg-background border-r md:hidden animate-in slide-in-from-left duration-300">
-            <SidebarContent onNavigate={() => setMobileOpen(false)} />
+            <SidebarContent onNavigate={() => setMobileOpen(false)} forceExpanded />
           </aside>
         </>
       )}

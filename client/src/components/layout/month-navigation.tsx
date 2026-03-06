@@ -1,12 +1,10 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
 import { useMonthNavigation } from '@/hooks/use-month-navigation';
 import { useMonth, ViewTab } from '@/providers/month-provider';
 import { useSettings } from '@/providers/settings-provider';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectTrigger,
@@ -14,95 +12,100 @@ import {
   SelectItem,
   SelectValue,
 } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+
+const CURRENT_BALANCE_KEY = 'financial-management-current-balance';
 
 export function MonthNavigation() {
-  const { months, currentYear, currentMonth, navigateToMonth, isLoading } = useMonthNavigation();
-  const { activeTab, setActiveTab } = useMonth();
-  const { getMonthLabel, t } = useSettings();
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const activeRef = useRef<HTMLButtonElement>(null);
+  const { months, currentYear, currentMonth, navigateToMonth } = useMonthNavigation();
+  const { activeTab, setActiveTab, setCurrentBalance } = useMonth();
+  const { getMonthLabel, t, formatDisplayValue, parseCurrency } = useSettings();
+
+  const now = new Date();
+  const nowMonth = now.getMonth() + 1;
+  const nowYear = now.getFullYear();
+  const isCurrentMonth = currentMonth === nowMonth && currentYear === nowYear;
+
+  const [displayBalance, setDisplayBalance] = useState('');
 
   useEffect(() => {
-    if (activeRef.current && scrollRef.current) {
-      const container = scrollRef.current;
-      const activeButton = activeRef.current;
-      const containerRect = container.getBoundingClientRect();
-      const buttonRect = activeButton.getBoundingClientRect();
-
-      const scrollLeft =
-        buttonRect.left -
-        containerRect.left -
-        containerRect.width / 2 +
-        buttonRect.width / 2 +
-        container.scrollLeft;
-
-      container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+    try {
+      const stored = localStorage.getItem(CURRENT_BALANCE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.month === nowMonth && parsed.year === nowYear) {
+          setDisplayBalance(formatDisplayValue(parsed.value));
+          setCurrentBalance(parsed.value);
+        } else {
+          localStorage.removeItem(CURRENT_BALANCE_KEY);
+          setDisplayBalance('');
+          setCurrentBalance(0);
+        }
+      }
+    } catch {
+      setDisplayBalance('');
+      setCurrentBalance(0);
     }
-  }, [currentYear, currentMonth, months]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formatDisplayValue]);
 
-  if (isLoading && months.length <= 1) {
-    return (
-      <div className="border-b bg-muted/30">
-        <div className="flex items-center">
-          <div className="flex px-4 py-2 gap-1 flex-1">
-            <Button variant="default" size="sm" className="flex-shrink-0 opacity-50" disabled>
-              {getMonthLabel(currentMonth)}/{currentYear}
-            </Button>
-          </div>
-          <div className="px-4 py-2 flex-shrink-0">
-            <Select value={activeTab} onValueChange={(v) => setActiveTab(v as ViewTab)}>
-              <SelectTrigger className="w-[160px] h-8 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="releases">{t('releases')}</SelectItem>
-                <SelectItem value="timeline">{t('timeline')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const monthValue = `${currentYear}-${currentMonth}`;
 
   return (
-    <div className="border-b bg-muted/30">
-      <div className="flex items-center">
-        <ScrollArea className="flex-1">
-          <div ref={scrollRef} className="flex px-4 py-2 gap-1">
-            {months.map((month) => {
-              const isActive = month.year === currentYear && month.month === currentMonth;
-              return (
-                <Button
-                  key={`${month.year}-${month.month}`}
-                  ref={isActive ? activeRef : null}
-                  variant={isActive ? 'default' : 'ghost'}
-                  size="sm"
-                  className={cn(
-                    'flex-shrink-0 transition-all',
-                    isActive && 'shadow-sm'
-                  )}
-                  onClick={() => navigateToMonth(month.year, month.month)}
-                >
-                  {getMonthLabel(month.month)}/{month.year}
-                </Button>
-              );
-            })}
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+    <div>
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as ViewTab)}
+      >
+        <TabsList className="w-full rounded-none h-10">
+          <TabsTrigger value="releases" className="w-1/2 rounded-sm">
+            {t('releases')}
+          </TabsTrigger>
+          <TabsTrigger value="timeline" className="w-1/2 rounded-sm">
+            {t('timeline')}
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
-        <div className="px-4 py-2 flex-shrink-0">
-          <Select value={activeTab} onValueChange={(v) => setActiveTab(v as ViewTab)}>
-            <SelectTrigger className="w-[160px] h-8 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="releases">{t('releases')}</SelectItem>
-              <SelectItem value="timeline">{t('timeline')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="flex items-center gap-3 px-4 py-3 border-b bg-muted/30">
+        <Select
+          value={monthValue}
+          onValueChange={(v) => {
+            const [y, m] = v.split('-').map(Number);
+            navigateToMonth(y, m);
+          }}
+        >
+          <SelectTrigger className="w-[160px] h-9 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {months.map((m) => (
+              <SelectItem key={`${m.year}-${m.month}`} value={`${m.year}-${m.month}`}>
+                {getMonthLabel(m.month)}/{m.year}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {isCurrentMonth && (
+          <Input
+            type="text"
+            inputMode="numeric"
+            placeholder={t('currentBalance')}
+            value={displayBalance}
+            onChange={(e) => {
+              const raw = e.target.value;
+              setDisplayBalance(raw);
+              const numeric = parseCurrency(raw);
+              setCurrentBalance(numeric);
+              localStorage.setItem(
+                CURRENT_BALANCE_KEY,
+                JSON.stringify({ month: nowMonth, year: nowYear, value: numeric })
+              );
+            }}
+            className="flex-1 h-9 text-sm font-medium"
+          />
+        )}
       </div>
     </div>
   );

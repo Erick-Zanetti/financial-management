@@ -2,12 +2,13 @@
 
 import { useMemo } from 'react';
 import {
-  PieChart as RechartsPieChart,
-  Pie,
-  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
   ResponsiveContainer,
-  Legend,
   Tooltip,
+  Cell,
 } from 'recharts';
 import { FinancialRelease } from '@/types/financial-release';
 import { useSettings } from '@/providers/settings-provider';
@@ -39,32 +40,58 @@ export function PieChart({ data }: PieChartProps) {
   const { formatCurrency } = useSettings();
 
   const chartData = useMemo(() => {
-    return data.map((item) => ({
-      name: item.name,
-      value: item.value,
-    }));
+    return [...data]
+      .sort((a, b) => b.value - a.value)
+      .map((item) => ({
+        name: item.name,
+        value: item.value,
+      }));
   }, [data]);
 
   if (data.length === 0) {
     return null;
   }
 
+  const barHeight = 32;
+  const chartHeight = Math.max(120, chartData.length * barHeight + 20);
+
   return (
-    <div className="h-[250px] pt-4">
+    <div className="pt-4" style={{ height: chartHeight }}>
       <ResponsiveContainer width="100%" height="100%">
-        <RechartsPieChart>
-          <Pie
-            data={chartData}
-            cx="50%"
-            cy="50%"
-            innerRadius={40}
-            outerRadius={80}
-            paddingAngle={2}
+        <BarChart
+          data={chartData}
+          layout="vertical"
+          margin={{ top: 0, right: 60, left: 0, bottom: 0 }}
+        >
+          <XAxis type="number" hide />
+          <YAxis
+            type="category"
+            dataKey="name"
+            width={90}
+            tick={{ fontSize: 12, fill: 'hsl(var(--foreground))' }}
+            tickLine={false}
+            axisLine={false}
+          />
+          <Tooltip
+            formatter={(value) => formatCurrency(Number(value))}
+            cursor={{ fill: 'hsl(var(--muted))' }}
+            contentStyle={{
+              backgroundColor: 'hsl(var(--background))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: '6px',
+            }}
+            itemStyle={{ color: 'hsl(var(--foreground))' }}
+            labelStyle={{ color: 'hsl(var(--foreground))' }}
+          />
+          <Bar
             dataKey="value"
-            label={({ name, percent }) =>
-              `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`
-            }
-            labelLine={false}
+            radius={[0, 4, 4, 0]}
+            barSize={20}
+            label={{
+              position: 'right',
+              formatter: (value: unknown) => formatCurrency(Number(value)),
+              style: { fontSize: 11, fill: 'hsl(var(--muted-foreground))' },
+            }}
           >
             {chartData.map((_, index) => (
               <Cell
@@ -72,30 +99,8 @@ export function PieChart({ data }: PieChartProps) {
                 fill={COLORS[index % COLORS.length]}
               />
             ))}
-          </Pie>
-          <Tooltip
-            formatter={(value) => formatCurrency(Number(value))}
-            contentStyle={{
-              backgroundColor: 'hsl(var(--background))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '6px',
-            }}
-            itemStyle={{
-              color: 'hsl(var(--foreground))',
-            }}
-            labelStyle={{
-              color: 'hsl(var(--foreground))',
-            }}
-          />
-          <Legend
-            layout="vertical"
-            align="left"
-            verticalAlign="middle"
-            formatter={(value) => (
-              <span className="text-sm text-foreground">{value}</span>
-            )}
-          />
-        </RechartsPieChart>
+          </Bar>
+        </BarChart>
       </ResponsiveContainer>
     </div>
   );

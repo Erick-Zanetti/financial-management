@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useMonth } from '@/providers/month-provider';
 import { useExpenses, useReceipts } from '@/hooks/use-releases';
 import { useSettings } from '@/providers/settings-provider';
@@ -9,42 +8,13 @@ import { ReleaseList } from '@/components/releases/release-list';
 import { CumulativeLineChart } from '@/components/charts/bar-chart';
 import { FinancialReleaseType } from '@/types/financial-release';
 import { TimelineView } from '@/components/timeline/timeline-view';
-import { Input } from '@/components/ui/input';
-
-const CURRENT_BALANCE_KEY = 'financial-management-current-balance';
 
 export default function LancamentosPage() {
-  const { currentYear: year, currentMonth: month, activeTab } = useMonth();
-  const { t, formatDisplayValue, parseCurrency } = useSettings();
+  const { currentYear: year, currentMonth: month, activeTab, currentBalance } = useMonth();
+  const { t } = useSettings();
 
   const now = new Date();
-  const nowMonth = now.getMonth() + 1;
-  const nowYear = now.getFullYear();
-  const isCurrentMonth = month === nowMonth && year === nowYear;
-
-  const [displayBalance, setDisplayBalance] = useState('');
-  const [currentBalance, setCurrentBalance] = useState(0);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(CURRENT_BALANCE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.month === nowMonth && parsed.year === nowYear) {
-          setDisplayBalance(formatDisplayValue(parsed.value));
-          setCurrentBalance(parsed.value);
-        } else {
-          localStorage.removeItem(CURRENT_BALANCE_KEY);
-          setDisplayBalance('');
-          setCurrentBalance(0);
-        }
-      }
-    } catch {
-      setDisplayBalance('');
-      setCurrentBalance(0);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formatDisplayValue]);
+  const isCurrentMonth = month === now.getMonth() + 1 && year === now.getFullYear();
 
   const { data: expenses = [], isLoading: loadingExpenses } = useExpenses(month, year);
   const { data: receipts = [], isLoading: loadingReceipts } = useReceipts(month, year);
@@ -76,34 +46,9 @@ export default function LancamentosPage() {
   const isLoading = loadingExpenses || loadingReceipts;
 
   return (
-    <div className="container mx-auto py-6 px-4 space-y-0">
-      {isCurrentMonth && (
-        <div className="flex items-center gap-3 pb-4">
-          <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-            {t('currentBalance')}
-          </span>
-          <Input
-            type="text"
-            inputMode="numeric"
-            placeholder="0,00"
-            value={displayBalance}
-            onChange={(e) => {
-              const raw = e.target.value;
-              setDisplayBalance(raw);
-              const numeric = parseCurrency(raw);
-              setCurrentBalance(numeric);
-              localStorage.setItem(
-                CURRENT_BALANCE_KEY,
-                JSON.stringify({ month: nowMonth, year: nowYear, value: numeric })
-              );
-            }}
-            className="text-lg font-bold w-40"
-          />
-        </div>
-      )}
-
+    <div className="mx-auto py-6 px-4">
       {activeTab === 'releases' ? (
-        <div className="space-y-6 pt-2">
+        <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <SummaryCard
               title={t('totalBalance')}
@@ -156,9 +101,7 @@ export default function LancamentosPage() {
           <CumulativeLineChart receipts={receipts} expenses={expenses} />
         </div>
       ) : (
-        <div className="pt-2">
-          <TimelineView month={month} year={year} currentBalance={isCurrentMonth ? currentBalance : undefined} />
-        </div>
+        <TimelineView month={month} year={year} currentBalance={isCurrentMonth ? currentBalance : undefined} />
       )}
     </div>
   );

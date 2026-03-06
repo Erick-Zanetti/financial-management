@@ -16,10 +16,9 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { FloatingInput } from '@/components/ui/floating-input';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -139,20 +138,24 @@ export function ReleaseDialog({
               name="day"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>{t('day')}</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            'w-full justify-start text-left font-normal',
-                            !field.value && 'text-muted-foreground'
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ? `${t('dayPrefix')} ${field.value}` : t('selectDay')}
-                        </Button>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            className={cn(
+                              'flex h-12 w-full items-center rounded-md border border-input bg-transparent px-3 pt-5 pb-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring text-left',
+                              !field.value && 'text-muted-foreground'
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {field.value ? `${t('dayPrefix')} ${field.value}` : t('selectDay')}
+                          </button>
+                          <span className="absolute left-3 top-2.5 text-xs text-muted-foreground pointer-events-none">
+                            {t('day')}
+                          </span>
+                        </div>
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -179,17 +182,18 @@ export function ReleaseDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('description')}</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder={t('descriptionPlaceholder')}
-                      maxLength={30}
-                      {...field}
-                    />
+                    <div className="relative">
+                      <FloatingInput
+                        label={t('description')}
+                        maxLength={30}
+                        {...field}
+                      />
+                      <div className="text-xs text-muted-foreground text-right mt-1">
+                        {field.value?.length || 0}/30
+                      </div>
+                    </div>
                   </FormControl>
-                  <div className="text-xs text-muted-foreground text-right">
-                    {field.value?.length || 0}/30
-                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -200,12 +204,11 @@ export function ReleaseDialog({
               name="value"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('value')}</FormLabel>
                   <FormControl>
-                    <Input
+                    <FloatingInput
+                      label={t('value')}
                       type="text"
                       inputMode="numeric"
-                      placeholder="0,00"
                       value={displayValue}
                       onChange={(e) => {
                         const digits = e.target.value.replace(/\D/g, '');
