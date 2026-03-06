@@ -1,17 +1,14 @@
 'use client';
 
 import { useMemo } from 'react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-  Tooltip,
-  Cell,
-} from 'recharts';
 import { FinancialRelease } from '@/types/financial-release';
 import { useSettings } from '@/providers/settings-provider';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const COLORS = [
   '#7986cb',
@@ -39,69 +36,58 @@ interface PieChartProps {
 export function PieChart({ data }: PieChartProps) {
   const { formatCurrency } = useSettings();
 
-  const chartData = useMemo(() => {
-    return [...data]
-      .sort((a, b) => b.value - a.value)
-      .map((item) => ({
-        name: item.name,
-        value: item.value,
-      }));
+  const { items, total } = useMemo(() => {
+    const sorted = [...data].sort((a, b) => b.value - a.value);
+    const t = sorted.reduce((sum, item) => sum + item.value, 0);
+    return { items: sorted, total: t };
   }, [data]);
 
-  if (data.length === 0) {
+  if (items.length === 0 || total === 0) {
     return null;
   }
 
-  const barHeight = 32;
-  const chartHeight = Math.max(120, chartData.length * barHeight + 20);
-
   return (
-    <div className="pt-4" style={{ height: chartHeight }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={chartData}
-          layout="vertical"
-          margin={{ top: 0, right: 60, left: 0, bottom: 0 }}
-        >
-          <XAxis type="number" hide />
-          <YAxis
-            type="category"
-            dataKey="name"
-            width={90}
-            tick={{ fontSize: 12, fill: 'hsl(var(--foreground))' }}
-            tickLine={false}
-            axisLine={false}
-          />
-          <Tooltip
-            formatter={(value) => formatCurrency(Number(value))}
-            cursor={{ fill: 'hsl(var(--muted))' }}
-            contentStyle={{
-              backgroundColor: 'hsl(var(--background))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '6px',
-            }}
-            itemStyle={{ color: 'hsl(var(--foreground))' }}
-            labelStyle={{ color: 'hsl(var(--foreground))' }}
-          />
-          <Bar
-            dataKey="value"
-            radius={[0, 4, 4, 0]}
-            barSize={20}
-            label={{
-              position: 'right',
-              formatter: (value: unknown) => formatCurrency(Number(value)),
-              style: { fontSize: 11, fill: 'hsl(var(--muted-foreground))' },
-            }}
-          >
-            {chartData.map((_, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
+    <TooltipProvider delayDuration={0}>
+      <div className="pt-4 space-y-2">
+        {/* Stacked bar */}
+        <div className="flex w-full h-8 rounded-md overflow-hidden">
+          {items.map((item, index) => {
+            const pct = (item.value / total) * 100;
+            return (
+              <Tooltip key={item.id || index}>
+                <TooltipTrigger asChild>
+                  <div
+                    style={{
+                      width: `${pct}%`,
+                      backgroundColor: COLORS[index % COLORS.length],
+                      minWidth: pct > 0 ? '2px' : '0',
+                    }}
+                    className="h-full transition-opacity hover:opacity-80 cursor-default"
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-medium">{item.name}</p>
+                  <p>{formatCurrency(item.value)} ({pct.toFixed(1)}%)</p>
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </div>
+
+        {/* Legend */}
+        <div className="flex flex-wrap gap-x-3 gap-y-1">
+          {items.map((item, index) => (
+            <div key={item.id || index} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <div
+                className="h-2.5 w-2.5 rounded-sm flex-shrink-0"
+                style={{ backgroundColor: COLORS[index % COLORS.length] }}
               />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
+              <span className="truncate max-w-[120px]">{item.name}</span>
+              <span className="tabular-nums">{((item.value / total) * 100).toFixed(0)}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </TooltipProvider>
   );
 }
