@@ -15,13 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FinancialRelease, FinancialReleaseType, Person } from '@/types/financial-release';
 import { useSettings } from '@/providers/settings-provider';
@@ -162,11 +155,11 @@ export function ReleaseList({
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10 text-center">{t('status')}</TableHead>
                     <TableHead className="w-12">{t('day')}</TableHead>
                     <TableHead>{t('description')}</TableHead>
                     <TableHead>{t('person')}</TableHead>
                     <TableHead className="text-right">{t('value')}</TableHead>
-                    <TableHead className="w-28">{t('status')}</TableHead>
                     <TableHead className="w-20"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -175,6 +168,15 @@ export function ReleaseList({
                     const isSettled = !!release.settled;
                     return (
                       <TableRow key={release.id} className={cn(isSettled && 'opacity-60')}>
+                        <TableCell className="text-center">
+                          <input
+                            type="checkbox"
+                            checked={isSettled}
+                            onChange={() => handleToggleSettled(release)}
+                            className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+                            title={isSettled ? settledLabel : t('pending')}
+                          />
+                        </TableCell>
                         <TableCell className={cn('font-medium', isSettled && 'line-through')}>
                           {release.day}
                         </TableCell>
@@ -186,20 +188,6 @@ export function ReleaseList({
                         </TableCell>
                         <TableCell className={cn('text-right', isSettled && 'line-through')}>
                           {formatCurrency(release.value)}
-                        </TableCell>
-                        <TableCell>
-                          <Select
-                            value={isSettled ? 'settled' : 'pending'}
-                            onValueChange={() => handleToggleSettled(release)}
-                          >
-                            <SelectTrigger className="h-7 text-xs w-full">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pending">{t('pending')}</SelectItem>
-                              <SelectItem value="settled">{settledLabel}</SelectItem>
-                            </SelectContent>
-                          </Select>
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
@@ -240,13 +228,12 @@ export function ReleaseList({
                 </TableBody>
                 <TableFooter>
                   <TableRow>
-                    <TableCell colSpan={3} className="font-medium">
+                    <TableCell colSpan={4} className="font-medium">
                       {t('total')}
                     </TableCell>
                     <TableCell className="text-right font-bold">
                       {formatCurrency(total)}
                     </TableCell>
-                    <TableCell></TableCell>
                     <TableCell></TableCell>
                   </TableRow>
                 </TableFooter>
