@@ -4,6 +4,7 @@ import {
   createFinancialReleaseSchema,
   updateFinancialReleaseSchema,
   filterByTypeSchema,
+  dashboardFilterSchema,
 } from '../validators/financial-release.validator';
 
 export class FinancialReleaseController {
@@ -26,6 +27,12 @@ export class FinancialReleaseController {
   async findAvailableMonths(_req: Request, res: Response): Promise<void> {
     const months = await financialReleaseService.findAvailableMonths();
     res.json(months);
+  }
+
+  async getDashboardSummary(req: Request, res: Response): Promise<void> {
+    const filter = dashboardFilterSchema.parse(req.query);
+    const data = await financialReleaseService.getDashboardSummary(filter);
+    res.json(data);
   }
 
   async findByType(req: Request, res: Response): Promise<void> {

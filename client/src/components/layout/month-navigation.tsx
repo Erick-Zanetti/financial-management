@@ -13,11 +13,13 @@ import {
   FloatingSelectValue,
 } from '@/components/ui/floating-select';
 import { FloatingInput } from '@/components/ui/floating-input';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const CURRENT_BALANCE_KEY = 'financial-management-current-balance';
 
 export function MonthNavigation() {
-  const { months, currentYear, currentMonth, navigateToMonth } = useMonthNavigation();
+  const { months, currentYear, currentMonth, currentIndex, navigateToMonth } = useMonthNavigation();
   const { activeTab, setActiveTab, setCurrentBalance } = useMonth();
   const { getMonthLabel, t, formatDisplayValue, parseCurrency } = useSettings();
 
@@ -68,6 +70,19 @@ export function MonthNavigation() {
       </Tabs>
 
       <div className="flex items-center gap-3 px-4 py-3 border-b bg-muted/30">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          disabled={currentIndex <= 0}
+          onClick={() => {
+            const prev = months[currentIndex - 1];
+            if (prev) navigateToMonth(prev.year, prev.month);
+          }}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+
         <FloatingSelect
           value={monthValue}
           onValueChange={(v) => {
@@ -86,6 +101,19 @@ export function MonthNavigation() {
             ))}
           </FloatingSelectContent>
         </FloatingSelect>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          disabled={currentIndex >= months.length - 1}
+          onClick={() => {
+            const next = months[currentIndex + 1];
+            if (next) navigateToMonth(next.year, next.month);
+          }}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
 
         {isCurrentMonth && (
           <FloatingInput

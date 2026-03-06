@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { releasesApi } from '@/lib/api/releases';
 import {
   CreateFinancialRelease,
-  UpdateFinancialRelease
+  UpdateFinancialRelease,
 } from '@/types/financial-release';
 
 export function useAvailableMonths() {
@@ -83,6 +83,14 @@ export function useToggleSettled() {
         queryKey: ['receipts', variables.month, variables.year]
       });
     },
+  });
+}
+
+export function useDashboardSummary(fromMonth: number, fromYear: number, toMonth: number, toYear: number) {
+  return useQuery({
+    queryKey: ['dashboard-summary', fromMonth, fromYear, toMonth, toYear],
+    queryFn: () => releasesApi.getDashboardSummary(fromMonth, fromYear, toMonth, toYear),
+    staleTime: 5 * 60 * 1000,
   });
 }
 

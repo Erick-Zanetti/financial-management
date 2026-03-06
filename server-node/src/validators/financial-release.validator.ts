@@ -24,6 +24,15 @@ export const filterByTypeSchema = z.object({
   year: z.coerce.number().int().min(2000).max(2100),
 });
 
+export const dashboardFilterSchema = z.object({
+  fromMonth: z.coerce.number().int().min(1).max(12),
+  fromYear: z.coerce.number().int().min(2000).max(2100),
+  toMonth: z.coerce.number().int().min(1).max(12),
+  toYear: z.coerce.number().int().min(2000).max(2100),
+});
+
+export type DashboardFilterDto = z.infer<typeof dashboardFilterSchema>;
+
 export type CreateFinancialReleaseDto = z.infer<
   typeof createFinancialReleaseSchema
 >;

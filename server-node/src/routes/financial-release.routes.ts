@@ -81,6 +81,11 @@ router.get(
  *         description: Filtered list of financial releases
  */
 router.get(
+  '/dashboard-summary',
+  asyncHandler(financialReleaseController.getDashboardSummary.bind(financialReleaseController)),
+);
+
+router.get(
   '/by-type',
   asyncHandler(financialReleaseController.findByType.bind(financialReleaseController)),
 );

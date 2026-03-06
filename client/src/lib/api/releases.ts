@@ -3,7 +3,8 @@ import {
   FinancialRelease,
   FinancialReleaseType,
   CreateFinancialRelease,
-  UpdateFinancialRelease
+  UpdateFinancialRelease,
+  DashboardSummaryItem
 } from '@/types/financial-release';
 
 export const releasesApi = {
@@ -41,4 +42,7 @@ export const releasesApi = {
 
   delete: (id: string) =>
     apiClient.delete<void>(`/${id}`),
+
+  getDashboardSummary: (fromMonth: number, fromYear: number, toMonth: number, toYear: number) =>
+    apiClient.get<DashboardSummaryItem[]>('/dashboard-summary', { fromMonth, fromYear, toMonth, toYear }),
 };

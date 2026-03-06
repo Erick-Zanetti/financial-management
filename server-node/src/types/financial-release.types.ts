@@ -21,3 +21,13 @@ export interface IFinancialReleaseFilter {
   month: number;
   year: number;
 }
+
+export interface IDashboardSummaryItem {
+  year: number;
+  month: number;
+  type: FinancialReleaseType;
+  categoryId: string;
+  categoryName: string;
+  total: number;
+  count: number;
+}

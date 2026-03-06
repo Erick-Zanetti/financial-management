@@ -22,5 +22,15 @@ export interface Month {
   month: number;
 }
 
+export interface DashboardSummaryItem {
+  year: number;
+  month: number;
+  type: FinancialReleaseType;
+  categoryId: string;
+  categoryName: string;
+  total: number;
+  count: number;
+}
+
 export type CreateFinancialRelease = Omit<FinancialRelease, 'id' | 'category'> & { category: string };
 export type UpdateFinancialRelease = Partial<CreateFinancialRelease>;

@@ -51,14 +51,6 @@ export default function LancamentosPage() {
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in-up">
             <SummaryCard
-              title={t('totalBalance')}
-              value={balance}
-              previousValue={prevBalance}
-              isLoading={isLoading}
-              variant="balance"
-              className="sm:col-span-2 lg:col-span-1"
-            />
-            <SummaryCard
               title={t('totalIncome')}
               value={totalReceipts}
               previousValue={prevTotalReceipts}
@@ -71,6 +63,14 @@ export default function LancamentosPage() {
               previousValue={prevTotalExpenses}
               isLoading={isLoading}
               variant="expense"
+            />
+            <SummaryCard
+              title={t('totalBalance')}
+              value={balance}
+              previousValue={prevBalance}
+              isLoading={isLoading}
+              variant="balance"
+              className="sm:col-span-2 lg:col-span-1"
             />
           </div>
 
