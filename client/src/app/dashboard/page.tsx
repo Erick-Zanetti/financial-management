@@ -47,6 +47,11 @@ export default function DashboardPage() {
     [data]
   );
 
+  const incomeCategoryPerMonth = useMemo(
+    () => computeCategoryPerMonth(data, range.months, getMonthLabel, FinancialReleaseType.Receipt),
+    [data, range.months, getMonthLabel]
+  );
+
   const expenseCategoryPerMonth = useMemo(
     () => computeCategoryPerMonth(data, range.months, getMonthLabel, FinancialReleaseType.Expense),
     [data, range.months, getMonthLabel]
@@ -56,7 +61,7 @@ export default function DashboardPage() {
     return (
       <div className="max-w-7xl mx-auto py-6 px-4 md:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {[1, 2, 3, 4].map(i => (
+          {[1, 2, 3, 4, 5].map(i => (
             <Card key={i}>
               <CardContent className="pt-6">
                 <Skeleton className="h-[300px] w-full" />
@@ -85,10 +90,17 @@ export default function DashboardPage() {
           incomeData={incomeDistribution}
           expenseData={expenseDistribution}
         />
+        {incomeCategoryPerMonth.categories.length > 0 && (
+          <CategoryBarChart
+            chartData={incomeCategoryPerMonth.chartData}
+            categories={incomeCategoryPerMonth.categories}
+            title={`${t('receipts')} — ${t('dashboardCategoryBreakdown')}`}
+          />
+        )}
         <CategoryBarChart
           chartData={expenseCategoryPerMonth.chartData}
           categories={expenseCategoryPerMonth.categories}
-          title={t('dashboardCategoryBreakdown')}
+          title={`${t('expenses')} — ${t('dashboardCategoryBreakdown')}`}
         />
       </div>
     </div>

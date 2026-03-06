@@ -28,6 +28,7 @@ export interface IDashboardSummaryItem {
   type: FinancialReleaseType;
   categoryId: string;
   categoryName: string;
+  categoryType: string;
   total: number;
   count: number;
 }
