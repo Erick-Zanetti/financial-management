@@ -1,11 +1,16 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { ICategory } from '../types/category.types';
+import { ICategory, CategoryType } from '../types/category.types';
 
 export interface CategoryDocument extends Omit<ICategory, 'id'>, Document {}
 
 const categorySchema = new Schema<CategoryDocument>(
   {
     name: { type: String, required: true, trim: true, unique: true },
+    type: {
+      type: String,
+      enum: Object.values(CategoryType),
+      required: true,
+    },
   },
   {
     collection: 'categories',

@@ -1,7 +1,9 @@
 import { z } from 'zod';
+import { CategoryType } from '../types/category.types';
 
 export const createCategorySchema = z.object({
   name: z.string().min(1).max(50).trim(),
+  type: z.nativeEnum(CategoryType),
 });
 
 export const updateCategorySchema = createCategorySchema.partial();

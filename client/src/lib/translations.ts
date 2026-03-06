@@ -80,6 +80,20 @@ export const pt = {
   categoryNameRequired: 'Nome é obrigatório',
   editCategory: 'Editar categoria',
   addCategory: 'Adicionar categoria',
+  categoryType: 'Tipo',
+  categoryTypeReceipt: 'Receitas',
+  categoryTypeExpense: 'Despesas',
+  categoryTypeBoth: 'Ambas',
+  categoryTypeRequired: 'Tipo é obrigatório',
+
+  // Dashboard charts
+  dashboardCategoryBreakdown: 'Categorias por Mês',
+  dashboardSavingsTrend: 'Tendência de Economia',
+  dashboardCategoryDistribution: 'Distribuição por Categoria',
+  dashboardIncomeDistribution: 'Receitas',
+  dashboardExpenseDistribution: 'Despesas',
+  dashboardNoData: 'Sem dados para o período',
+  savings: 'Economia',
 
   // Clone
   clone: 'Clonar',
@@ -191,6 +205,20 @@ export const en: Record<keyof typeof pt, string> = {
   categoryNameRequired: 'Name is required',
   editCategory: 'Edit category',
   addCategory: 'Add category',
+  categoryType: 'Type',
+  categoryTypeReceipt: 'Income',
+  categoryTypeExpense: 'Expenses',
+  categoryTypeBoth: 'Both',
+  categoryTypeRequired: 'Type is required',
+
+  // Dashboard charts
+  dashboardCategoryBreakdown: 'Categories by Month',
+  dashboardSavingsTrend: 'Savings Trend',
+  dashboardCategoryDistribution: 'Distribution by Category',
+  dashboardIncomeDistribution: 'Income',
+  dashboardExpenseDistribution: 'Expenses',
+  dashboardNoData: 'No data for the period',
+  savings: 'Savings',
 
   // Clone
   clone: 'Clone',

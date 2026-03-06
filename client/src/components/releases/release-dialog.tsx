@@ -59,7 +59,8 @@ export function ReleaseDialog({
   const updateMutation = useUpdateRelease();
   const [displayValue, setDisplayValue] = useState('');
   const { t, getMonthLabel, formatDisplayValue } = useSettings();
-  const { data: categories = [] } = useCategories();
+  const { data: allCategories = [] } = useCategories();
+  const categories = allCategories.filter((cat) => (cat.type as string) === type || cat.type === 'B');
 
   const formSchema = z.object({
     name: z.string().min(1, t('descriptionRequired')).max(30, t('maxChars')),

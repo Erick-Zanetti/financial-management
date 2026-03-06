@@ -17,12 +17,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from '@/components/ui/sheet';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,8 +40,16 @@ import {
   FormItem,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { FloatingInput } from '@/components/ui/floating-input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 import { useSettings } from '@/providers/settings-provider';
 import {
   useCategories,
@@ -49,7 +57,7 @@ import {
   useUpdateCategory,
   useDeleteCategory,
 } from '@/hooks/use-categories';
-import { Category } from '@/types/category';
+import { Category, CategoryType } from '@/types/category';
 
 export default function CategoriasPage() {
   const { t } = useSettings();
@@ -58,37 +66,43 @@ export default function CategoriasPage() {
   const updateMutation = useUpdateCategory();
   const deleteMutation = useDeleteCategory();
 
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
 
   const formSchema = z.object({
     name: z.string().min(1, t('categoryNameRequired')).max(50),
+    type: z.nativeEnum(CategoryType, { message: t('categoryTypeRequired') }),
   });
 
   type FormValues = z.infer<typeof formSchema>;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: '' },
+    defaultValues: { name: '', type: CategoryType.Expense },
   });
 
   const handleAdd = () => {
     setEditingCategory(null);
-    form.reset({ name: '' });
-    setDialogOpen(true);
+    form.reset({ name: '', type: CategoryType.Expense });
+    setSheetOpen(true);
   };
 
   const handleEdit = (category: Category) => {
     setEditingCategory(category);
-    form.reset({ name: category.name });
-    setDialogOpen(true);
+    form.reset({ name: category.name, type: category.type });
+    setSheetOpen(true);
   };
 
   const handleDelete = (category: Category) => {
     setDeletingCategory(category);
     setDeleteDialogOpen(true);
+  };
+
+  const handleSheetClose = () => {
+    setSheetOpen(false);
+    setEditingCategory(null);
   };
 
   const onSubmit = async (values: FormValues) => {
@@ -100,7 +114,7 @@ export default function CategoriasPage() {
         await createMutation.mutateAsync(values);
         toast.success(t('categoryCreated'));
       }
-      setDialogOpen(false);
+      handleSheetClose();
     } catch {
       toast.error(t('saveFailed'));
     }
@@ -121,6 +135,12 @@ export default function CategoriasPage() {
       }
     }
   };
+
+  const getTypeLabel = (type: CategoryType) => t(
+    type === CategoryType.Receipt ? 'categoryTypeReceipt'
+    : type === CategoryType.Expense ? 'categoryTypeExpense'
+    : 'categoryTypeBoth'
+  );
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
@@ -150,6 +170,7 @@ export default function CategoriasPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('categoryName')}</TableHead>
+                  <TableHead>{t('categoryType')}</TableHead>
                   <TableHead className="w-20"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -157,6 +178,9 @@ export default function CategoriasPage() {
                 {categories.map((category) => (
                   <TableRow key={category.id}>
                     <TableCell className="font-medium">{category.name}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {getTypeLabel(category.type)}
+                    </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         <Button
@@ -185,15 +209,16 @@ export default function CategoriasPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
+      <Sheet open={sheetOpen} onOpenChange={handleSheetClose}>
+        <SheetContent side="right">
+          <SheetHeader>
+            <SheetTitle>
               {editingCategory ? t('editCategory') : t('addCategory')}
-            </DialogTitle>
-          </DialogHeader>
+            </SheetTitle>
+          </SheetHeader>
+
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 mt-8">
               <FormField
                 control={form.control}
                 name="name"
@@ -210,22 +235,55 @@ export default function CategoriasPage() {
                   </FormItem>
                 )}
               />
-              <DialogFooter className="gap-2">
+
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <div className="relative">
+                          <SelectTrigger
+                            className={cn(
+                              'h-12 rounded-lg pt-5 pb-1 text-sm',
+                              !field.value && 'text-muted-foreground'
+                            )}
+                          >
+                            <SelectValue placeholder={t('categoryType')} />
+                          </SelectTrigger>
+                          <span className="absolute left-3 top-2.5 text-xs text-muted-foreground pointer-events-none">
+                            {t('categoryType')}
+                          </span>
+                        </div>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={CategoryType.Expense}>{t('categoryTypeExpense')}</SelectItem>
+                        <SelectItem value={CategoryType.Receipt}>{t('categoryTypeReceipt')}</SelectItem>
+                        <SelectItem value={CategoryType.Both}>{t('categoryTypeBoth')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <SheetFooter className="gap-2 pt-4">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setDialogOpen(false)}
+                  onClick={handleSheetClose}
                 >
                   {t('cancel')}
                 </Button>
                 <Button type="submit" disabled={isPending}>
                   {isPending ? t('saving') : t('save')}
                 </Button>
-              </DialogFooter>
+              </SheetFooter>
             </form>
           </Form>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
