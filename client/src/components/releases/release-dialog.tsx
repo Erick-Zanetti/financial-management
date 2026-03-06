@@ -21,19 +21,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { FinancialRelease, FinancialReleaseType, Person } from '@/types/financial-release';
+import { FinancialRelease, FinancialReleaseType } from '@/types/financial-release';
 import { useCreateRelease, useUpdateRelease } from '@/hooks/use-releases';
 import { useSettings } from '@/providers/settings-provider';
 
@@ -44,8 +37,6 @@ interface ReleaseDialogProps {
   month: number;
   year: number;
   release?: FinancialRelease | null;
-  defaultPerson?: Person;
-  onPersonCreated?: (person: Person) => void;
 }
 
 export function ReleaseDialog({
@@ -55,8 +46,6 @@ export function ReleaseDialog({
   month,
   year,
   release,
-  defaultPerson,
-  onPersonCreated,
 }: ReleaseDialogProps) {
   const isEditing = !!release;
   const createMutation = useCreateRelease();
@@ -68,7 +57,6 @@ export function ReleaseDialog({
     name: z.string().min(1, t('descriptionRequired')).max(30, t('maxChars')),
     value: z.number().min(0.01, t('valueMustBePositive')),
     day: z.number().min(1, t('invalidDay')).max(31, t('invalidDay')),
-    person: z.nativeEnum(Person, { message: t('personRequired') }),
   });
 
   type FormValues = z.infer<typeof formSchema>;
@@ -79,7 +67,6 @@ export function ReleaseDialog({
       name: '',
       value: 0,
       day: 1,
-      person: undefined,
     },
   });
 
@@ -90,7 +77,6 @@ export function ReleaseDialog({
           name: release.name,
           value: release.value,
           day: release.day,
-          person: release.person,
         });
         setDisplayValue(formatDisplayValue(release.value));
       } else {
@@ -98,12 +84,11 @@ export function ReleaseDialog({
           name: '',
           value: 0,
           day: 1,
-          person: defaultPerson,
         });
         setDisplayValue('');
       }
     }
-  }, [open, release, form, defaultPerson, formatDisplayValue]);
+  }, [open, release, form, formatDisplayValue]);
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -126,9 +111,6 @@ export function ReleaseDialog({
           year,
         });
         toast.success(t('releaseSaved'));
-        if (onPersonCreated) {
-          onPersonCreated(values.person);
-        }
       }
       onOpenChange(false);
     } catch {
@@ -152,28 +134,6 @@ export function ReleaseDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="person"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('person')}</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('selectPerson')} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value={Person.ERICK}>Erick</SelectItem>
-                      <SelectItem value={Person.JULIA}>Julia</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <FormField
               control={form.control}
               name="day"

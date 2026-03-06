@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { FinancialReleaseType, Person } from '../types/financial-release.types';
+import { FinancialReleaseType } from '../types/financial-release.types';
 
 export const createFinancialReleaseSchema = z.object({
   name: z.string().min(1, 'Name is required').max(200),
@@ -7,9 +7,7 @@ export const createFinancialReleaseSchema = z.object({
   type: z.nativeEnum(FinancialReleaseType, {
     errorMap: () => ({ message: 'Type must be R (Receipt) or E (Expense)' }),
   }),
-  person: z.nativeEnum(Person, {
-    errorMap: () => ({ message: 'Person must be ERICK or JULIA' }),
-  }),
+  person: z.string().optional(),
   year: z.number().int().min(2000).max(2100),
   month: z.number().int().min(1).max(12),
   day: z.number().int().min(1).max(31),

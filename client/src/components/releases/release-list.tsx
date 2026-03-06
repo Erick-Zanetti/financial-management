@@ -10,13 +10,12 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FinancialRelease, FinancialReleaseType, Person } from '@/types/financial-release';
+import { FinancialRelease, FinancialReleaseType } from '@/types/financial-release';
 import { useSettings } from '@/providers/settings-provider';
 import { cn } from '@/lib/utils';
 import { PieChart } from '@/components/charts/pie-chart';
@@ -31,8 +30,6 @@ interface ReleaseListProps {
   year: number;
   isLoading?: boolean;
   variant: 'receipt' | 'expense';
-  defaultPerson?: Person;
-  onPersonCreated?: (person: Person) => void;
   allMonthSettled?: boolean;
 }
 
@@ -44,8 +41,6 @@ export function ReleaseList({
   year,
   isLoading,
   variant,
-  defaultPerson,
-  onPersonCreated,
   allMonthSettled = false,
 }: ReleaseListProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -56,11 +51,6 @@ export function ReleaseList({
   const { t, formatCurrency } = useSettings();
   const createMutation = useCreateRelease();
   const toggleSettledMutation = useToggleSettled();
-
-  const activeReleases = allMonthSettled
-    ? releases
-    : releases.filter((r) => !r.settled);
-  const total = activeReleases.reduce((sum, r) => sum + r.value, 0);
 
   const pieData = allMonthSettled
     ? releases
@@ -94,7 +84,6 @@ export function ReleaseList({
         name: release.name,
         value: release.value,
         type: release.type,
-        person: release.person,
         day: release.day,
         month: nextMonth,
         year: nextYear,
@@ -158,7 +147,6 @@ export function ReleaseList({
                     <TableHead className="w-10 text-center">{t('status')}</TableHead>
                     <TableHead className="w-12">{t('day')}</TableHead>
                     <TableHead>{t('description')}</TableHead>
-                    <TableHead>{t('person')}</TableHead>
                     <TableHead className="text-right">{t('value')}</TableHead>
                     <TableHead className="w-20"></TableHead>
                   </TableRow>
@@ -182,9 +170,6 @@ export function ReleaseList({
                         </TableCell>
                         <TableCell className={cn(isSettled && 'line-through')}>
                           {release.name}
-                        </TableCell>
-                        <TableCell className={cn('capitalize', isSettled && 'line-through')}>
-                          {release.person.toLowerCase()}
                         </TableCell>
                         <TableCell className={cn('text-right', isSettled && 'line-through')}>
                           {formatCurrency(release.value)}
@@ -226,17 +211,6 @@ export function ReleaseList({
                     );
                   })}
                 </TableBody>
-                <TableFooter>
-                  <TableRow>
-                    <TableCell colSpan={4} className="font-medium">
-                      {t('total')}
-                    </TableCell>
-                    <TableCell className="text-right font-bold">
-                      {formatCurrency(total)}
-                    </TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                </TableFooter>
               </Table>
             </div>
           )}
@@ -251,8 +225,6 @@ export function ReleaseList({
         month={month}
         year={year}
         release={editingRelease}
-        defaultPerson={defaultPerson}
-        onPersonCreated={onPersonCreated}
       />
 
       <DeleteDialog

@@ -3,17 +3,12 @@ export enum FinancialReleaseType {
   Expense = 'E',
 }
 
-export enum Person {
-  ERICK = 'ERICK',
-  JULIA = 'JULIA',
-}
-
 export interface IFinancialRelease {
   id?: string;
   name: string;
   value: number;
   type: FinancialReleaseType;
-  person: Person;
+  person?: string;
   year: number;
   month: number;
   day: number;

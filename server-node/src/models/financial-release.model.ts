@@ -2,7 +2,6 @@ import mongoose, { Schema, Document } from 'mongoose';
 import {
   IFinancialRelease,
   FinancialReleaseType,
-  Person,
 } from '../types/financial-release.types';
 
 /**
@@ -15,7 +14,6 @@ import {
  *         - name
  *         - value
  *         - type
- *         - person
  *         - year
  *         - month
  *         - day
@@ -32,7 +30,6 @@ import {
  *           enum: [R, E]
  *         person:
  *           type: string
- *           enum: [ERICK, JULIA]
  *         year:
  *           type: integer
  *         month:
@@ -63,8 +60,7 @@ const financialReleaseSchema = new Schema<FinancialReleaseDocument>(
     },
     person: {
       type: String,
-      enum: Object.values(Person),
-      required: true,
+      required: false,
     },
     year: { type: Number, required: true },
     month: { type: Number, required: true, min: 1, max: 12 },

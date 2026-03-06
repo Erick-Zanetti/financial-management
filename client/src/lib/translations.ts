@@ -18,27 +18,21 @@ export const pt = {
   expenses: 'Despesas',
   receiptsVsExpenses: 'Receitas vs Despesas',
   summary: 'Resumo',
+  totalBalance: 'Saldo Total',
+  totalIncome: 'Total Receitas',
+  totalExpenses: 'Total Despesas',
+  vsPreviousMonth: 'vs. Mês anterior',
 
   // Table
   day: 'Dia',
   description: 'Descrição',
-  person: 'Pessoa',
   value: 'Valor',
   total: 'Total',
   noData: 'Sem dados',
   add: 'Adicionar',
 
-  // Person filter
-  all: 'Todos',
-  filterByPerson: 'Filtrar por pessoa',
-
-  // Person selection modal
-  whoAreYou: 'Quem é você?',
-  personSelectionDescription: 'Escolha para pré-filtrar os dados do dashboard.',
-
   // Release dialog
   edit: 'Editar',
-  selectPerson: 'Selecione uma pessoa',
   selectDay: 'Selecione o dia',
   dayPrefix: 'Dia',
   descriptionPlaceholder: 'Descrição',
@@ -46,7 +40,6 @@ export const pt = {
   maxChars: 'Máximo 30 caracteres',
   valueMustBePositive: 'Valor deve ser maior que zero',
   invalidDay: 'Dia inválido',
-  personRequired: 'Pessoa é obrigatória',
   cancel: 'Cancelar',
   save: 'Salvar',
   saving: 'Salvando...',
@@ -121,27 +114,21 @@ export const en: Record<keyof typeof pt, string> = {
   expenses: 'Expenses',
   receiptsVsExpenses: 'Income vs Expenses',
   summary: 'Summary',
+  totalBalance: 'Total Balance',
+  totalIncome: 'Total Income',
+  totalExpenses: 'Total Expenses',
+  vsPreviousMonth: 'vs. Previous month',
 
   // Table
   day: 'Day',
   description: 'Description',
-  person: 'Person',
   value: 'Amount',
   total: 'Total',
   noData: 'No data',
   add: 'Add',
 
-  // Person filter
-  all: 'All',
-  filterByPerson: 'Filter by person',
-
-  // Person selection modal
-  whoAreYou: 'Who are you?',
-  personSelectionDescription: 'Choose to pre-filter the dashboard data.',
-
   // Release dialog
   edit: 'Edit',
-  selectPerson: 'Select a person',
   selectDay: 'Select day',
   dayPrefix: 'Day',
   descriptionPlaceholder: 'Description',
@@ -149,7 +136,6 @@ export const en: Record<keyof typeof pt, string> = {
   maxChars: 'Maximum 30 characters',
   valueMustBePositive: 'Value must be greater than zero',
   invalidDay: 'Invalid day',
-  personRequired: 'Person is required',
   cancel: 'Cancel',
   save: 'Save',
   saving: 'Saving...',
