@@ -5,12 +5,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from '@/components/ui/sheet';
 import {
   Form,
   FormControl,
@@ -121,19 +121,19 @@ export function ReleaseDialog({
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px]">
-        <DialogHeader>
-          <DialogTitle>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right">
+        <SheetHeader>
+          <SheetTitle>
             {isEditing ? t('edit') : t('add')}
             <span className="text-sm font-normal text-muted-foreground ml-2">
               — {getMonthLabel(month)}/{year}
             </span>
-          </DialogTitle>
-        </DialogHeader>
+          </SheetTitle>
+        </SheetHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-6">
             <FormField
               control={form.control}
               name="day"
@@ -227,7 +227,7 @@ export function ReleaseDialog({
               )}
             />
 
-            <DialogFooter className="gap-2">
+            <SheetFooter className="gap-2 pt-4">
               <Button
                 type="button"
                 variant="outline"
@@ -238,10 +238,10 @@ export function ReleaseDialog({
               <Button type="submit" disabled={isPending}>
                 {isPending ? t('saving') : t('save')}
               </Button>
-            </DialogFooter>
+            </SheetFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

@@ -1,13 +1,12 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
 import { buildDynamicMonths, getCurrentMonthIndex } from '@/lib/months';
 import { useAvailableMonths } from '@/hooks/use-releases';
+import { useMonth } from '@/providers/month-provider';
 
 export function useMonthNavigation() {
-  const params = useParams();
-  const router = useRouter();
+  const { currentYear, currentMonth, setMonth } = useMonth();
 
   const { data: availableMonths, isLoading } = useAvailableMonths();
 
@@ -15,9 +14,6 @@ export function useMonthNavigation() {
     () => buildDynamicMonths(availableMonths ?? []),
     [availableMonths]
   );
-
-  const currentYear = params.year ? Number(params.year) : new Date().getFullYear();
-  const currentMonth = params.month ? Number(params.month) : new Date().getMonth() + 1;
 
   const currentIndex = useMemo(() => {
     const index = months.findIndex(
@@ -27,7 +23,7 @@ export function useMonthNavigation() {
   }, [months, currentYear, currentMonth]);
 
   const navigateToMonth = (year: number, month: number) => {
-    router.push(`/lancamentos/${year}/${month}`);
+    setMonth(year, month);
   };
 
   return {

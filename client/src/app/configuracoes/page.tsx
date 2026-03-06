@@ -20,8 +20,6 @@ export default function ConfiguracoesPage() {
 
   return (
     <div className="container mx-auto py-6 px-4">
-      <h1 className="text-2xl font-bold mb-6">{t('settings')}</h1>
-
       <div className="max-w-md space-y-4">
         <Card>
           <CardContent className="pt-6 space-y-4">

@@ -1,15 +1,28 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { Menu, Moon, Sun, Wallet } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { useSettings } from '@/providers/settings-provider';
 import { useSidebar } from '@/providers/sidebar-provider';
 
+function usePageTitle() {
+  const pathname = usePathname();
+  const { t } = useSettings();
+
+  if (pathname.startsWith('/lancamentos')) return t('releases');
+  if (pathname.startsWith('/categorias')) return t('categories');
+  if (pathname.startsWith('/configuracoes')) return t('settings');
+  if (pathname.startsWith('/dashboard')) return t('menuDashboard');
+  return t('appTitle');
+}
+
 export function Header() {
   const { t } = useSettings();
   const { theme, setTheme } = useTheme();
   const { setMobileOpen } = useSidebar();
+  const pageTitle = usePageTitle();
 
   return (
     <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -25,6 +38,7 @@ export function Header() {
           </Button>
           <Wallet className="h-6 w-6 md:hidden" />
           <span className="font-semibold md:hidden">{t('appTitle')}</span>
+          <h1 className="hidden md:block text-lg font-semibold">{pageTitle}</h1>
         </div>
         <Button
           variant="ghost"

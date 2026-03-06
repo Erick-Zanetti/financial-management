@@ -7,7 +7,7 @@ export default function CategoriasPage() {
 
   return (
     <div className="container mx-auto py-6 px-4">
-      <h1 className="text-2xl font-bold">{t('categories')}</h1>
+      {/* Content */}
     </div>
   );
 }

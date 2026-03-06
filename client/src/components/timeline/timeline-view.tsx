@@ -11,9 +11,10 @@ import { cn } from '@/lib/utils';
 interface TimelineViewProps {
   month: number;
   year: number;
+  currentBalance?: number;
 }
 
-export function TimelineView({ month, year }: TimelineViewProps) {
+export function TimelineView({ month, year, currentBalance = 0 }: TimelineViewProps) {
   const { data: expenses = [], isLoading: loadingExpenses } = useExpenses(month, year);
   const { data: receipts = [], isLoading: loadingReceipts } = useReceipts(month, year);
   const { t, formatCurrency } = useSettings();
@@ -32,7 +33,7 @@ export function TimelineView({ month, year }: TimelineViewProps) {
   const allSettled = sortedReleases.length > 0 && sortedReleases.every((r) => r.settled);
 
   const getRunningBalance = (index: number) => {
-    let balance = 0;
+    let balance = currentBalance;
     for (let i = 0; i <= index; i++) {
       const release = sortedReleases[i];
       if (!allSettled && release.settled) continue;
@@ -87,6 +88,30 @@ export function TimelineView({ month, year }: TimelineViewProps) {
           <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
 
           <div className="space-y-4">
+            {currentBalance > 0 && (
+              <div className="relative pl-10">
+                <div className="absolute left-2 top-2 h-4 w-4 rounded-full border-2 bg-background border-blue-500" />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border border-blue-500/30 p-4 bg-card">
+                  <div className="flex-1">
+                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                      {t('currentBalance')}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <div
+                      className={cn(
+                        'text-lg font-bold',
+                        currentBalance >= 0
+                          ? 'text-blue-600 dark:text-blue-400'
+                          : 'text-red-600 dark:text-red-400'
+                      )}
+                    >
+                      {formatCurrency(currentBalance)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             {sortedReleases.map((release, index) => {
               const isReceipt = release.type === FinancialReleaseType.Receipt;
               const balance = getRunningBalance(index);

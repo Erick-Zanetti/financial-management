@@ -1,4 +1,5 @@
 import { MonthNavigation } from '@/components/layout/month-navigation';
+import { MonthProvider } from '@/providers/month-provider';
 
 export default function LancamentosLayout({
   children,
@@ -6,9 +7,9 @@ export default function LancamentosLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
+    <MonthProvider>
       <MonthNavigation />
       {children}
-    </>
+    </MonthProvider>
   );
 }
