@@ -86,10 +86,6 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <MonthlyLineChart data={monthlyTotals} />
         <SavingsTrendChart data={savingsTrend} />
-        <CategoryDonutChart
-          incomeData={incomeDistribution}
-          expenseData={expenseDistribution}
-        />
         {incomeCategoryPerMonth.categories.length > 0 && (
           <CategoryBarChart
             chartData={incomeCategoryPerMonth.chartData}
@@ -97,11 +93,15 @@ export default function DashboardPage() {
             title={`${t('receipts')} — ${t('dashboardCategoryBreakdown')}`}
           />
         )}
+        <CategoryBarChart
+          chartData={expenseCategoryPerMonth.chartData}
+          categories={expenseCategoryPerMonth.categories}
+          title={`${t('expenses')} — ${t('dashboardCategoryBreakdown')}`}
+        />
         <div className="lg:col-span-2">
-          <CategoryBarChart
-            chartData={expenseCategoryPerMonth.chartData}
-            categories={expenseCategoryPerMonth.categories}
-            title={`${t('expenses')} — ${t('dashboardCategoryBreakdown')}`}
+          <CategoryDonutChart
+            incomeData={incomeDistribution}
+            expenseData={expenseDistribution}
           />
         </div>
       </div>
