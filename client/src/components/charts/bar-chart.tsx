@@ -1,11 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
-  YAxis,
   ResponsiveContainer,
   Tooltip,
   Legend,
@@ -14,66 +12,34 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSettings } from '@/providers/settings-provider';
 import { FinancialRelease } from '@/types/financial-release';
 
-interface CumulativeLineChartProps {
+interface StackedBarChartProps {
   receipts: FinancialRelease[];
   expenses: FinancialRelease[];
 }
 
-interface DayData {
-  day: number;
-  receipts: number;
-  expenses: number;
-  receiptsLabel: string;
-  expensesLabel: string;
-}
-
-export function CumulativeLineChart({ receipts, expenses }: CumulativeLineChartProps) {
+export function CumulativeLineChart({ receipts, expenses }: StackedBarChartProps) {
   const { t, formatCurrency } = useSettings();
 
-  const data = useMemo(() => {
-    const receiptsByDay: Record<number, { total: number; names: string[] }> = {};
-    const expensesByDay: Record<number, { total: number; names: string[] }> = {};
+  const totalReceipts = receipts.reduce((sum, r) => sum + r.value, 0);
+  const totalExpenses = expenses.reduce((sum, e) => sum + e.value, 0);
+  const total = totalReceipts + totalExpenses;
 
-    for (const r of receipts) {
-      if (!receiptsByDay[r.day]) receiptsByDay[r.day] = { total: 0, names: [] };
-      receiptsByDay[r.day].total += r.value;
-      receiptsByDay[r.day].names.push(r.name);
-    }
+  if (total === 0) {
+    return null;
+  }
 
-    for (const e of expenses) {
-      if (!expensesByDay[e.day]) expensesByDay[e.day] = { total: 0, names: [] };
-      expensesByDay[e.day].total += e.value;
-      expensesByDay[e.day].names.push(e.name);
-    }
+  const receiptsPct = Math.round((totalReceipts / total) * 100);
+  const expensesPct = 100 - receiptsPct;
 
-    const allDays = new Set<number>();
-    Object.keys(receiptsByDay).forEach((d) => allDays.add(Number(d)));
-    Object.keys(expensesByDay).forEach((d) => allDays.add(Number(d)));
-
-    const sortedDays = Array.from(allDays).sort((a, b) => a - b);
-
-    let cumReceipts = 0;
-    let cumExpenses = 0;
-    const result: DayData[] = [];
-
-    for (const day of sortedDays) {
-      const rDay = receiptsByDay[day];
-      const eDay = expensesByDay[day];
-
-      if (rDay) cumReceipts += rDay.total;
-      if (eDay) cumExpenses += eDay.total;
-
-      result.push({
-        day,
-        receipts: cumReceipts,
-        expenses: cumExpenses,
-        receiptsLabel: rDay ? rDay.names.join(', ') : '',
-        expensesLabel: eDay ? eDay.names.join(', ') : '',
-      });
-    }
-
-    return result;
-  }, [receipts, expenses]);
+  const data = [
+    {
+      name: t('receiptsVsExpenses'),
+      receipts: receiptsPct,
+      expenses: expensesPct,
+      receiptsValue: totalReceipts,
+      expensesValue: totalExpenses,
+    },
+  ];
 
   const receiptsLabel = t('receipts');
   const expensesLabel = t('expenses');
@@ -86,23 +52,20 @@ export function CumulativeLineChart({ receipts, expenses }: CumulativeLineChartP
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[250px]">
+        <div className="h-[60px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart
+            <BarChart
               data={data}
-              margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+              layout="vertical"
+              margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
             >
-              <XAxis
-                dataKey="day"
-                tickFormatter={(v) => `${v}`}
-              />
-              <YAxis
-                tickFormatter={(v) => formatCurrency(v)}
-                width={80}
-              />
+              <XAxis type="number" domain={[0, 100]} hide />
               <Tooltip
-                content={({ active, payload, label }) => {
+                cursor={false}
+                content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
+                  const d = payload[0]?.payload;
+                  if (!d) return null;
                   return (
                     <div
                       className="rounded-md border px-3 py-2 text-sm"
@@ -112,49 +75,42 @@ export function CumulativeLineChart({ receipts, expenses }: CumulativeLineChartP
                         color: 'hsl(var(--foreground))',
                       }}
                     >
-                      <p className="font-medium mb-1">{t('day')} {label}</p>
-                      {payload.map((entry) => {
-                        const isReceipt = entry.dataKey === 'receipts';
-                        const labelKey = isReceipt ? 'receiptsLabel' : 'expensesLabel';
-                        const names = entry.payload[labelKey];
-                        return (
-                          <div key={entry.dataKey as string} className="mb-1">
-                            <span style={{ color: entry.color }}>
-                              {isReceipt ? receiptsLabel : expensesLabel}:
-                            </span>{' '}
-                            {formatCurrency(Number(entry.value))}
-                            {names && (
-                              <p className="text-xs text-muted-foreground ml-2">
-                                {names}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
+                      <div className="mb-1">
+                        <span style={{ color: '#4caf50' }}>{receiptsLabel}:</span>{' '}
+                        {formatCurrency(d.receiptsValue)} ({d.receipts}%)
+                      </div>
+                      <div>
+                        <span style={{ color: '#f44336' }}>{expensesLabel}:</span>{' '}
+                        {formatCurrency(d.expensesValue)} ({d.expenses}%)
+                      </div>
                     </div>
                   );
                 }}
               />
-              <Legend />
-              <Line
+              <Legend
+                formatter={(value) => {
+                  const d = data[0];
+                  if (value === receiptsLabel) return `${receiptsLabel} (${d.receipts}%)`;
+                  return `${expensesLabel} (${d.expenses}%)`;
+                }}
+              />
+              <Bar
                 name={receiptsLabel}
-                type="monotone"
                 dataKey="receipts"
-                stroke="#4caf50"
-                strokeWidth={2}
-                dot={{ r: 4 }}
-                activeDot={{ r: 6 }}
+                stackId="a"
+                fill="#4caf50"
+                radius={[4, 0, 0, 4]}
+                barSize={28}
               />
-              <Line
+              <Bar
                 name={expensesLabel}
-                type="monotone"
                 dataKey="expenses"
-                stroke="#f44336"
-                strokeWidth={2}
-                dot={{ r: 4 }}
-                activeDot={{ r: 6 }}
+                stackId="a"
+                fill="#f44336"
+                radius={[0, 4, 4, 0]}
+                barSize={28}
               />
-            </LineChart>
+            </BarChart>
           </ResponsiveContainer>
         </div>
       </CardContent>

@@ -6,13 +6,13 @@ import { useMonth, ViewTab } from '@/providers/month-provider';
 import { useSettings } from '@/providers/settings-provider';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
+  FloatingSelect,
+  FloatingSelectTrigger,
+  FloatingSelectContent,
+  FloatingSelectItem,
+  FloatingSelectValue,
+} from '@/components/ui/floating-select';
+import { FloatingInput } from '@/components/ui/floating-input';
 
 const CURRENT_BALANCE_KEY = 'financial-management-current-balance';
 
@@ -68,30 +68,29 @@ export function MonthNavigation() {
       </Tabs>
 
       <div className="flex items-center gap-3 px-4 py-3 border-b bg-muted/30">
-        <Select
+        <FloatingSelect
           value={monthValue}
           onValueChange={(v) => {
             const [y, m] = v.split('-').map(Number);
             navigateToMonth(y, m);
           }}
         >
-          <SelectTrigger className="w-[160px] h-9 text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
+          <FloatingSelectTrigger label={t('month')} className="w-[160px]">
+            <FloatingSelectValue />
+          </FloatingSelectTrigger>
+          <FloatingSelectContent>
             {months.map((m) => (
-              <SelectItem key={`${m.year}-${m.month}`} value={`${m.year}-${m.month}`}>
+              <FloatingSelectItem key={`${m.year}-${m.month}`} value={`${m.year}-${m.month}`}>
                 {getMonthLabel(m.month)}/{m.year}
-              </SelectItem>
+              </FloatingSelectItem>
             ))}
-          </SelectContent>
-        </Select>
+          </FloatingSelectContent>
+        </FloatingSelect>
 
         {isCurrentMonth && (
-          <Input
-            type="text"
+          <FloatingInput
+            label={t('currentBalance')}
             inputMode="numeric"
-            placeholder={t('currentBalance')}
             value={displayBalance}
             onChange={(e) => {
               const raw = e.target.value;
@@ -103,7 +102,7 @@ export function MonthNavigation() {
                 JSON.stringify({ month: nowMonth, year: nowYear, value: numeric })
               );
             }}
-            className="flex-1 h-9 text-sm font-medium"
+            className="flex-1"
           />
         )}
       </div>

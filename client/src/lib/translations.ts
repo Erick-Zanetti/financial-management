@@ -12,6 +12,7 @@ export const pt = {
   theme: 'Tema',
 
   // Dashboard
+  month: 'Mês',
   currentBalance: 'Saldo Atual',
   balance: 'Saldo',
   receipts: 'Receitas',
@@ -108,6 +109,7 @@ export const en: Record<keyof typeof pt, string> = {
   theme: 'Theme',
 
   // Dashboard
+  month: 'Month',
   currentBalance: 'Current Balance',
   balance: 'Balance',
   receipts: 'Income',
