@@ -98,7 +98,7 @@ export function CumulativeLineChart({ receipts, expenses }: CumulativeLineChartP
               />
               <YAxis
                 tickFormatter={(v) => formatCurrency(v)}
-                width={80}
+                width={110}
               />
               <Tooltip
                 content={({ active, payload, label }) => {
