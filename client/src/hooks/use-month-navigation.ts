@@ -27,7 +27,7 @@ export function useMonthNavigation() {
   }, [months, currentYear, currentMonth]);
 
   const navigateToMonth = (year: number, month: number) => {
-    router.push(`/${year}/${month}`);
+    router.push(`/lancamentos/${year}/${month}`);
   };
 
   return {

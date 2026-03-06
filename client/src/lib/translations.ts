@@ -4,9 +4,12 @@ export const pt = {
   toggleTheme: 'Alternar tema',
   settings: 'Configurações',
 
-  // Navigation
+  // Navigation / Sidebar
   releases: 'Lançamentos',
   timeline: 'Linha do tempo',
+  menuDashboard: 'Dashboard',
+  categories: 'Categorias',
+  theme: 'Tema',
 
   // Dashboard
   currentBalance: 'Saldo Atual',
@@ -104,9 +107,12 @@ export const en: Record<keyof typeof pt, string> = {
   toggleTheme: 'Toggle theme',
   settings: 'Settings',
 
-  // Navigation
+  // Navigation / Sidebar
   releases: 'Releases',
   timeline: 'Timeline',
+  menuDashboard: 'Dashboard',
+  categories: 'Categories',
+  theme: 'Theme',
 
   // Dashboard
   currentBalance: 'Current Balance',

@@ -4,8 +4,10 @@ import './globals.css';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { SettingsProvider } from '@/providers/settings-provider';
 import { QueryProvider } from '@/providers/query-provider';
+import { SidebarProvider } from '@/providers/sidebar-provider';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { AppShell } from '@/components/layout/app-shell';
 import { Header } from '@/components/layout/header';
-import { MonthNavigation } from '@/components/layout/month-navigation';
 import { Toaster } from '@/components/ui/sonner';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -26,11 +28,14 @@ export default function RootLayout({
         <ThemeProvider>
           <SettingsProvider>
             <QueryProvider>
-              <div className="min-h-screen bg-background">
-                <Header />
-                <MonthNavigation />
-                <main>{children}</main>
-              </div>
+              <SidebarProvider>
+                <TooltipProvider delayDuration={0}>
+                  <AppShell>
+                    <Header />
+                    <main>{children}</main>
+                  </AppShell>
+                </TooltipProvider>
+              </SidebarProvider>
               <Toaster />
             </QueryProvider>
           </SettingsProvider>
