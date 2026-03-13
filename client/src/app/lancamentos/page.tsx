@@ -37,7 +37,8 @@ export default function LancamentosPage() {
   const totalExpenses = shouldFilterBySettled
     ? expenses.filter((e) => !e.settled).reduce((sum, e) => sum + e.value, 0)
     : expenses.reduce((sum, e) => sum + e.value, 0);
-  const balance = totalReceipts - totalExpenses;
+  const monthBalance = totalReceipts - totalExpenses;
+  const balance = isCurrentMonth ? currentBalance + monthBalance : monthBalance;
 
   const prevTotalReceipts = prevReceipts.reduce((sum, r) => sum + r.value, 0);
   const prevTotalExpenses = prevExpenses.reduce((sum, e) => sum + e.value, 0);
