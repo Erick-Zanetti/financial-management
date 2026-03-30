@@ -29,7 +29,7 @@ export default function LancamentosPage() {
     expenses.every((e) => e.settled) &&
     receipts.every((r) => r.settled);
 
-  const shouldFilterBySettled = isCurrentMonth && !allMonthSettled;
+  const shouldFilterBySettled = !allMonthSettled;
 
   const totalReceipts = shouldFilterBySettled
     ? receipts.filter((r) => !r.settled).reduce((sum, r) => sum + r.value, 0)
@@ -40,8 +40,17 @@ export default function LancamentosPage() {
   const monthBalance = totalReceipts - totalExpenses;
   const balance = isCurrentMonth ? currentBalance + monthBalance : monthBalance;
 
-  const prevTotalReceipts = prevReceipts.reduce((sum, r) => sum + r.value, 0);
-  const prevTotalExpenses = prevExpenses.reduce((sum, e) => sum + e.value, 0);
+  const prevHasTransactions = prevExpenses.length > 0 || prevReceipts.length > 0;
+  const prevAllSettled = prevHasTransactions &&
+    prevExpenses.every((e) => e.settled) &&
+    prevReceipts.every((r) => r.settled);
+  const prevShouldFilter = !prevAllSettled;
+  const prevTotalReceipts = prevShouldFilter
+    ? prevReceipts.filter((r) => !r.settled).reduce((sum, r) => sum + r.value, 0)
+    : prevReceipts.reduce((sum, r) => sum + r.value, 0);
+  const prevTotalExpenses = prevShouldFilter
+    ? prevExpenses.filter((e) => !e.settled).reduce((sum, e) => sum + e.value, 0)
+    : prevExpenses.reduce((sum, e) => sum + e.value, 0);
   const prevBalance = prevTotalReceipts - prevTotalExpenses;
 
   const isLoading = loadingExpenses || loadingReceipts;
