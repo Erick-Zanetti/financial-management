@@ -1,0 +1,21 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-${{ github.repository }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: [self-hosted, vps-deploy]
+    steps:
+      - name: Deploy application
+        run: |
+          /opt/services/deploy.sh \
+            "${{ github.event.repository.name }}" \
+            "${{ github.event.repository.clone_url }}" \
+            "${{ github.ref_name }}"
