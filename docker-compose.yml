@@ -1,30 +1,27 @@
 services:
-  app_proxy:
-    environment:
-      APP_HOST: financial-management_app
-      APP_PORT: 4200
-    container_name: financial-management_app_proxy_1
   mongodb-fm:
     image: mongo:7.0.5
     container_name: financial-management_mongodb
-    restart: on-failure
+    restart: unless-stopped
     volumes:
-      - ${APP_DATA_DIR:-.}/db:/data/db
+      - ./db:/data/db
   api-financial-management:
-    build: ${APP_DATA_DIR}/server-node
+    build: ./server-node
     container_name: financial-management_api
     environment:
       - NODE_ENV=production
       - MONGODB_URI=mongodb://mongodb-fm:27017/financial-management
     depends_on:
       - mongodb-fm
-    restart: on-failure
+    restart: unless-stopped
   app-financial-management:
-    build: ${APP_DATA_DIR}/client
+    build: ./client
     container_name: financial-management_app
+    ports:
+      - "4200:4200"
     environment:
       - NEXT_PUBLIC_API_URL=/api/financial-release
       - INTERNAL_API_URL=http://api-financial-management:3000
     depends_on:
       - api-financial-management
-    restart: on-failure
+    restart: unless-stopped
