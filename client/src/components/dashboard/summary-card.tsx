@@ -9,6 +9,8 @@ interface SummaryCardProps {
   title: string;
   value: number;
   previousValue?: number;
+  comparisonValue?: number;
+  comparisonPreviousValue?: number;
   isLoading?: boolean;
   variant: 'balance' | 'income' | 'expense';
   className?: string;
@@ -18,6 +20,8 @@ export function SummaryCard({
   title,
   value,
   previousValue,
+  comparisonValue,
+  comparisonPreviousValue,
   isLoading,
   variant,
   className,
@@ -40,12 +44,15 @@ export function SummaryCard({
         ? 'bg-gradient-to-br from-red-500/5 to-red-600/[0.03]'
         : 'bg-gradient-to-br from-primary/5 to-cyan-500/[0.03]';
 
+  const cmpValue = comparisonValue ?? value;
+  const cmpPrevious = comparisonPreviousValue ?? previousValue;
+
   const showComparison =
-    previousValue !== undefined && previousValue !== 0;
+    cmpPrevious !== undefined && cmpPrevious !== 0;
 
   let percentChange = 0;
   if (showComparison) {
-    percentChange = ((value - previousValue!) / Math.abs(previousValue!)) * 100;
+    percentChange = ((cmpValue - cmpPrevious!) / Math.abs(cmpPrevious!)) * 100;
   }
 
   const isPositiveChange =

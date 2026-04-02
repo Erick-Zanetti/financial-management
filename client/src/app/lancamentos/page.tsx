@@ -53,6 +53,14 @@ export default function LancamentosPage() {
     : prevExpenses.reduce((sum, e) => sum + e.value, 0);
   const prevBalance = prevTotalReceipts - prevTotalExpenses;
 
+  // Unfiltered totals for percentage comparison (always includes all transactions)
+  const totalReceiptsAll = receipts.reduce((sum, r) => sum + r.value, 0);
+  const totalExpensesAll = expenses.reduce((sum, e) => sum + e.value, 0);
+  const balanceAll = totalReceiptsAll - totalExpensesAll;
+  const prevTotalReceiptsAll = prevReceipts.reduce((sum, r) => sum + r.value, 0);
+  const prevTotalExpensesAll = prevExpenses.reduce((sum, e) => sum + e.value, 0);
+  const prevBalanceAll = prevTotalReceiptsAll - prevTotalExpensesAll;
+
   const isLoading = loadingExpenses || loadingReceipts;
 
   return (
@@ -64,6 +72,8 @@ export default function LancamentosPage() {
               title={t('totalIncome')}
               value={totalReceipts}
               previousValue={prevTotalReceipts}
+              comparisonValue={totalReceiptsAll}
+              comparisonPreviousValue={prevTotalReceiptsAll}
               isLoading={isLoading}
               variant="income"
             />
@@ -71,6 +81,8 @@ export default function LancamentosPage() {
               title={t('totalExpenses')}
               value={totalExpenses}
               previousValue={prevTotalExpenses}
+              comparisonValue={totalExpensesAll}
+              comparisonPreviousValue={prevTotalExpensesAll}
               isLoading={isLoading}
               variant="expense"
             />
@@ -78,6 +90,8 @@ export default function LancamentosPage() {
               title={t('totalBalance')}
               value={balance}
               previousValue={prevBalance}
+              comparisonValue={balanceAll}
+              comparisonPreviousValue={prevBalanceAll}
               isLoading={isLoading}
               variant="balance"
               className="sm:col-span-2 lg:col-span-1"
