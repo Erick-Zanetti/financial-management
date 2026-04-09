@@ -89,7 +89,7 @@ export function ReleaseDialog({
 
   const subcategorySchema = z.object({
     name: z.string().min(1, t('descriptionRequired')),
-    value: z.number().min(0.01, t('valueMustBePositive')),
+    value: z.number(),
   });
 
   const formSchema = z.object({
