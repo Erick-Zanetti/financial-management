@@ -57,7 +57,7 @@ function SubcategorySummary({
   formatCurrency: (v: number) => string;
 }) {
   const sum = subcategories.reduce((acc, s) => acc + s.value, 0);
-  const match = Math.abs(sum - total) < 0.01;
+  const match = sum <= total + 0.01;
   return (
     <div className={cn('text-xs text-right', match ? 'text-muted-foreground' : 'text-destructive font-medium')}>
       {formatCurrency(sum)} / {formatCurrency(total)}
@@ -156,7 +156,7 @@ export function ReleaseDialog({
 
     if (subcategories) {
       const sum = subcategories.reduce((acc, s) => acc + s.value, 0);
-      if (Math.abs(sum - values.value) >= 0.01) {
+      if (sum > values.value + 0.01) {
         form.setError('subcategories', { message: t('subcategorySumMismatch') });
         return;
       }

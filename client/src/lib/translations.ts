@@ -88,7 +88,7 @@ export const pt = {
   subcategoryName: 'Nome',
   addSubcategory: 'Adicionar subcategoria',
   removeSubcategory: 'Remover',
-  subcategorySumMismatch: 'A soma das subcategorias deve ser igual ao valor total',
+  subcategorySumMismatch: 'A soma das subcategorias não pode ultrapassar o valor total',
 
   // Dashboard charts
   dashboardCategoryBreakdown: 'Categorias por Mês',
@@ -234,7 +234,7 @@ export const en: Record<keyof typeof pt, string> = {
   subcategoryName: 'Name',
   addSubcategory: 'Add subcategory',
   removeSubcategory: 'Remove',
-  subcategorySumMismatch: 'Subcategory values must equal the total value',
+  subcategorySumMismatch: 'Subcategory values must not exceed the total value',
 
   // Dashboard charts
   dashboardCategoryBreakdown: 'Categories by Month',

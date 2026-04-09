@@ -26,10 +26,10 @@ export const createFinancialReleaseSchema = baseFinancialReleaseSchema.refine(
   (data) => {
     if (!data.subcategories || data.subcategories.length === 0) return true;
     const sum = data.subcategories.reduce((acc, s) => acc + s.value, 0);
-    return Math.abs(sum - data.value) < 0.01;
+    return sum <= data.value + 0.01;
   },
   {
-    message: 'Subcategory values must sum to the release total',
+    message: 'Subcategory values must not exceed the release total',
     path: ['subcategories'],
   },
 );
