@@ -194,30 +194,31 @@ export function AiPdfProcessor({
           {formatDisplayValue(subcategorySum)}
         </div>
 
-        <div className="flex gap-2 justify-end">
-          {report && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (navigator.clipboard?.writeText) {
-                  navigator.clipboard.writeText(report);
-                } else {
-                  const ta = document.createElement('textarea');
-                  ta.value = report;
-                  ta.style.position = 'fixed';
-                  ta.style.opacity = '0';
-                  document.body.appendChild(ta);
-                  ta.select();
-                  document.execCommand('copy');
-                  document.body.removeChild(ta);
-                }
+        <div className="flex flex-wrap gap-2 justify-end">
+          <Button
+            variant="outline"
+            disabled={!report}
+            onClick={() => {
+              const text = report || '';
+              const ta = document.createElement('textarea');
+              ta.value = text;
+              ta.style.position = 'fixed';
+              ta.style.left = '-9999px';
+              document.body.appendChild(ta);
+              ta.focus();
+              ta.select();
+              try {
+                document.execCommand('copy');
                 toast.success(t('aiReportCopied'));
-              }}
-            >
-              <ClipboardCopy className="h-3 w-3 mr-1" />
-              {t('aiCopyReport')}
-            </Button>
-          )}
+              } catch {
+                toast.error('Copy failed');
+              }
+              document.body.removeChild(ta);
+            }}
+          >
+            <ClipboardCopy className="h-3 w-3 mr-1" />
+            {t('aiCopyReport')}
+          </Button>
           <Button variant="outline" onClick={onBack}>
             {t('aiBack')}
           </Button>
