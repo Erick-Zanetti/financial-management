@@ -14,6 +14,7 @@ export interface IFinancialRelease {
   month: number;
   day: number;
   settled?: boolean;
+  observations?: string;
 }
 
 export interface IFinancialReleaseFilter {

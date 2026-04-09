@@ -95,6 +95,10 @@ export const pt = {
   dashboardNoData: 'Sem dados para o período',
   savings: 'Economia',
 
+  // Observations
+  observations: 'Observações',
+  maxCharsObservations: 'Máximo 200 caracteres',
+
   // Clone
   clone: 'Clonar',
   releaseCloned: 'Lançamento clonado para o próximo mês!',
@@ -219,6 +223,10 @@ export const en: Record<keyof typeof pt, string> = {
   dashboardExpenseDistribution: 'Expenses',
   dashboardNoData: 'No data for the period',
   savings: 'Savings',
+
+  // Observations
+  observations: 'Observations',
+  maxCharsObservations: 'Maximum 200 characters',
 
   // Clone
   clone: 'Clone',

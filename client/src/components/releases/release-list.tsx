@@ -88,6 +88,7 @@ export function ReleaseList({
         day: release.day,
         month: nextMonth,
         year: nextYear,
+        observations: release.observations,
       });
       toast.success(t('releaseCloned'));
     } catch {

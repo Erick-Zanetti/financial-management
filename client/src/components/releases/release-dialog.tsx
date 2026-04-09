@@ -19,6 +19,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { FloatingInput } from '@/components/ui/floating-input';
+import { FloatingTextarea } from '@/components/ui/floating-textarea';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -67,6 +68,7 @@ export function ReleaseDialog({
     value: z.number().min(0.01, t('valueMustBePositive')),
     day: z.number().min(1, t('invalidDay')).max(31, t('invalidDay')),
     category: z.string().min(1, t('categoryRequired')),
+    observations: z.string().max(200, t('maxCharsObservations')),
   });
 
   type FormValues = z.infer<typeof formSchema>;
@@ -78,6 +80,7 @@ export function ReleaseDialog({
       value: 0,
       day: 1,
       category: '',
+      observations: '',
     },
   });
 
@@ -89,6 +92,7 @@ export function ReleaseDialog({
           value: release.value,
           day: release.day,
           category: release.category?.id || '',
+          observations: release.observations || '',
         });
         setDisplayValue(formatDisplayValue(release.value));
       } else {
@@ -97,6 +101,7 @@ export function ReleaseDialog({
           value: 0,
           day: 1,
           category: '',
+          observations: '',
         });
         setDisplayValue('');
       }
@@ -272,6 +277,28 @@ export function ReleaseDialog({
                       }}
                       onBlur={field.onBlur}
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="observations"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <div className="relative">
+                      <FloatingTextarea
+                        label={t('observations')}
+                        maxLength={200}
+                        {...field}
+                      />
+                      <div className="text-xs text-muted-foreground text-right mt-1">
+                        {field.value?.length || 0}/200
+                      </div>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

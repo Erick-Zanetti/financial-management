@@ -43,6 +43,8 @@ import {
  *         settled:
  *           type: boolean
  *           default: false
+ *         observations:
+ *           type: string
  */
 
 export interface FinancialReleaseDocument
@@ -71,6 +73,7 @@ const financialReleaseSchema = new Schema<FinancialReleaseDocument>(
     month: { type: Number, required: true, min: 1, max: 12 },
     day: { type: Number, required: true, min: 1, max: 31 },
     settled: { type: Boolean, default: false },
+    observations: { type: String, required: false, trim: true },
   },
   {
     collection: 'financialreleases',
