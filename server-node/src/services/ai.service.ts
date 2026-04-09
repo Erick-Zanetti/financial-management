@@ -45,6 +45,7 @@ class AiService {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: text },
         ],
+        max_tokens: 16000,
         response_format: { type: 'json_object' },
       }),
     });
