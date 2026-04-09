@@ -45,7 +45,7 @@ export function AiPdfProcessor({
   const [report, setReport] = useState('');
   const copyRef = useRef<HTMLTextAreaElement>(null);
 
-  const ACCEPTED_TYPES = ['application/pdf', 'text/csv', 'text/plain', 'application/vnd.ms-excel'];
+  const ACCEPTED_TYPES = ['text/csv', 'text/plain', 'application/vnd.ms-excel'];
 
   const handleFile = useCallback((file: File) => {
     if (!ACCEPTED_TYPES.includes(file.type) && !file.name.endsWith('.csv')) {
@@ -265,7 +265,7 @@ export function AiPdfProcessor({
         <input
           ref={fileInputRef}
           type="file"
-          accept=".pdf,.csv,application/pdf,text/csv"
+          accept=".csv,text/csv"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];

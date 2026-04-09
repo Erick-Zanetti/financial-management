@@ -1,7 +1,6 @@
 import multer from 'multer';
 
 const ALLOWED_MIMETYPES = [
-  'application/pdf',
   'text/csv',
   'text/plain',
   'application/vnd.ms-excel',
@@ -14,7 +13,7 @@ export const upload = multer({
     if (ALLOWED_MIMETYPES.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Only PDF and CSV files are allowed'));
+      cb(new Error('Only CSV files are allowed'));
     }
   },
 });
