@@ -51,11 +51,10 @@ class AiService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      logger.error('OpenRouter API error', {
-        status: response.status,
-        body: errorBody,
-      });
-      throw new AppError(502, 'AI service returned an error');
+      logger.error(
+        `OpenRouter API error [${response.status}]: ${errorBody.slice(0, 500)}`,
+      );
+      throw new AppError(502, `AI service error [${response.status}]: ${errorBody.slice(0, 200)}`);
     }
 
     const completion = (await response.json()) as {
