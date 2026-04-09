@@ -127,13 +127,10 @@ export function AiPdfProcessor({
   };
 
   const subcategorySum = subcategories.reduce((acc, s) => acc + s.value, 0);
-  const sumExceedsTotal = subcategorySum - aiTotal > 0.01;
 
   const handleAccept = () => {
-    if (sumExceedsTotal) return;
-
     onAccept({
-      total: aiTotal,
+      total: Math.max(aiTotal, subcategorySum),
       subcategories: subcategories.map(({ name, value }) => ({ name, value })),
     });
   };
@@ -191,26 +188,15 @@ export function AiPdfProcessor({
           ))}
         </div>
 
-        <div
-          className={cn(
-            'text-xs text-right',
-            sumExceedsTotal
-              ? 'text-destructive font-medium'
-              : 'text-muted-foreground',
-          )}
-        >
-          {formatDisplayValue(subcategorySum)} / {formatDisplayValue(aiTotal)}
+        <div className="text-xs text-right text-muted-foreground">
+          {formatDisplayValue(subcategorySum)}
         </div>
-
-        {sumExceedsTotal && (
-          <p className="text-xs text-destructive">{t('aiSumExceedsTotal')}</p>
-        )}
 
         <div className="flex gap-2 justify-end">
           <Button variant="outline" onClick={onBack}>
             {t('aiBack')}
           </Button>
-          <Button onClick={handleAccept} disabled={sumExceedsTotal}>
+          <Button onClick={handleAccept}>
             {t('aiAccept')}
           </Button>
         </div>
