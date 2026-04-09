@@ -6,21 +6,42 @@ interface FloatingTextareaProps extends React.ComponentProps<"textarea"> {
 }
 
 const FloatingTextarea = React.forwardRef<HTMLTextAreaElement, FloatingTextareaProps>(
-  ({ className, label, id, ...props }, ref) => {
+  ({ className, label, id, onChange, ...props }, ref) => {
     const generatedId = React.useId();
     const textareaId = id || generatedId;
+    const innerRef = React.useRef<HTMLTextAreaElement | null>(null);
+
+    const adjustHeight = React.useCallback(() => {
+      const el = innerRef.current;
+      if (el) {
+        el.style.height = 'auto';
+        el.style.height = `${el.scrollHeight}px`;
+      }
+    }, []);
+
+    React.useEffect(() => {
+      adjustHeight();
+    }, [props.value, adjustHeight]);
 
     return (
       <div className="relative">
         <textarea
           id={textareaId}
-          ref={ref}
+          ref={(node) => {
+            innerRef.current = node;
+            if (typeof ref === 'function') ref(node);
+            else if (ref) ref.current = node;
+          }}
           placeholder=" "
           rows={3}
           className={cn(
-            "peer flex min-h-[80px] w-full rounded-lg border border-input bg-transparent px-3 pt-6 pb-2 text-base shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-none",
+            "peer flex min-h-[80px] w-full rounded-lg border border-input bg-transparent px-3 pt-6 pb-2 text-base shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-vertical",
             className
           )}
+          onChange={(e) => {
+            onChange?.(e);
+            adjustHeight();
+          }}
           {...props}
         />
         <label
