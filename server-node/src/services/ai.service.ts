@@ -78,10 +78,15 @@ class AiService {
       throw new AppError(502, 'AI returned invalid JSON');
     }
 
+    logger.info('AI raw response parsed', { parsed: JSON.stringify(parsed) });
+
     try {
       return aiProcessedResultSchema.parse(parsed);
     } catch (err) {
-      logger.error('AI returned invalid structure', { parsed, error: err });
+      logger.error('AI returned invalid structure', {
+        parsed: JSON.stringify(parsed),
+        error: String(err),
+      });
       throw new AppError(502, 'AI returned invalid structure');
     }
   }
