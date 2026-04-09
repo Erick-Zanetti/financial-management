@@ -28,18 +28,20 @@ export default function ConfiguracoesPage() {
 
   const [aiEnabled, setAiEnabled] = useState(false);
   const [openRouterToken, setOpenRouterToken] = useState('');
+  const [tokenTouched, setTokenTouched] = useState(false);
   const [aiCustomPrompt, setAiCustomPrompt] = useState('');
 
   useEffect(() => {
     if (systemConfig) {
       setAiEnabled(systemConfig.aiIntegrationEnabled);
       setOpenRouterToken(systemConfig.openRouterToken);
+      setTokenTouched(false);
       setAiCustomPrompt(systemConfig.aiCustomPrompt);
     }
   }, [systemConfig]);
 
   const handleSaveAiConfig = async () => {
-    if (aiEnabled && !openRouterToken.trim()) {
+    if (aiEnabled && tokenTouched && !openRouterToken.trim()) {
       toast.error(t('openRouterTokenRequired'));
       return;
     }
@@ -47,7 +49,7 @@ export default function ConfiguracoesPage() {
     try {
       await updateConfigMutation.mutateAsync({
         aiIntegrationEnabled: aiEnabled,
-        openRouterToken,
+        ...(tokenTouched ? { openRouterToken } : {}),
         aiCustomPrompt,
       });
       toast.success(t('aiConfigSaved'));
@@ -114,8 +116,14 @@ export default function ConfiguracoesPage() {
               <>
                 <FloatingInput
                   label={t('openRouterToken')}
-                  type="password"
+                  type={tokenTouched ? 'password' : 'text'}
                   value={openRouterToken}
+                  onFocus={() => {
+                    if (!tokenTouched) {
+                      setOpenRouterToken('');
+                      setTokenTouched(true);
+                    }
+                  }}
                   onChange={(e) => setOpenRouterToken(e.target.value)}
                 />
 
