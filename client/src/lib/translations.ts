@@ -143,6 +143,13 @@ export const pt = {
   pdfSelected: 'PDF selecionado',
   aiCopyReport: 'Copiar relatório',
   aiReportCopied: 'Relatório copiado!',
+  aiCategoriesTitle: 'Categorias da IA',
+  aiCategorySlug: 'Slug',
+  aiCategoryDisplayName: 'Nome de exibição',
+  aiCategoryDescription: 'Descrição',
+  aiCategoryExamples: 'Exemplos (separados por vírgula)',
+  aiAddCategory: 'Adicionar categoria',
+  aiRemoveCategory: 'Remover',
 
   // Settings
   language: 'Idioma',
@@ -310,6 +317,13 @@ export const en: Record<keyof typeof pt, string> = {
   pdfSelected: 'PDF selected',
   aiCopyReport: 'Copy report',
   aiReportCopied: 'Report copied!',
+  aiCategoriesTitle: 'AI Categories',
+  aiCategorySlug: 'Slug',
+  aiCategoryDisplayName: 'Display name',
+  aiCategoryDescription: 'Description',
+  aiCategoryExamples: 'Examples (comma-separated)',
+  aiAddCategory: 'Add category',
+  aiRemoveCategory: 'Remove',
 
   // Settings
   language: 'Language',

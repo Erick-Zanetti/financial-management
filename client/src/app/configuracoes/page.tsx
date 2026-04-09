@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Plus, Sun, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import { FloatingTextarea } from '@/components/ui/floating-textarea';
 import { useSettings } from '@/providers/settings-provider';
 import { Language } from '@/lib/translations';
 import { useSystemConfig, useUpdateSystemConfig } from '@/hooks/use-system-config';
+import { AiCategoryConfig } from '@/types/system-config';
 
 export default function ConfiguracoesPage() {
   const { language, currency, setLanguage, setCurrency, t } = useSettings();
@@ -32,6 +33,7 @@ export default function ConfiguracoesPage() {
   const [aiCustomPrompt, setAiCustomPrompt] = useState('');
   const [aiModel, setAiModel] = useState('');
   const [aiOutputLanguage, setAiOutputLanguage] = useState('pt');
+  const [aiCategories, setAiCategories] = useState<AiCategoryConfig[]>([]);
 
   useEffect(() => {
     if (systemConfig) {
@@ -41,6 +43,7 @@ export default function ConfiguracoesPage() {
       setAiCustomPrompt(systemConfig.aiCustomPrompt);
       setAiModel(systemConfig.aiModel);
       setAiOutputLanguage(systemConfig.aiOutputLanguage);
+      setAiCategories(systemConfig.aiCategories || []);
     }
   }, [systemConfig]);
 
@@ -62,11 +65,33 @@ export default function ConfiguracoesPage() {
         aiCustomPrompt,
         aiModel,
         aiOutputLanguage,
+        aiCategories: aiCategories.filter((c) => c.slug.trim()),
       });
       toast.success(t('aiConfigSaved'));
     } catch {
       toast.error(t('aiConfigSaveFailed'));
     }
+  };
+
+  const addCategory = () => {
+    setAiCategories((prev) => [
+      ...prev,
+      { slug: '', displayName: '', description: '', examples: [] },
+    ]);
+  };
+
+  const removeCategory = (index: number) => {
+    setAiCategories((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const updateCategory = (
+    index: number,
+    field: keyof AiCategoryConfig,
+    value: string | string[],
+  ) => {
+    setAiCategories((prev) =>
+      prev.map((cat, i) => (i === index ? { ...cat, [field]: value } : cat)),
+    );
   };
 
   return (
@@ -154,6 +179,89 @@ export default function ConfiguracoesPage() {
                     <FloatingSelectItem value="en">{t('english')}</FloatingSelectItem>
                   </FloatingSelectContent>
                 </FloatingSelect>
+
+                <div className="rounded-lg border p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{t('aiCategoriesTitle')}</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addCategory}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      {t('aiAddCategory')}
+                    </Button>
+                  </div>
+
+                  {aiCategories.map((cat, index) => (
+                    <div
+                      key={index}
+                      className="rounded-md border p-3 space-y-2"
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1 grid grid-cols-2 gap-2">
+                          <FloatingInput
+                            label={t('aiCategorySlug')}
+                            value={cat.slug}
+                            onChange={(e) =>
+                              updateCategory(
+                                index,
+                                'slug',
+                                e.target.value
+                                  .toLowerCase()
+                                  .replace(/[^a-z0-9_]/g, '_'),
+                              )
+                            }
+                          />
+                          <FloatingInput
+                            label={t('aiCategoryDisplayName')}
+                            value={cat.displayName}
+                            onChange={(e) =>
+                              updateCategory(index, 'displayName', e.target.value)
+                            }
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 mt-1 shrink-0 hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => removeCategory(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <FloatingInput
+                        label={t('aiCategoryDescription')}
+                        value={cat.description}
+                        onChange={(e) =>
+                          updateCategory(index, 'description', e.target.value)
+                        }
+                      />
+                      <FloatingInput
+                        label={t('aiCategoryExamples')}
+                        value={cat.examples.join(', ')}
+                        onChange={(e) =>
+                          updateCategory(
+                            index,
+                            'examples',
+                            e.target.value
+                              .split(',')
+                              .map((s) => s.trim())
+                              .filter(Boolean),
+                          )
+                        }
+                      />
+                    </div>
+                  ))}
+
+                  {aiCategories.length === 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-2">
+                      Nenhuma categoria configurada. Categorias padrão serão usadas.
+                    </p>
+                  )}
+                </div>
 
                 <div className="relative">
                   <FloatingTextarea
