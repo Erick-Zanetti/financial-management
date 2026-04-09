@@ -83,11 +83,12 @@ class AiService {
     try {
       return aiProcessedResultSchema.parse(parsed);
     } catch (err) {
+      const detail = JSON.stringify(parsed).slice(0, 500);
       logger.error('AI returned invalid structure', {
-        parsed: JSON.stringify(parsed),
+        parsed: detail,
         error: String(err),
       });
-      throw new AppError(502, 'AI returned invalid structure');
+      throw new AppError(502, `AI returned invalid structure. Raw: ${detail}`);
     }
   }
 
