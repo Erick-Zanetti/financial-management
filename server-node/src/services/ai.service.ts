@@ -83,12 +83,13 @@ class AiService {
     try {
       return aiProcessedResultSchema.parse(parsed);
     } catch (err) {
-      const detail = JSON.stringify(parsed).slice(0, 500);
-      logger.error('AI returned invalid structure', {
-        parsed: detail,
-        error: String(err),
-      });
-      throw new AppError(502, `AI returned invalid structure. Raw: ${detail}`);
+      const raw = JSON.stringify(parsed);
+      const zodDetail = err instanceof Error ? err.message : String(err);
+      logger.error('AI returned invalid structure', { raw, zodDetail });
+      throw new AppError(
+        502,
+        `AI validation failed: ${zodDetail.slice(0, 300)}. Raw: ${raw.slice(0, 1500)}`,
+      );
     }
   }
 
