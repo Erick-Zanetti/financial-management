@@ -157,18 +157,18 @@ export function AiPdfProcessor({
 
   if (phase === 'review') {
     return (
-      <div className="flex flex-col h-full">
-        <div className="mb-3">
+      <div className="space-y-3">
+        <div>
           <h3 className="text-sm font-medium">{t('aiReviewTitle')}</h3>
           <p className="text-xs text-muted-foreground">{t('aiReviewSubtitle')}</p>
         </div>
 
-        <div className="flex items-center justify-between mb-3 px-1">
+        <div className="flex items-center justify-between px-1">
           <span className="text-sm font-medium">{t('aiTotal')}</span>
           <span className="text-sm font-semibold">{formatDisplayValue(aiTotal)}</span>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto rounded-lg border p-3 space-y-2">
+        <div className="max-h-[calc(100vh-320px)] overflow-y-auto rounded-lg border p-3 space-y-2">
           {subcategories.map((sub, index) => (
             <div key={index} className="flex items-start gap-2">
               <div className="flex-1">
@@ -191,30 +191,28 @@ export function AiPdfProcessor({
           ))}
         </div>
 
-        <div className="pt-3">
-          <div
-            className={cn(
-              'text-xs text-right',
-              sumExceedsTotal
-                ? 'text-destructive font-medium'
-                : 'text-muted-foreground',
-            )}
-          >
-            {formatDisplayValue(subcategorySum)} / {formatDisplayValue(aiTotal)}
-          </div>
-
-          {sumExceedsTotal && (
-            <p className="text-xs text-destructive mt-1">{t('aiSumExceedsTotal')}</p>
+        <div
+          className={cn(
+            'text-xs text-right',
+            sumExceedsTotal
+              ? 'text-destructive font-medium'
+              : 'text-muted-foreground',
           )}
+        >
+          {formatDisplayValue(subcategorySum)} / {formatDisplayValue(aiTotal)}
+        </div>
 
-          <div className="flex gap-2 justify-end pt-2">
-            <Button variant="outline" onClick={onBack}>
-              {t('aiBack')}
-            </Button>
-            <Button onClick={handleAccept} disabled={sumExceedsTotal}>
-              {t('aiAccept')}
-            </Button>
-          </div>
+        {sumExceedsTotal && (
+          <p className="text-xs text-destructive">{t('aiSumExceedsTotal')}</p>
+        )}
+
+        <div className="flex gap-2 justify-end">
+          <Button variant="outline" onClick={onBack}>
+            {t('aiBack')}
+          </Button>
+          <Button onClick={handleAccept} disabled={sumExceedsTotal}>
+            {t('aiAccept')}
+          </Button>
         </div>
       </div>
     );
