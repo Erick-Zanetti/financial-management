@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Copy } from 'lucide-react';
+import { Plus, Pencil, Trash2, Copy, Layers } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCreateRelease, useToggleSettled } from '@/hooks/use-releases';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +18,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { FinancialRelease, FinancialReleaseType } from '@/types/financial-release';
 import { useSettings } from '@/providers/settings-provider';
 import { cn } from '@/lib/utils';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { PieChart } from '@/components/charts/pie-chart';
 import { ReleaseDialog } from './release-dialog';
 import { DeleteDialog } from './delete-dialog';
@@ -89,6 +95,7 @@ export function ReleaseList({
         month: nextMonth,
         year: nextYear,
         observations: release.observations,
+        subcategories: release.subcategories,
       });
       toast.success(t('releaseCloned'));
     } catch {
@@ -172,7 +179,26 @@ export function ReleaseList({
                           {release.day}
                         </TableCell>
                         <TableCell className={cn(isSettled && 'line-through')}>
-                          {release.name}
+                          <span className="flex items-center gap-1.5">
+                            {release.name}
+                            {release.subcategories && release.subcategories.length > 0 && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Layers className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="text-xs">
+                                    {release.subcategories.map((sub, i) => (
+                                      <div key={i} className="flex justify-between gap-4">
+                                        <span>{sub.name}</span>
+                                        <span>{formatCurrency(sub.value)}</span>
+                                      </div>
+                                    ))}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </span>
                         </TableCell>
                         <TableCell className={cn('text-muted-foreground', isSettled && 'line-through')}>
                           {release.category?.name}

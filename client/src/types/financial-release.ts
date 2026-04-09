@@ -3,12 +3,17 @@ export enum FinancialReleaseType {
   Expense = 'E'
 }
 
+export interface Subcategory {
+  name: string;
+  value: number;
+}
+
 export interface FinancialRelease {
   id: string | null;
   name: string;
   value: number;
   type: FinancialReleaseType;
-  category: { id: string; name: string };
+  category: { id: string; name: string; allowSubcategories?: boolean };
   person?: string;
   year: number;
   month: number;
@@ -16,6 +21,7 @@ export interface FinancialRelease {
   date?: Date;
   settled?: boolean;
   observations?: string;
+  subcategories?: Subcategory[];
 }
 
 export interface Month {

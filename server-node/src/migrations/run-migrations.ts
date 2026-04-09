@@ -28,5 +28,15 @@ export async function runMigrations(): Promise<void> {
     logger.info(`Migrated ${result.modifiedCount} releases to category "Outros"`);
   }
 
+  const subcatResult = await Category.updateMany(
+    { allowSubcategories: { $exists: false } },
+    { $set: { allowSubcategories: false } },
+  );
+  if (subcatResult.modifiedCount > 0) {
+    logger.info(
+      `Set allowSubcategories=false on ${subcatResult.modifiedCount} categories`,
+    );
+  }
+
   logger.info('Migrations complete');
 }

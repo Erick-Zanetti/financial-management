@@ -3,6 +3,11 @@ export enum FinancialReleaseType {
   Expense = 'E',
 }
 
+export interface ISubcategory {
+  name: string;
+  value: number;
+}
+
 export interface IFinancialRelease {
   id?: string;
   name: string;
@@ -15,6 +20,7 @@ export interface IFinancialRelease {
   day: number;
   settled?: boolean;
   observations?: string;
+  subcategories?: ISubcategory[];
 }
 
 export interface IFinancialReleaseFilter {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Plus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { FinancialRelease, FinancialReleaseType } from '@/types/financial-release';
@@ -45,6 +45,24 @@ interface ReleaseDialogProps {
   month: number;
   year: number;
   release?: FinancialRelease | null;
+}
+
+function SubcategorySummary({
+  subcategories,
+  total,
+  formatCurrency,
+}: {
+  subcategories: { name: string; value: number }[];
+  total: number;
+  formatCurrency: (v: number) => string;
+}) {
+  const sum = subcategories.reduce((acc, s) => acc + s.value, 0);
+  const match = Math.abs(sum - total) < 0.01;
+  return (
+    <div className={cn('text-xs text-right', match ? 'text-muted-foreground' : 'text-destructive font-medium')}>
+      {formatCurrency(sum)} / {formatCurrency(total)}
+    </div>
+  );
 }
 
 export function ReleaseDialog({
@@ -63,12 +81,18 @@ export function ReleaseDialog({
   const { data: allCategories = [] } = useCategories();
   const categories = allCategories.filter((cat) => (cat.type as string) === type || cat.type === 'B');
 
+  const subcategorySchema = z.object({
+    name: z.string().min(1, t('descriptionRequired')),
+    value: z.number().min(0.01, t('valueMustBePositive')),
+  });
+
   const formSchema = z.object({
     name: z.string().min(1, t('descriptionRequired')).max(30, t('maxChars')),
     value: z.number().min(0.01, t('valueMustBePositive')),
     day: z.number().min(1, t('invalidDay')).max(31, t('invalidDay')),
     category: z.string().min(1, t('categoryRequired')),
     observations: z.string().max(200, t('maxCharsObservations')),
+    subcategories: z.array(subcategorySchema),
   });
 
   type FormValues = z.infer<typeof formSchema>;
@@ -81,20 +105,35 @@ export function ReleaseDialog({
       day: 1,
       category: '',
       observations: '',
+      subcategories: [],
     },
   });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'subcategories',
+  });
+
+  const selectedCategoryId = form.watch('category');
+  const selectedCategory = allCategories.find((c) => c.id === selectedCategoryId);
+  const showSubcategories = selectedCategory?.allowSubcategories === true;
+
+  const [subDisplayValues, setSubDisplayValues] = useState<string[]>([]);
 
   useEffect(() => {
     if (open) {
       if (release) {
+        const subs = release.subcategories ?? [];
         form.reset({
           name: release.name,
           value: release.value,
           day: release.day,
           category: release.category?.id || '',
           observations: release.observations || '',
+          subcategories: subs,
         });
         setDisplayValue(formatDisplayValue(release.value));
+        setSubDisplayValues(subs.map((s) => formatDisplayValue(s.value)));
       } else {
         form.reset({
           name: '',
@@ -102,32 +141,40 @@ export function ReleaseDialog({
           day: 1,
           category: '',
           observations: '',
+          subcategories: [],
         });
         setDisplayValue('');
+        setSubDisplayValues([]);
       }
     }
   }, [open, release, form, formatDisplayValue]);
 
   const onSubmit = async (values: FormValues) => {
+    const subcategories = showSubcategories && values.subcategories && values.subcategories.length > 0
+      ? values.subcategories
+      : undefined;
+
+    if (subcategories) {
+      const sum = subcategories.reduce((acc, s) => acc + s.value, 0);
+      if (Math.abs(sum - values.value) >= 0.01) {
+        form.setError('subcategories', { message: t('subcategorySumMismatch') });
+        return;
+      }
+    }
+
     try {
+      const payload = {
+        ...values,
+        type,
+        month,
+        year,
+        subcategories,
+      };
       if (isEditing && release?.id) {
-        await updateMutation.mutateAsync({
-          id: release.id,
-          data: {
-            ...values,
-            type,
-            month,
-            year,
-          },
-        });
+        await updateMutation.mutateAsync({ id: release.id, data: payload });
         toast.success(t('releaseUpdated'));
       } else {
-        await createMutation.mutateAsync({
-          ...values,
-          type,
-          month,
-          year,
-        });
+        await createMutation.mutateAsync(payload);
         toast.success(t('releaseSaved'));
       }
       onOpenChange(false);
@@ -282,6 +329,101 @@ export function ReleaseDialog({
                 </FormItem>
               )}
             />
+
+            {showSubcategories && (
+              <div className="space-y-3 rounded-lg border p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">{t('subcategories')}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      append({ name: '', value: 0 });
+                      setSubDisplayValues((prev) => [...prev, '']);
+                    }}
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    {t('addSubcategory')}
+                  </Button>
+                </div>
+
+                {fields.map((field, index) => (
+                  <div key={field.id} className="flex items-start gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`subcategories.${index}.name`}
+                      render={({ field: nameField }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <FloatingInput
+                              label={t('subcategoryName')}
+                              {...nameField}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`subcategories.${index}.value`}
+                      render={({ field: valField }) => (
+                        <FormItem className="w-32">
+                          <FormControl>
+                            <FloatingInput
+                              label={t('value')}
+                              type="text"
+                              inputMode="numeric"
+                              value={subDisplayValues[index] ?? ''}
+                              onChange={(e) => {
+                                const digits = e.target.value.replace(/\D/g, '');
+                                const cents = parseInt(digits, 10) || 0;
+                                const numeric = cents / 100;
+                                setSubDisplayValues((prev) => {
+                                  const next = [...prev];
+                                  next[index] = cents === 0 ? '' : formatDisplayValue(numeric);
+                                  return next;
+                                });
+                                valField.onChange(numeric);
+                              }}
+                              onBlur={valField.onBlur}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 mt-2 shrink-0 hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => {
+                        remove(index);
+                        setSubDisplayValues((prev) => prev.filter((_, i) => i !== index));
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+
+                {fields.length > 0 && (
+                  <SubcategorySummary
+                    subcategories={form.watch('subcategories') ?? []}
+                    total={form.watch('value')}
+                    formatCurrency={formatDisplayValue}
+                  />
+                )}
+
+                {form.formState.errors.subcategories?.message && (
+                  <p className="text-sm text-destructive">
+                    {form.formState.errors.subcategories.message}
+                  </p>
+                )}
+              </div>
+            )}
 
             <FormField
               control={form.control}

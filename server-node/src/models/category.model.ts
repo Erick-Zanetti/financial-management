@@ -11,6 +11,7 @@ const categorySchema = new Schema<CategoryDocument>(
       enum: Object.values(CategoryType),
       required: true,
     },
+    allowSubcategories: { type: Boolean, default: false },
   },
   {
     collection: 'categories',

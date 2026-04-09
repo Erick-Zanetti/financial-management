@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import { FinancialReleaseType } from '../types/financial-release.types';
 
-export const createFinancialReleaseSchema = z.object({
+const subcategorySchema = z.object({
+  name: z.string().min(1, 'Subcategory name is required').max(100),
+  value: z.number().positive('Subcategory value must be positive'),
+});
+
+const baseFinancialReleaseSchema = z.object({
   name: z.string().min(1, 'Name is required').max(200),
   value: z.number().positive('Value must be positive'),
   type: z.nativeEnum(FinancialReleaseType, {
@@ -13,10 +18,23 @@ export const createFinancialReleaseSchema = z.object({
   month: z.number().int().min(1).max(12),
   day: z.number().int().min(1).max(31),
   settled: z.boolean().optional().default(false),
+  subcategories: z.array(subcategorySchema).optional(),
 });
 
+export const createFinancialReleaseSchema = baseFinancialReleaseSchema.refine(
+  (data) => {
+    if (!data.subcategories || data.subcategories.length === 0) return true;
+    const sum = data.subcategories.reduce((acc, s) => acc + s.value, 0);
+    return Math.abs(sum - data.value) < 0.01;
+  },
+  {
+    message: 'Subcategory values must sum to the release total',
+    path: ['subcategories'],
+  },
+);
+
 export const updateFinancialReleaseSchema =
-  createFinancialReleaseSchema.partial();
+  baseFinancialReleaseSchema.partial();
 
 export const filterByTypeSchema = z.object({
   type: z.nativeEnum(FinancialReleaseType),

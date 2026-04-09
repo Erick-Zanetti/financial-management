@@ -74,6 +74,13 @@ const financialReleaseSchema = new Schema<FinancialReleaseDocument>(
     day: { type: Number, required: true, min: 1, max: 31 },
     settled: { type: Boolean, default: false },
     observations: { type: String, required: false, trim: true },
+    subcategories: [
+      {
+        name: { type: String, required: true, trim: true },
+        value: { type: Number, required: true },
+        _id: false,
+      },
+    ],
   },
   {
     collection: 'financialreleases',

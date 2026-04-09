@@ -74,24 +74,25 @@ export default function CategoriasPage() {
   const formSchema = z.object({
     name: z.string().min(1, t('categoryNameRequired')).max(50),
     type: z.nativeEnum(CategoryType, { message: t('categoryTypeRequired') }),
+    allowSubcategories: z.boolean(),
   });
 
   type FormValues = z.infer<typeof formSchema>;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: '', type: CategoryType.Expense },
+    defaultValues: { name: '', type: CategoryType.Expense, allowSubcategories: false },
   });
 
   const handleAdd = () => {
     setEditingCategory(null);
-    form.reset({ name: '', type: CategoryType.Expense });
+    form.reset({ name: '', type: CategoryType.Expense, allowSubcategories: false });
     setSheetOpen(true);
   };
 
   const handleEdit = (category: Category) => {
     setEditingCategory(category);
-    form.reset({ name: category.name, type: category.type });
+    form.reset({ name: category.name, type: category.type, allowSubcategories: category.allowSubcategories ?? false });
     setSheetOpen(true);
   };
 
@@ -177,7 +178,14 @@ export default function CategoriasPage() {
               <TableBody>
                 {categories.map((category) => (
                   <TableRow key={category.id}>
-                    <TableCell className="font-medium">{category.name}</TableCell>
+                    <TableCell className="font-medium">
+                      {category.name}
+                      {category.allowSubcategories && (
+                        <span className="ml-2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          {t('subcategories')}
+                        </span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-muted-foreground">
                       {getTypeLabel(category.type)}
                     </TableCell>
@@ -264,6 +272,26 @@ export default function CategoriasPage() {
                       </SelectContent>
                     </Select>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="allowSubcategories"
+                render={({ field }) => (
+                  <FormItem>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+                        />
+                      </FormControl>
+                      <span className="text-sm">{t('allowSubcategories')}</span>
+                    </label>
                   </FormItem>
                 )}
               />

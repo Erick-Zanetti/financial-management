@@ -8,4 +8,5 @@ export interface ICategory {
   id?: string;
   name: string;
   type: CategoryType;
+  allowSubcategories?: boolean;
 }

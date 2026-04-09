@@ -85,6 +85,12 @@ export const pt = {
   categoryTypeExpense: 'Despesas',
   categoryTypeBoth: 'Ambas',
   categoryTypeRequired: 'Tipo é obrigatório',
+  allowSubcategories: 'Permitir subcategorias',
+  subcategories: 'Subcategorias',
+  subcategoryName: 'Nome',
+  addSubcategory: 'Adicionar subcategoria',
+  removeSubcategory: 'Remover',
+  subcategorySumMismatch: 'A soma das subcategorias deve ser igual ao valor total',
 
   // Dashboard charts
   dashboardCategoryBreakdown: 'Categorias por Mês',
@@ -214,6 +220,12 @@ export const en: Record<keyof typeof pt, string> = {
   categoryTypeExpense: 'Expenses',
   categoryTypeBoth: 'Both',
   categoryTypeRequired: 'Type is required',
+  allowSubcategories: 'Allow subcategories',
+  subcategories: 'Subcategories',
+  subcategoryName: 'Name',
+  addSubcategory: 'Add subcategory',
+  removeSubcategory: 'Remove',
+  subcategorySumMismatch: 'Subcategory values must equal the total value',
 
   // Dashboard charts
   dashboardCategoryBreakdown: 'Categories by Month',

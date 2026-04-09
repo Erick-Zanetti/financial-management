@@ -8,6 +8,7 @@ export interface Category {
   id: string;
   name: string;
   type: CategoryType;
+  allowSubcategories?: boolean;
 }
 
 export type CreateCategory = Omit<Category, 'id'>;
