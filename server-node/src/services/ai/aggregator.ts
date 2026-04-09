@@ -28,25 +28,21 @@ export function aggregate(
   }
 
   const category_details = new Map<ExpenseCategory, ClassifiedRow[]>();
-  let expected_total = 0;
+  let sumPositives = 0;
 
   for (const row of preprocessed.expense_rows) {
     const category = classMap.get(row.row_id) || 'outros';
     const iof_amount = iofByParent.get(row.row_id) || 0;
     const effective_amount = round2(row.amount_brl + iof_amount);
 
-    expected_total = round2(expected_total + effective_amount);
+    sumPositives = round2(sumPositives + effective_amount);
 
     const list = category_details.get(category) || [];
     list.push({ row, iof_amount, effective_amount });
     category_details.set(category, list);
   }
 
-  // Subtract unmatched credits from total (they reduce the bill)
-  const unmatched_credits_total = round2(
-    preprocessed.unmatched_credits.reduce((s, r) => s + Math.abs(r.amount_brl), 0),
-  );
-
+  // Build subcategories from positive expense categories
   const subcategories: Array<{ name: string; value: number }> = [];
   let categorized_total = 0;
 
@@ -61,14 +57,33 @@ export function aggregate(
     categorized_total = round2(categorized_total + value);
   }
 
-  subcategories.sort((a, b) => b.value - a.value);
+  // Add unmatched credits as a negative "Reembolsos/Créditos" category
+  const unmatchedCreditsTotal = round2(
+    preprocessed.unmatched_credits.reduce((s, r) => s + r.amount_brl, 0),
+  );
 
-  // expected = gross expenses - unmatched credits
-  const adjusted_expected = round2(expected_total - unmatched_credits_total);
-  // final total after deducting unmatched credits
-  const final_total = round2(categorized_total - unmatched_credits_total);
+  if (unmatchedCreditsTotal !== 0) {
+    subcategories.push({
+      name: 'Reembolsos/Créditos',
+      value: unmatchedCreditsTotal,
+    });
+    categorized_total = round2(categorized_total + unmatchedCreditsTotal);
+  }
 
-  const matches = Math.abs(categorized_total - expected_total) <= 0.01;
+  // Sort: positive categories desc, negative (reembolsos) always last
+  subcategories.sort((a, b) => {
+    if (a.value < 0 && b.value >= 0) return 1;
+    if (a.value >= 0 && b.value < 0) return -1;
+    return b.value - a.value;
+  });
+
+  // Validation: expected = sumPositives + unmatchedCredits (negative, so algebraic sum)
+  const sumMatchedReversals = round2(
+    preprocessed.matched_reversals.reduce((s, p) => s + p.positive_row.amount_brl, 0),
+  );
+  const expected_total = round2(sumPositives + unmatchedCreditsTotal);
+
+  const matches = Math.abs(expected_total - categorized_total) <= 0.01;
 
   if (!matches) {
     const breakdown = subcategories
@@ -81,13 +96,9 @@ export function aggregate(
   }
 
   return {
-    total: final_total,
+    total: categorized_total,
     subcategories,
-    validation: {
-      expected_total: adjusted_expected,
-      categorized_total: final_total,
-      matches,
-    },
+    validation: { expected_total, categorized_total, matches },
     category_details,
     preprocessed,
   };

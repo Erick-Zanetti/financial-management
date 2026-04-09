@@ -56,14 +56,11 @@ export function generateReport(result: AggregatedResult): string {
     );
   }
 
-  // Excluded items (payments, unmatched credits, fees, IOF)
+  // Excluded items (payments, fees, IOF) — unmatched credits are now a category
   const excludedRows: string[] = [];
 
   for (const p of preprocessed.payments) {
     excludedRows.push(`| Pagamento | ${p.merchant} | ${formatBrl(p.amount_brl)} |`);
-  }
-  for (const c of preprocessed.unmatched_credits) {
-    excludedRows.push(`| Crédito/Estorno | ${c.merchant} | ${formatBrl(Math.abs(c.amount_brl))} |`);
   }
   for (const entry of preprocessed.iof_entries) {
     excludedRows.push(
@@ -109,6 +106,22 @@ export function generateReport(result: AggregatedResult): string {
     );
   }
 
+  // Reembolsos/Créditos category (unmatched credits as negative category)
+  if (preprocessed.unmatched_credits.length > 0) {
+    const creditsTotal = preprocessed.unmatched_credits.reduce(
+      (s, c) => s + c.amount_brl,
+      0,
+    );
+    if (creditsTotal !== 0) {
+      const creditLines = preprocessed.unmatched_credits
+        .map((c) => `| ${c.merchant} | -${formatBrl(Math.abs(c.amount_brl))} |`)
+        .join('\n');
+      sections.push(
+        `## Reembolsos/Créditos — -${formatBrl(Math.abs(creditsTotal))}\n| Transação | Valor |\n|---|---:|\n${creditLines}`,
+      );
+    }
+  }
+
   // Summary footer
   const paymentsTotal = preprocessed.payments.reduce(
     (s, p) => s + Math.abs(p.amount_brl),
@@ -118,16 +131,12 @@ export function generateReport(result: AggregatedResult): string {
     (s, p) => s + p.positive_row.amount_brl,
     0,
   );
-  const unmatchedCreditsTotal = preprocessed.unmatched_credits.reduce(
-    (s, c) => s + Math.abs(c.amount_brl),
-    0,
-  );
   const feesTotal =
     preprocessed.fees.reduce((s, f) => s + Math.abs(f.amount_brl), 0) +
     preprocessed.iof_entries.reduce((s, e) => s + e.iof_row.amount_brl, 0);
 
   sections.push(
-    `---\n**Total categorizado:** R$ ${formatBrl(result.total)}\n**Pagamentos:** R$ ${formatBrl(paymentsTotal)}\n**Estornos pareados:** R$ ${formatBrl(matchedReversalsTotal)}\n**Créditos não pareados:** R$ ${formatBrl(unmatchedCreditsTotal)}\n**Taxas/IOF:** R$ ${formatBrl(feesTotal)}`,
+    `---\n**Total categorizado:** R$ ${formatBrl(result.total)}\n**Pagamentos:** R$ ${formatBrl(paymentsTotal)}\n**Estornos pareados:** R$ ${formatBrl(matchedReversalsTotal)}\n**Taxas/IOF:** R$ ${formatBrl(feesTotal)}`,
   );
 
   return sections.join('\n\n');

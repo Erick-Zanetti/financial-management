@@ -6,7 +6,7 @@ import { consolidateExpenses } from './preprocessor';
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MAX_RETRIES = 3;
 
-const SYSTEM_PROMPT = `Você é um classificador de transações de cartão de crédito. Para cada transação, classifique em UMA das categorias do enum. As categorias padrão são sugestões — se o usuário fornecer instruções adicionais com regras específicas de categorização, siga as regras do usuário. Use 'outros' somente quando realmente não se encaixar em nenhuma outra categoria. Não invente row_ids. Retorne todos os row_ids enviados.`;
+const SYSTEM_PROMPT = `Você é um classificador de transações de cartão de crédito. Para cada transação, classifique em UMA das categorias do enum. Se o usuário fornecer instruções com regras de categorização, siga estritamente as regras do usuário. Se não houver instruções do usuário, use seu julgamento para classificar nas categorias do enum. Use 'outros' somente quando realmente não se encaixar em nenhuma outra categoria. Não invente row_ids. Retorne todos os row_ids enviados.`;
 
 const CLASSIFICATION_SCHEMA = {
   name: 'classifications',
