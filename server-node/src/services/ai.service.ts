@@ -104,12 +104,13 @@ class AiService {
     let prompt = `You are a financial document analyzer specialized in categorizing expenses. Your task is to analyze a credit card statement or bill, group the transactions into meaningful spending categories, and return the categorized totals.
 
 Instructions:
-1. Read all individual charges/transactions in the document.
-2. Group them into logical spending categories that YOU create (e.g., "Groceries", "Restaurants", "Transportation", "Subscriptions", "Health", "Entertainment", "Shopping", "Education", etc.). Use your judgment to pick the most appropriate category names.
-3. For each category, sum up all transactions that belong to it and return the category name and total value.
-4. Calculate the overall total of the bill.
-5. Output category names in ${outputLanguage} language.
-6. Return ONLY a valid JSON object with this exact structure:
+1. First, find the EXACT total amount of the bill as printed on the document (look for "Total", "Total da fatura", "Amount due", etc.). This is your reference total — use it as-is, do NOT recalculate it.
+2. Read all individual charges/transactions in the document.
+3. Group them into logical spending categories that YOU create (e.g., "Groceries", "Restaurants", "Transportation", "Subscriptions", "Health", "Entertainment", "Shopping", "Education", etc.). Use your judgment to pick the most appropriate category names.
+4. For each category, sum up all transactions that belong to it.
+5. CRITICAL: Verify that the sum of all category values equals the document total EXACTLY. If there is a difference, create an adjustment category to make the sum match.
+6. Output category names in ${outputLanguage} language.
+7. Return ONLY a valid JSON object with this exact structure:
 
 {
   "total": <number - the bill total as a decimal>,
@@ -120,8 +121,8 @@ Instructions:
 
 Rules:
 - All monetary values must be positive numbers with up to 2 decimal places.
-- The "total" should be the overall bill total as stated on the document.
-- The sum of all subcategory values must equal the total.
+- The "total" MUST be the exact total printed on the document. Do NOT recalculate or estimate it.
+- The sum of all subcategory values MUST equal the total EXACTLY. This is mandatory.
 - Only current charges — no fees, interest, or previous balance.
 - EXCLUDE refunds, credits, chargebacks, and adjustments entirely. Do NOT include negative values.
 - Do NOT list individual transactions — group them into categories.

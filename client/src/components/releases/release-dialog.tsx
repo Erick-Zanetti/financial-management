@@ -162,11 +162,11 @@ export function ReleaseDialog({
   }, [open, release, form, formatDisplayValue]);
 
   const onSubmit = async (values: FormValues) => {
-    const subcategories = showSubcategories && values.subcategories && values.subcategories.length > 0
-      ? values.subcategories
+    const subcategories = showSubcategories
+      ? (values.subcategories ?? [])
       : undefined;
 
-    if (subcategories) {
+    if (subcategories && subcategories.length > 0) {
       const sum = subcategories.reduce((acc, s) => acc + s.value, 0);
       if (sum > values.value + 0.01) {
         form.setError('subcategories', { message: t('subcategorySumMismatch') });

@@ -167,7 +167,7 @@ export function AiPdfProcessor({
 
         <div className="max-h-[calc(100vh-320px)] overflow-y-auto rounded-lg border p-3 space-y-2">
           {subcategories.map((sub, index) => (
-            <div key={index} className="flex items-start gap-2">
+            <div key={index} className="flex flex-col sm:flex-row sm:items-start gap-2">
               <div className="flex-1">
                 <FloatingInput
                   label={t('subcategoryName')}
@@ -175,7 +175,7 @@ export function AiPdfProcessor({
                   onChange={(e) => handleSubNameChange(index, e.target.value)}
                 />
               </div>
-              <div className="w-32">
+              <div className="w-full sm:w-32">
                 <FloatingInput
                   label={t('value')}
                   type="text"
