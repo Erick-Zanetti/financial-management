@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { FloatingInput } from '@/components/ui/floating-input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useProcessPdf } from '@/hooks/use-ai-processing';
+import { useProcessFile } from '@/hooks/use-ai-processing';
 import { useSettings } from '@/providers/settings-provider';
 
 interface AiPdfProcessorProps {
@@ -33,7 +33,7 @@ export function AiPdfProcessor({
   onProcessingChange,
 }: AiPdfProcessorProps) {
   const { t, formatDisplayValue } = useSettings();
-  const processMutation = useProcessPdf();
+  const processMutation = useProcessFile();
 
   const [phase, setPhase] = useState<Phase>('upload');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -45,8 +45,10 @@ export function AiPdfProcessor({
   const [report, setReport] = useState('');
   const copyRef = useRef<HTMLTextAreaElement>(null);
 
+  const ACCEPTED_TYPES = ['application/pdf', 'text/csv', 'text/plain', 'application/vnd.ms-excel'];
+
   const handleFile = useCallback((file: File) => {
-    if (file.type !== 'application/pdf') {
+    if (!ACCEPTED_TYPES.includes(file.type) && !file.name.endsWith('.csv')) {
       return;
     }
     setSelectedFile(file);
@@ -263,7 +265,7 @@ export function AiPdfProcessor({
         <input
           ref={fileInputRef}
           type="file"
-          accept=".pdf,application/pdf"
+          accept=".pdf,.csv,application/pdf,text/csv"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];

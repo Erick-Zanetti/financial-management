@@ -21,7 +21,7 @@ class AiController {
       throw new AppError(400, 'AI model is not configured');
     }
 
-    const result = await aiService.processPdf(req.file.buffer, {
+    const result = await aiService.processFile(req.file.buffer, req.file.mimetype, {
       openRouterToken: config.openRouterToken,
       aiModel: config.aiModel,
       aiOutputLanguage: config.aiOutputLanguage || 'pt',

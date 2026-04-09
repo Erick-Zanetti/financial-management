@@ -13,15 +13,22 @@ interface AiConfig {
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 class AiService {
-  async processPdf(
-    pdfBuffer: Buffer,
+  async processFile(
+    fileBuffer: Buffer,
+    mimetype: string,
     config: AiConfig,
   ): Promise<AiProcessedResultDto> {
-    const pdfData = await pdfParse(pdfBuffer);
-    const text = pdfData.text;
+    let text: string;
 
-    if (!text || text.trim().length < 50) {
-      throw new AppError(422, 'PDF contains insufficient text content');
+    if (mimetype === 'application/pdf') {
+      const pdfData = await pdfParse(fileBuffer);
+      text = pdfData.text;
+    } else {
+      text = fileBuffer.toString('utf-8');
+    }
+
+    if (!text || text.trim().length < 20) {
+      throw new AppError(422, 'File contains insufficient text content');
     }
 
     const systemPrompt = this.buildSystemPrompt(

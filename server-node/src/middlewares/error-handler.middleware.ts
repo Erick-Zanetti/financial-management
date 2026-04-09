@@ -26,7 +26,7 @@ export const errorHandler = (
     return;
   }
 
-  if (err.message === 'Only PDF files are allowed') {
+  if (err.message === 'Only PDF and CSV files are allowed') {
     res.status(400).json({ message: err.message });
     return;
   }

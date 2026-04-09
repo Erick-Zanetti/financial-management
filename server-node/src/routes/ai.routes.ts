@@ -6,8 +6,8 @@ import { upload } from '../config/multer.config';
 const router = Router();
 
 router.post(
-  '/process-pdf',
-  upload.single('pdf'),
+  '/process-file',
+  upload.single('file'),
   asyncHandler(aiController.processPdf.bind(aiController)),
 );
 
