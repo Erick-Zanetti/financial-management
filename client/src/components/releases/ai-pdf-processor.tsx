@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { ClipboardCopy, FileUp, Loader2 } from 'lucide-react';
+import { Download, FileUp, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -198,35 +198,17 @@ export function AiPdfProcessor({
           <Button
             variant="outline"
             disabled={!report}
-            onClick={async () => {
-              try {
-                const blob = new Blob([report], { type: 'text/plain' });
-                const item = new ClipboardItem({ 'text/plain': blob });
-                await navigator.clipboard.write([item]);
-                toast.success(t('aiReportCopied'));
-              } catch {
-                try {
-                  await navigator.clipboard.writeText(report);
-                  toast.success(t('aiReportCopied'));
-                } catch {
-                  const ta = document.createElement('textarea');
-                  ta.value = report;
-                  Object.assign(ta.style, {
-                    position: 'fixed', top: '0', left: '0',
-                    width: '1px', height: '1px', opacity: '0.01',
-                  });
-                  document.body.appendChild(ta);
-                  ta.focus();
-                  ta.setSelectionRange(0, ta.value.length);
-                  const ok = document.execCommand('copy');
-                  document.body.removeChild(ta);
-                  if (ok) toast.success(t('aiReportCopied'));
-                  else toast.error(`Copy failed. Report length: ${report.length}`);
-                }
-              }
+            onClick={() => {
+              const blob = new Blob([report], { type: 'text/markdown' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'ai-report.md';
+              a.click();
+              URL.revokeObjectURL(url);
             }}
           >
-            <ClipboardCopy className="h-3 w-3 mr-1" />
+            <Download className="h-3 w-3 mr-1" />
             {t('aiCopyReport')}
           </Button>
           <Button variant="outline" onClick={onBack}>
