@@ -1,4 +1,4 @@
-import { CsvRow, IofEntry, ReversalPair, PreprocessedData } from './types';
+import { CsvRow, ConsolidatedRow, IofEntry, ReversalPair, PreprocessedData } from './types';
 
 export function normalizeMerchant(merchant: string): string {
   return merchant
@@ -134,4 +134,39 @@ export function preprocess(rows: CsvRow[]): PreprocessedData {
     payments: [...step3.payments, ...unmatched_negatives],
     fees: step4.fees,
   };
+}
+
+export function consolidateExpenses(rows: CsvRow[]): ConsolidatedRow[] {
+  const groups = new Map<string, { merchant: string; total: number; count: number; ids: number[] }>();
+
+  for (const row of rows) {
+    const key = normalizeMerchant(row.merchant);
+    const existing = groups.get(key);
+    if (existing) {
+      existing.total = round2(existing.total + row.amount_brl);
+      existing.count++;
+      existing.ids.push(row.row_id);
+    } else {
+      groups.set(key, {
+        merchant: row.merchant,
+        total: row.amount_brl,
+        count: 1,
+        ids: [row.row_id],
+      });
+    }
+  }
+
+  let id = 1;
+  const result: ConsolidatedRow[] = [];
+  for (const g of groups.values()) {
+    result.push({
+      consolidated_id: id++,
+      merchant: g.merchant,
+      total_amount: round2(g.total),
+      count: g.count,
+      original_row_ids: g.ids,
+    });
+  }
+
+  return result;
 }

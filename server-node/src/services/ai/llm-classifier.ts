@@ -1,6 +1,7 @@
 import { logger } from '../../config/logger.config';
 import { AppError } from '../../middlewares/error-handler.middleware';
-import { CsvRow, LlmClassification, EXPENSE_CATEGORIES } from './types';
+import { CsvRow, ConsolidatedRow, LlmClassification, EXPENSE_CATEGORIES } from './types';
+import { consolidateExpenses } from './preprocessor';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MAX_RETRIES = 3;
@@ -41,15 +42,16 @@ function formatBrl(value: number): string {
   });
 }
 
-function buildUserMessage(rows: CsvRow[]): string {
-  const lines = rows.map(
-    (r) => `${r.row_id} | ${r.merchant} | R$ ${formatBrl(r.amount_brl)}`,
-  );
+function buildUserMessage(rows: ConsolidatedRow[]): string {
+  const lines = rows.map((r) => {
+    const suffix = r.count > 1 ? ` (x${r.count})` : '';
+    return `${r.consolidated_id} | ${r.merchant}${suffix} | R$ ${formatBrl(r.total_amount)}`;
+  });
   return `Classifique cada transação em uma categoria:\n\n${lines.join('\n')}`;
 }
 
 async function callLlm(
-  rows: CsvRow[],
+  rows: ConsolidatedRow[],
   config: { openRouterToken: string; aiModel: string; customPrompt: string },
 ): Promise<LlmClassification[]> {
   const systemContent = config.customPrompt
@@ -122,7 +124,7 @@ async function callLlm(
 }
 
 async function callLlmFallback(
-  rows: CsvRow[],
+  rows: ConsolidatedRow[],
   config: { openRouterToken: string; aiModel: string; customPrompt: string },
 ): Promise<LlmClassification[]> {
   const systemContent = config.customPrompt
@@ -180,39 +182,59 @@ export async function classifyExpenses(
 ): Promise<LlmClassification[]> {
   if (rows.length === 0) return [];
 
-  const validRowIds = new Set(rows.map((r) => r.row_id));
-  const allClassifications: LlmClassification[] = [];
-  let remainingRows = [...rows];
+  // Consolidate identical merchants before sending to LLM
+  const consolidated = consolidateExpenses(rows);
+  logger.info(`Consolidated ${rows.length} expense rows into ${consolidated.length} unique merchants`);
+
+  const validIds = new Set(consolidated.map((r) => r.consolidated_id));
+  const consolidatedClassifications: Array<{ consolidated_id: number; category: LlmClassification['category'] }> = [];
+  let remaining = [...consolidated];
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    if (remainingRows.length === 0) break;
+    if (remaining.length === 0) break;
 
     if (attempt > 0) {
       logger.warn(
-        `LLM retry ${attempt}/${MAX_RETRIES}: ${remainingRows.length} rows missing`,
+        `LLM retry ${attempt}/${MAX_RETRIES}: ${remaining.length} rows missing`,
       );
     }
 
     logger.info(
-      `LLM classification call: ${remainingRows.length} rows, attempt ${attempt + 1}`,
+      `LLM classification call: ${remaining.length} consolidated rows, attempt ${attempt + 1}`,
     );
 
-    const results = await callLlm(remainingRows, config);
+    const results = await callLlm(remaining, config);
 
-    // Filter out invalid row_ids
-    const valid = results.filter((c) => validRowIds.has(c.row_id));
-    allClassifications.push(...valid);
+    // Filter out invalid ids
+    const valid = results.filter((c) => validIds.has(c.row_id));
+    for (const v of valid) {
+      consolidatedClassifications.push({ consolidated_id: v.row_id, category: v.category });
+    }
 
     const returnedIds = new Set(valid.map((c) => c.row_id));
-    remainingRows = remainingRows.filter((r) => !returnedIds.has(r.row_id));
+    remaining = remaining.filter((r) => !returnedIds.has(r.consolidated_id));
   }
 
   // Default remaining to "outros"
-  for (const row of remainingRows) {
+  for (const row of remaining) {
     logger.warn(
-      `Row ${row.row_id} (${row.merchant}) defaulted to "outros" after ${MAX_RETRIES} retries`,
+      `Consolidated row ${row.consolidated_id} (${row.merchant}) defaulted to "outros" after ${MAX_RETRIES} retries`,
     );
-    allClassifications.push({ row_id: row.row_id, category: 'outros' });
+    consolidatedClassifications.push({ consolidated_id: row.consolidated_id, category: 'outros' });
+  }
+
+  // Expand consolidated classifications back to original row_ids
+  const classMap = new Map<number, LlmClassification['category']>();
+  for (const c of consolidatedClassifications) {
+    classMap.set(c.consolidated_id, c.category);
+  }
+
+  const allClassifications: LlmClassification[] = [];
+  for (const cr of consolidated) {
+    const category = classMap.get(cr.consolidated_id) || 'outros';
+    for (const rowId of cr.original_row_ids) {
+      allClassifications.push({ row_id: rowId, category });
+    }
   }
 
   return allClassifications;

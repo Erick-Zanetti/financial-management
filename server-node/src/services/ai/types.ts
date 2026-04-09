@@ -56,6 +56,14 @@ export interface PreprocessedData {
   fees: CsvRow[];
 }
 
+export interface ConsolidatedRow {
+  consolidated_id: number;
+  merchant: string;
+  total_amount: number;
+  count: number;
+  original_row_ids: number[];
+}
+
 export interface LlmClassification {
   row_id: number;
   category: ExpenseCategory;
