@@ -3,7 +3,7 @@ import { FinancialReleaseType } from '../types/financial-release.types';
 
 const subcategorySchema = z.object({
   name: z.string().min(1, 'Subcategory name is required').max(100),
-  value: z.number().positive('Subcategory value must be positive'),
+  value: z.number(),
 });
 
 const baseFinancialReleaseSchema = z.object({
