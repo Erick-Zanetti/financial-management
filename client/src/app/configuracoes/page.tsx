@@ -70,7 +70,7 @@ export default function ConfiguracoesPage() {
   };
 
   return (
-    <div className="max-w-lg mx-auto py-8 px-4">
+    <div className="max-w-3xl mx-auto py-8 px-4">
       <div className="space-y-4">
         <Card>
           <CardContent className="pt-6 space-y-4">
@@ -158,13 +158,14 @@ export default function ConfiguracoesPage() {
                 <div className="relative">
                   <FloatingTextarea
                     label={t('aiCustomPrompt')}
-                    maxLength={2000}
+                    maxLength={5000}
                     value={aiCustomPrompt}
                     onChange={(e) => setAiCustomPrompt(e.target.value)}
                     placeholder={t('aiCustomPromptPlaceholder')}
+                    className="min-h-[200px]"
                   />
                   <div className="text-xs text-muted-foreground text-right mt-1">
-                    {aiCustomPrompt.length}/2000
+                    {aiCustomPrompt.length}/5000
                   </div>
                 </div>
               </>
