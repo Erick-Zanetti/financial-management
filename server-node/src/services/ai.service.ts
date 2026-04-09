@@ -33,22 +33,30 @@ class AiService {
 
     const systemPrompt = this.buildSystemPrompt(config.aiCustomPrompt);
 
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${config.openRouterToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: config.aiModel,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: text },
-        ],
-        max_tokens: 43329,
-        response_format: { type: 'json_object' },
-      }),
-    });
+    let response: Response;
+    try {
+      response = await fetch(OPENROUTER_API_URL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${config.openRouterToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: config.aiModel,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: text },
+          ],
+          max_tokens: 43329,
+          response_format: { type: 'json_object' },
+        }),
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const cause = err instanceof Error && err.cause ? ` cause: ${JSON.stringify(err.cause)}` : '';
+      logger.error(`OpenRouter fetch failed: ${msg}${cause}`);
+      throw new AppError(502, `AI service connection failed: ${msg}`);
+    }
 
     if (!response.ok) {
       const errorBody = await response.text();
