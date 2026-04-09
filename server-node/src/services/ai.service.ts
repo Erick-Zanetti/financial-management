@@ -93,41 +93,47 @@ class AiService {
     outputLanguage: string,
     customPrompt: string,
   ): string {
-    let prompt = `You are a financial document analyzer specialized in categorizing expenses. Your task is to analyze a credit card statement or bill, group the transactions into meaningful spending categories, and return the categorized totals.
+    let prompt = `You are a financial document analyzer specialized in categorizing expenses. Your task is to analyze a credit card statement or bill, clean up the transactions, group them into categories, and return the results.
 
 Instructions:
-1. First, find the EXACT total amount of the bill as printed on the document (look for "Total", "Total da fatura", "Amount due", etc.). This is your reference total — use it as-is, do NOT recalculate it.
-2. Read all individual charges/transactions in the document.
-3. Group them into logical spending categories that YOU create (e.g., "Groceries", "Restaurants", "Transportation", "Subscriptions", "Health", "Entertainment", "Shopping", "Education", etc.). Use your judgment to pick the most appropriate category names.
-4. For each category, sum up all transactions that belong to it.
-5. CRITICAL: Verify that the sum of all category values equals the document total EXACTLY. If there is a difference, create an adjustment category to make the sum match.
-6. Output category names in ${outputLanguage} language.
-7. For each category, write a brief rationale explaining why those transactions were grouped together, and include a markdown table listing every transaction in that category with its value.
-8. Return ONLY a valid JSON object with this exact structure:
+1. Extract ALL line items from the document (positive and negative).
+2. Identify and REMOVE matched pairs: when a negative transaction clearly reverses/cancels a positive one (e.g., "Anuidade Cartão +98.00" paired with "Estorno Anuidade -98.00", or "Seguro +15.00" paired with "Estorno Seguro -15.00"). Remove BOTH the charge and its reversal. Match by similar description and equal absolute value.
+3. After removing matched pairs, DISCARD any remaining negative transactions entirely.
+4. The working set is now only positive charges with no reversals.
+5. Group these charges into spending categories that YOU create. Use your judgment for category names.
+6. For each category, sum up all transactions that belong to it.
+7. The "total" in your response MUST be the sum of all remaining positive charges (after cleanup). Do NOT use the printed bill total — calculate it from the cleaned transactions.
+8. Output category names in ${outputLanguage} language.
+9. For each category, write a brief rationale and a markdown table listing every transaction with its value.
+10. Return ONLY a valid JSON object with this exact structure:
 
 {
-  "total": <number - the bill total as a decimal>,
+  "total": <number>,
   "subcategories": [
-    { "name": "<string - category name>", "value": <number - sum of transactions in this category as a decimal> }
+    { "name": "<string>", "value": <number> }
   ],
-  "report": "<string - markdown report with details per category>"
+  "report": "<string - markdown report>"
 }
 
-The "report" field must be a markdown string with the following structure for each category:
+The "report" field must be a markdown string with this structure per category:
 ## Category Name — $value
-**Rationale:** Brief explanation of why these transactions were grouped.
+**Rationale:** Brief explanation of grouping logic.
 | Transaction | Value |
 |---|---|
 | item name | $value |
-| ... | ... |
+
+At the top of the report, include a section listing removed pairs:
+## Removed Pairs
+| Charge | Reversal | Value |
+|---|---|---|
+| Anuidade Cartão | Estorno Anuidade | 98.00 |
 
 Rules:
-- All monetary values must be positive numbers with up to 2 decimal places.
-- The "total" MUST be the exact total printed on the document. Do NOT recalculate or estimate it.
-- The sum of all subcategory values MUST equal the total EXACTLY. This is mandatory.
-- Only current charges — no fees, interest, or previous balance carried from prior statements.
-- If there are refunds, credits, or chargebacks, include them as negative values within the appropriate category. They are part of the bill and affect the total.
-- Do NOT list individual transactions — group them into categories.
+- All subcategory values MUST be positive.
+- The "total" MUST equal the sum of all subcategory values EXACTLY.
+- Do NOT use the printed bill total. Calculate from cleaned transactions.
+- Do NOT include any negative values in subcategories.
+- Do NOT list individual transactions in the JSON subcategories — only grouped category totals.
 - Aim for 5 to 15 categories. Merge very small or similar categories together.
 - If you cannot extract items, return: { "total": 0, "subcategories": [] }
 - Do NOT include any text outside the JSON object.`;
