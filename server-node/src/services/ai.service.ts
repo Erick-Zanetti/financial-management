@@ -78,18 +78,22 @@ class AiService {
       throw new AppError(502, 'AI returned invalid JSON');
     }
 
-    logger.info('AI raw response parsed', { parsed: JSON.stringify(parsed) });
+    // Filter out negative subcategories (e.g. refunds the model included despite instructions)
+    const obj = parsed as Record<string, unknown>;
+    if (Array.isArray(obj.subcategories)) {
+      obj.subcategories = (obj.subcategories as Array<Record<string, unknown>>).filter(
+        (s) => typeof s.value === 'number' ? s.value > 0 : true,
+      );
+    }
 
     try {
-      return aiProcessedResultSchema.parse(parsed);
+      return aiProcessedResultSchema.parse(obj);
     } catch (err) {
-      const raw = JSON.stringify(parsed);
-      const zodDetail = err instanceof Error ? err.message : String(err);
-      logger.error('AI returned invalid structure', { raw, zodDetail });
-      throw new AppError(
-        502,
-        `AI validation failed: ${zodDetail.slice(0, 300)}. Raw: ${raw.slice(0, 1500)}`,
-      );
+      logger.error('AI returned invalid structure', {
+        parsed: JSON.stringify(obj),
+        error: err instanceof Error ? err.message : String(err),
+      });
+      throw new AppError(502, 'AI returned invalid structure');
     }
   }
 
@@ -119,6 +123,7 @@ Rules:
 - The "total" should be the overall bill total as stated on the document.
 - The sum of all subcategory values must equal the total.
 - Only current charges — no fees, interest, or previous balance.
+- EXCLUDE refunds, credits, chargebacks, and adjustments entirely. Do NOT include negative values.
 - Do NOT list individual transactions — group them into categories.
 - Aim for 5 to 15 categories. Merge very small or similar categories together.
 - If you cannot extract items, return: { "total": 0, "subcategories": [] }
