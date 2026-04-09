@@ -198,22 +198,32 @@ export function AiPdfProcessor({
           <Button
             variant="outline"
             disabled={!report}
-            onClick={() => {
-              const text = report || '';
-              const ta = document.createElement('textarea');
-              ta.value = text;
-              ta.style.position = 'fixed';
-              ta.style.left = '-9999px';
-              document.body.appendChild(ta);
-              ta.focus();
-              ta.select();
+            onClick={async () => {
               try {
-                document.execCommand('copy');
+                const blob = new Blob([report], { type: 'text/plain' });
+                const item = new ClipboardItem({ 'text/plain': blob });
+                await navigator.clipboard.write([item]);
                 toast.success(t('aiReportCopied'));
               } catch {
-                toast.error('Copy failed');
+                try {
+                  await navigator.clipboard.writeText(report);
+                  toast.success(t('aiReportCopied'));
+                } catch {
+                  const ta = document.createElement('textarea');
+                  ta.value = report;
+                  Object.assign(ta.style, {
+                    position: 'fixed', top: '0', left: '0',
+                    width: '1px', height: '1px', opacity: '0.01',
+                  });
+                  document.body.appendChild(ta);
+                  ta.focus();
+                  ta.setSelectionRange(0, ta.value.length);
+                  const ok = document.execCommand('copy');
+                  document.body.removeChild(ta);
+                  if (ok) toast.success(t('aiReportCopied'));
+                  else toast.error(`Copy failed. Report length: ${report.length}`);
+                }
               }
-              document.body.removeChild(ta);
             }}
           >
             <ClipboardCopy className="h-3 w-3 mr-1" />
