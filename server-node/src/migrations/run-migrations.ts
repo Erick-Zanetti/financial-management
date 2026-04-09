@@ -1,5 +1,6 @@
 import { Category } from '../models/category.model';
 import { FinancialRelease } from '../models/financial-release.model';
+import { SystemConfig } from '../models/system-config.model';
 import { logger } from '../config/logger.config';
 
 export async function runMigrations(): Promise<void> {
@@ -36,6 +37,32 @@ export async function runMigrations(): Promise<void> {
     logger.info(
       `Set allowSubcategories=false on ${subcatResult.modifiedCount} categories`,
     );
+  }
+
+  const aiCatResult = await Category.updateMany(
+    { allowAiIntegration: { $exists: false } },
+    { $set: { allowAiIntegration: false } },
+  );
+  if (aiCatResult.modifiedCount > 0) {
+    logger.info(
+      `Set allowAiIntegration=false on ${aiCatResult.modifiedCount} categories`,
+    );
+  }
+
+  const aiRelResult = await FinancialRelease.updateMany(
+    { useAiIntegration: { $exists: false } },
+    { $set: { useAiIntegration: false } },
+  );
+  if (aiRelResult.modifiedCount > 0) {
+    logger.info(
+      `Set useAiIntegration=false on ${aiRelResult.modifiedCount} releases`,
+    );
+  }
+
+  const existingConfig = await SystemConfig.findOne();
+  if (!existingConfig) {
+    await new SystemConfig({}).save();
+    logger.info('Created default system config');
   }
 
   logger.info('Migrations complete');

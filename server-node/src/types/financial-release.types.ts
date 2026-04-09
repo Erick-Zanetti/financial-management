@@ -21,6 +21,7 @@ export interface IFinancialRelease {
   settled?: boolean;
   observations?: string;
   subcategories?: ISubcategory[];
+  useAiIntegration?: boolean;
 }
 
 export interface IFinancialReleaseFilter {

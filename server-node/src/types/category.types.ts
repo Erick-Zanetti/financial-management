@@ -9,4 +9,5 @@ export interface ICategory {
   name: string;
   type: CategoryType;
   allowSubcategories?: boolean;
+  allowAiIntegration?: boolean;
 }

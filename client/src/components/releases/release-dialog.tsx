@@ -36,6 +36,7 @@ import { toast } from 'sonner';
 import { FinancialRelease, FinancialReleaseType } from '@/types/financial-release';
 import { useCreateRelease, useUpdateRelease } from '@/hooks/use-releases';
 import { useCategories } from '@/hooks/use-categories';
+import { useSystemConfig } from '@/hooks/use-system-config';
 import { useSettings } from '@/providers/settings-provider';
 
 interface ReleaseDialogProps {
@@ -79,6 +80,7 @@ export function ReleaseDialog({
   const [displayValue, setDisplayValue] = useState('');
   const { t, getMonthLabel, formatDisplayValue } = useSettings();
   const { data: allCategories = [] } = useCategories();
+  const { data: systemConfig } = useSystemConfig();
   const categories = allCategories.filter((cat) => (cat.type as string) === type || cat.type === 'B');
 
   const subcategorySchema = z.object({
@@ -93,6 +95,7 @@ export function ReleaseDialog({
     category: z.string().min(1, t('categoryRequired')),
     observations: z.string().max(200, t('maxCharsObservations')),
     subcategories: z.array(subcategorySchema),
+    useAiIntegration: z.boolean(),
   });
 
   type FormValues = z.infer<typeof formSchema>;
@@ -106,6 +109,7 @@ export function ReleaseDialog({
       category: '',
       observations: '',
       subcategories: [],
+      useAiIntegration: false,
     },
   });
 
@@ -117,6 +121,9 @@ export function ReleaseDialog({
   const selectedCategoryId = form.watch('category');
   const selectedCategory = allCategories.find((c) => c.id === selectedCategoryId);
   const showSubcategories = selectedCategory?.allowSubcategories === true;
+  const showAiIntegration = showSubcategories
+    && selectedCategory?.allowAiIntegration === true
+    && systemConfig?.aiIntegrationEnabled === true;
 
   const [subDisplayValues, setSubDisplayValues] = useState<string[]>([]);
 
@@ -131,6 +138,7 @@ export function ReleaseDialog({
           category: release.category?.id || '',
           observations: release.observations || '',
           subcategories: subs,
+          useAiIntegration: release.useAiIntegration ?? false,
         });
         setDisplayValue(formatDisplayValue(release.value));
         setSubDisplayValues(subs.map((s) => formatDisplayValue(s.value)));
@@ -142,6 +150,7 @@ export function ReleaseDialog({
           category: '',
           observations: '',
           subcategories: [],
+          useAiIntegration: false,
         });
         setDisplayValue('');
         setSubDisplayValues([]);
@@ -169,6 +178,7 @@ export function ReleaseDialog({
         month,
         year,
         subcategories,
+        useAiIntegration: showAiIntegration ? values.useAiIntegration : false,
       };
       if (isEditing && release?.id) {
         await updateMutation.mutateAsync({ id: release.id, data: payload });
@@ -329,6 +339,28 @@ export function ReleaseDialog({
                 </FormItem>
               )}
             />
+
+            {showAiIntegration && (
+              <FormField
+                control={form.control}
+                name="useAiIntegration"
+                render={({ field }) => (
+                  <FormItem>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+                        />
+                      </FormControl>
+                      <span className="text-sm">{t('useAiIntegration')}</span>
+                    </label>
+                  </FormItem>
+                )}
+              />
+            )}
 
             {showSubcategories && (
               <div className="space-y-3 rounded-lg border p-3">

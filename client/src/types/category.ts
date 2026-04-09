@@ -9,6 +9,7 @@ export interface Category {
   name: string;
   type: CategoryType;
   allowSubcategories?: boolean;
+  allowAiIntegration?: boolean;
 }
 
 export type CreateCategory = Omit<Category, 'id'>;

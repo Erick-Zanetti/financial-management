@@ -5,6 +5,7 @@ export const createCategorySchema = z.object({
   name: z.string().min(1).max(50).trim(),
   type: z.nativeEnum(CategoryType),
   allowSubcategories: z.boolean().optional().default(false),
+  allowAiIntegration: z.boolean().optional().default(false),
 });
 
 export const updateCategorySchema = createCategorySchema.partial();

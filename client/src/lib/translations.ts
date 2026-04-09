@@ -112,6 +112,18 @@ export const pt = {
   // Timeline
   noReleasesThisMonth: 'Nenhum lançamento para este mês',
 
+  // AI Integration
+  aiIntegration: 'Integração com IA',
+  aiIntegrationEnabled: 'Habilitar integração com IA',
+  openRouterToken: 'Token OpenRouter',
+  aiCustomPrompt: 'Prompt personalizado',
+  aiCustomPromptPlaceholder: 'Instruções adicionais para a IA (opcional)',
+  aiConfigSaved: 'Configuração de IA salva com sucesso!',
+  aiConfigSaveFailed: 'Falha ao salvar configuração de IA.',
+  allowAiIntegration: 'Permitir integração com IA',
+  aiIntegrationBadge: 'IA',
+  useAiIntegration: 'Usar integração com IA',
+
   // Settings
   language: 'Idioma',
   currency: 'Moeda',
@@ -246,6 +258,18 @@ export const en: Record<keyof typeof pt, string> = {
 
   // Timeline
   noReleasesThisMonth: 'No releases for this month',
+
+  // AI Integration
+  aiIntegration: 'AI Integration',
+  aiIntegrationEnabled: 'Enable AI integration',
+  openRouterToken: 'OpenRouter Token',
+  aiCustomPrompt: 'Custom prompt',
+  aiCustomPromptPlaceholder: 'Additional instructions for the AI (optional)',
+  aiConfigSaved: 'AI configuration saved successfully!',
+  aiConfigSaveFailed: 'Failed to save AI configuration.',
+  allowAiIntegration: 'Allow AI integration',
+  aiIntegrationBadge: 'AI',
+  useAiIntegration: 'Use AI integration',
 
   // Settings
   language: 'Language',

@@ -12,11 +12,11 @@ import { IDashboardSummaryItem } from '../types/financial-release.types';
 
 export class FinancialReleaseService {
   async findAll(): Promise<FinancialReleaseDocument[]> {
-    return FinancialRelease.find().populate('category', 'name allowSubcategories').sort({ year: -1, month: -1, day: -1 });
+    return FinancialRelease.find().populate('category', 'name allowSubcategories allowAiIntegration').sort({ year: -1, month: -1, day: -1 });
   }
 
   async findById(id: string): Promise<FinancialReleaseDocument | null> {
-    return FinancialRelease.findById(id).populate('category', 'name allowSubcategories');
+    return FinancialRelease.findById(id).populate('category', 'name allowSubcategories allowAiIntegration');
   }
 
   async findByTypeAndMonthAndYear(
@@ -26,14 +26,14 @@ export class FinancialReleaseService {
       type: filter.type,
       month: filter.month,
       year: filter.year,
-    }).populate('category', 'name allowSubcategories').sort({ day: 1 });
+    }).populate('category', 'name allowSubcategories allowAiIntegration').sort({ day: 1 });
   }
 
   async create(
     data: CreateFinancialReleaseDto,
   ): Promise<FinancialReleaseDocument> {
     const release = await new FinancialRelease(data).save();
-    return release.populate('category', 'name allowSubcategories');
+    return release.populate('category', 'name allowSubcategories allowAiIntegration');
   }
 
   async update(
@@ -44,7 +44,7 @@ export class FinancialReleaseService {
       id,
       { $set: data },
       { new: true, runValidators: true },
-    ).populate('category', 'name allowSubcategories');
+    ).populate('category', 'name allowSubcategories allowAiIntegration');
   }
 
   async findAvailableMonths(): Promise<{ year: number; month: number }[]> {

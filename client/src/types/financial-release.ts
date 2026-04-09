@@ -13,7 +13,7 @@ export interface FinancialRelease {
   name: string;
   value: number;
   type: FinancialReleaseType;
-  category: { id: string; name: string; allowSubcategories?: boolean };
+  category: { id: string; name: string; allowSubcategories?: boolean; allowAiIntegration?: boolean };
   person?: string;
   year: number;
   month: number;
@@ -22,6 +22,7 @@ export interface FinancialRelease {
   settled?: boolean;
   observations?: string;
   subcategories?: Subcategory[];
+  useAiIntegration?: boolean;
 }
 
 export interface Month {

@@ -12,6 +12,7 @@ const categorySchema = new Schema<CategoryDocument>(
       required: true,
     },
     allowSubcategories: { type: Boolean, default: false },
+    allowAiIntegration: { type: Boolean, default: false },
   },
   {
     collection: 'categories',

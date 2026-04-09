@@ -1,7 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -11,12 +13,43 @@ import {
   FloatingSelectContent,
   FloatingSelectItem,
 } from '@/components/ui/floating-select';
+import { FloatingInput } from '@/components/ui/floating-input';
+import { FloatingTextarea } from '@/components/ui/floating-textarea';
 import { useSettings } from '@/providers/settings-provider';
 import { Language } from '@/lib/translations';
+import { useSystemConfig, useUpdateSystemConfig } from '@/hooks/use-system-config';
 
 export default function ConfiguracoesPage() {
   const { language, currency, setLanguage, setCurrency, t } = useSettings();
   const { theme, setTheme } = useTheme();
+
+  const { data: systemConfig } = useSystemConfig();
+  const updateConfigMutation = useUpdateSystemConfig();
+
+  const [aiEnabled, setAiEnabled] = useState(false);
+  const [openRouterToken, setOpenRouterToken] = useState('');
+  const [aiCustomPrompt, setAiCustomPrompt] = useState('');
+
+  useEffect(() => {
+    if (systemConfig) {
+      setAiEnabled(systemConfig.aiIntegrationEnabled);
+      setOpenRouterToken(systemConfig.openRouterToken);
+      setAiCustomPrompt(systemConfig.aiCustomPrompt);
+    }
+  }, [systemConfig]);
+
+  const handleSaveAiConfig = async () => {
+    try {
+      await updateConfigMutation.mutateAsync({
+        aiIntegrationEnabled: aiEnabled,
+        openRouterToken,
+        aiCustomPrompt,
+      });
+      toast.success(t('aiConfigSaved'));
+    } catch {
+      toast.error(t('aiConfigSaveFailed'));
+    }
+  };
 
   return (
     <div className="max-w-lg mx-auto py-8 px-4">
@@ -57,6 +90,52 @@ export default function ConfiguracoesPage() {
                 {t('theme')}
               </span>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6 space-y-4">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={aiEnabled}
+                onChange={(e) => setAiEnabled(e.target.checked)}
+                className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+              />
+              <span className="text-sm">{t('aiIntegrationEnabled')}</span>
+            </label>
+
+            {aiEnabled && (
+              <>
+                <FloatingInput
+                  label={t('openRouterToken')}
+                  type="password"
+                  value={openRouterToken}
+                  onChange={(e) => setOpenRouterToken(e.target.value)}
+                />
+
+                <div className="relative">
+                  <FloatingTextarea
+                    label={t('aiCustomPrompt')}
+                    maxLength={2000}
+                    value={aiCustomPrompt}
+                    onChange={(e) => setAiCustomPrompt(e.target.value)}
+                    placeholder={t('aiCustomPromptPlaceholder')}
+                  />
+                  <div className="text-xs text-muted-foreground text-right mt-1">
+                    {aiCustomPrompt.length}/2000
+                  </div>
+                </div>
+              </>
+            )}
+
+            <Button
+              onClick={handleSaveAiConfig}
+              disabled={updateConfigMutation.isPending}
+              className="w-full"
+            >
+              {updateConfigMutation.isPending ? t('saving') : t('save')}
+            </Button>
           </CardContent>
         </Card>
       </div>

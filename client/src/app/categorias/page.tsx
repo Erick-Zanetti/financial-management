@@ -58,6 +58,7 @@ import {
   useDeleteCategory,
 } from '@/hooks/use-categories';
 import { Category, CategoryType } from '@/types/category';
+import { useSystemConfig } from '@/hooks/use-system-config';
 
 export default function CategoriasPage() {
   const { t } = useSettings();
@@ -71,28 +72,32 @@ export default function CategoriasPage() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
 
+  const { data: systemConfig } = useSystemConfig();
+  const isAiGloballyEnabled = systemConfig?.aiIntegrationEnabled === true;
+
   const formSchema = z.object({
     name: z.string().min(1, t('categoryNameRequired')).max(50),
     type: z.nativeEnum(CategoryType, { message: t('categoryTypeRequired') }),
     allowSubcategories: z.boolean(),
+    allowAiIntegration: z.boolean(),
   });
 
   type FormValues = z.infer<typeof formSchema>;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: '', type: CategoryType.Expense, allowSubcategories: false },
+    defaultValues: { name: '', type: CategoryType.Expense, allowSubcategories: false, allowAiIntegration: false },
   });
 
   const handleAdd = () => {
     setEditingCategory(null);
-    form.reset({ name: '', type: CategoryType.Expense, allowSubcategories: false });
+    form.reset({ name: '', type: CategoryType.Expense, allowSubcategories: false, allowAiIntegration: false });
     setSheetOpen(true);
   };
 
   const handleEdit = (category: Category) => {
     setEditingCategory(category);
-    form.reset({ name: category.name, type: category.type, allowSubcategories: category.allowSubcategories ?? false });
+    form.reset({ name: category.name, type: category.type, allowSubcategories: category.allowSubcategories ?? false, allowAiIntegration: category.allowAiIntegration ?? false });
     setSheetOpen(true);
   };
 
@@ -183,6 +188,11 @@ export default function CategoriasPage() {
                       {category.allowSubcategories && (
                         <span className="ml-2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                           {t('subcategories')}
+                        </span>
+                      )}
+                      {category.allowAiIntegration && (
+                        <span className="ml-2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          {t('aiIntegrationBadge')}
                         </span>
                       )}
                     </TableCell>
@@ -286,7 +296,12 @@ export default function CategoriasPage() {
                         <input
                           type="checkbox"
                           checked={field.value}
-                          onChange={field.onChange}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            if (!e.target.checked) {
+                              form.setValue('allowAiIntegration', false);
+                            }
+                          }}
                           className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
                         />
                       </FormControl>
@@ -295,6 +310,28 @@ export default function CategoriasPage() {
                   </FormItem>
                 )}
               />
+
+              {form.watch('allowSubcategories') && isAiGloballyEnabled && (
+                <FormField
+                  control={form.control}
+                  name="allowAiIntegration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <FormControl>
+                          <input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={field.onChange}
+                            className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+                          />
+                        </FormControl>
+                        <span className="text-sm">{t('allowAiIntegration')}</span>
+                      </label>
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <SheetFooter className="gap-2 pt-4">
                 <Button

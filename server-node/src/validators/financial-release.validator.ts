@@ -19,6 +19,7 @@ const baseFinancialReleaseSchema = z.object({
   day: z.number().int().min(1).max(31),
   settled: z.boolean().optional().default(false),
   subcategories: z.array(subcategorySchema).optional(),
+  useAiIntegration: z.boolean().optional().default(false),
 });
 
 export const createFinancialReleaseSchema = baseFinancialReleaseSchema.refine(
