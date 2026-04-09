@@ -18,14 +18,23 @@ class AiService {
     mimetype: string,
     config: AiConfig,
   ): Promise<AiProcessedResultDto> {
+    logger.info(`Processing file: mimetype=${mimetype}, size=${fileBuffer.length}`);
+
     let text: string;
 
     if (mimetype === 'application/pdf') {
-      const pdfData = await pdfParse(fileBuffer);
-      text = pdfData.text;
+      try {
+        const pdfData = await pdfParse(fileBuffer);
+        text = pdfData.text;
+      } catch (err) {
+        logger.error(`PDF parse failed: ${err instanceof Error ? err.message : err}`);
+        throw new AppError(422, 'Failed to parse PDF file');
+      }
     } else {
       text = fileBuffer.toString('utf-8');
     }
+
+    logger.info(`Extracted text length: ${text.length}`);
 
     if (!text || text.trim().length < 20) {
       throw new AppError(422, 'File contains insufficient text content');
