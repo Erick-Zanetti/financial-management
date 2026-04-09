@@ -64,8 +64,6 @@ export const pt = {
   paid: 'Pago',
   settledSuccess: 'Lançamento efetivado!',
   unsettledSuccess: 'Lançamento revertido para pendente!',
-  cannotEditSettled: 'Desmarque para editar',
-  cannotDeleteSettled: 'Desmarque para remover',
 
   // Categories
   category: 'Categoria',
@@ -211,8 +209,6 @@ export const en: Record<keyof typeof pt, string> = {
   paid: 'Paid',
   settledSuccess: 'Release settled!',
   unsettledSuccess: 'Release reverted to pending!',
-  cannotEditSettled: 'Unsettle to edit',
-  cannotDeleteSettled: 'Unsettle to delete',
 
   // Categories
   category: 'Category',

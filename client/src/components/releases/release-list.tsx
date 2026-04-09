@@ -213,8 +213,6 @@ export function ReleaseList({
                               size="icon"
                               className="h-8 w-8"
                               onClick={() => handleEdit(release)}
-                              disabled={isSettled}
-                              title={isSettled ? t('cannotEditSettled') : undefined}
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
@@ -232,8 +230,6 @@ export function ReleaseList({
                               size="icon"
                               className="h-8 w-8 hover:text-destructive hover:bg-destructive/10"
                               onClick={() => handleDelete(release)}
-                              disabled={isSettled}
-                              title={isSettled ? t('cannotDeleteSettled') : undefined}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
