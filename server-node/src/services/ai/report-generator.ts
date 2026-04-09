@@ -1,4 +1,35 @@
-import { AggregatedResult, CATEGORY_DISPLAY_NAMES, ExpenseCategory } from './types';
+import { AggregatedResult, ClassifiedRow, CATEGORY_DISPLAY_NAMES, ExpenseCategory } from './types';
+import { normalizeMerchant } from './preprocessor';
+
+interface ConsolidatedReportRow {
+  merchant: string;
+  total: number;
+  iof_total: number;
+  count: number;
+}
+
+function consolidateForReport(rows: ClassifiedRow[]): ConsolidatedReportRow[] {
+  const groups = new Map<string, ConsolidatedReportRow>();
+
+  for (const r of rows) {
+    const key = normalizeMerchant(r.row.merchant);
+    const existing = groups.get(key);
+    if (existing) {
+      existing.total = Math.round((existing.total + r.effective_amount) * 100) / 100;
+      existing.iof_total = Math.round((existing.iof_total + r.iof_amount) * 100) / 100;
+      existing.count++;
+    } else {
+      groups.set(key, {
+        merchant: r.row.merchant,
+        total: r.effective_amount,
+        iof_total: r.iof_amount,
+        count: 1,
+      });
+    }
+  }
+
+  return [...groups.values()];
+}
 
 function formatBrl(value: number): string {
   return Math.abs(value).toLocaleString('pt-BR', {
@@ -63,14 +94,13 @@ export function generateReport(result: AggregatedResult): string {
     if (catTotal <= 0) continue;
 
     const displayName = CATEGORY_DISPLAY_NAMES[category as ExpenseCategory];
-    const rowLines = rows
-      .sort((a, b) => b.effective_amount - a.effective_amount)
-      .map((r) => {
-        const label =
-          r.iof_amount > 0
-            ? `${r.row.merchant} (+ IOF ${formatBrl(r.iof_amount)})`
-            : r.row.merchant;
-        return `| ${label} | ${formatBrl(r.effective_amount)} |`;
+    const consolidated = consolidateForReport(rows);
+    const rowLines = consolidated
+      .sort((a, b) => b.total - a.total)
+      .map((c) => {
+        const countSuffix = c.count > 1 ? ` (x${c.count})` : '';
+        const iofSuffix = c.iof_total > 0 ? ` (+ IOF ${formatBrl(c.iof_total)})` : '';
+        return `| ${c.merchant}${countSuffix}${iofSuffix} | ${formatBrl(c.total)} |`;
       })
       .join('\n');
 
