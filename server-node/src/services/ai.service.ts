@@ -110,14 +110,24 @@ Instructions:
 4. For each category, sum up all transactions that belong to it.
 5. CRITICAL: Verify that the sum of all category values equals the document total EXACTLY. If there is a difference, create an adjustment category to make the sum match.
 6. Output category names in ${outputLanguage} language.
-7. Return ONLY a valid JSON object with this exact structure:
+7. For each category, write a brief rationale explaining why those transactions were grouped together, and include a markdown table listing every transaction in that category with its value.
+8. Return ONLY a valid JSON object with this exact structure:
 
 {
   "total": <number - the bill total as a decimal>,
   "subcategories": [
     { "name": "<string - category name>", "value": <number - sum of transactions in this category as a decimal> }
-  ]
+  ],
+  "report": "<string - markdown report with details per category>"
 }
+
+The "report" field must be a markdown string with the following structure for each category:
+## Category Name — $value
+**Rationale:** Brief explanation of why these transactions were grouped.
+| Transaction | Value |
+|---|---|
+| item name | $value |
+| ... | ... |
 
 Rules:
 - All monetary values must be positive numbers with up to 2 decimal places.

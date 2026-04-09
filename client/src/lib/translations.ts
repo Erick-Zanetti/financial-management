@@ -141,6 +141,8 @@ export const pt = {
   aiProcessingFailed: 'Falha ao processar PDF com IA',
   aiNoResults: 'Nenhum item encontrado no PDF',
   pdfSelected: 'PDF selecionado',
+  aiCopyReport: 'Copiar relatório',
+  aiReportCopied: 'Relatório copiado!',
 
   // Settings
   language: 'Idioma',
@@ -306,6 +308,8 @@ export const en: Record<keyof typeof pt, string> = {
   aiProcessingFailed: 'Failed to process PDF with AI',
   aiNoResults: 'No items found in PDF',
   pdfSelected: 'PDF selected',
+  aiCopyReport: 'Copy report',
+  aiReportCopied: 'Report copied!',
 
   // Settings
   language: 'Language',

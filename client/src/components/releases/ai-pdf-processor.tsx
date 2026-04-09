@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { FileUp, Loader2 } from 'lucide-react';
+import { ClipboardCopy, FileUp, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,7 @@ export function AiPdfProcessor({
 
   const [aiTotal, setAiTotal] = useState(0);
   const [subcategories, setSubcategories] = useState<ReviewSubcategory[]>([]);
+  const [report, setReport] = useState('');
 
   const handleFile = useCallback((file: File) => {
     if (file.type !== 'application/pdf') {
@@ -93,6 +94,7 @@ export function AiPdfProcessor({
           displayValue: formatDisplayValue(s.value),
         })),
       );
+      setReport(result.report || '');
       setPhase('review');
     } catch {
       toast.error(t('aiProcessingFailed'));
@@ -193,6 +195,18 @@ export function AiPdfProcessor({
         </div>
 
         <div className="flex gap-2 justify-end">
+          {report && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                navigator.clipboard.writeText(report);
+                toast.success(t('aiReportCopied'));
+              }}
+            >
+              <ClipboardCopy className="h-3 w-3 mr-1" />
+              {t('aiCopyReport')}
+            </Button>
+          )}
           <Button variant="outline" onClick={onBack}>
             {t('aiBack')}
           </Button>

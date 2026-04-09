@@ -10,6 +10,7 @@ export const aiProcessedResultSchema = z.object({
       }),
     )
     .min(1),
+  report: z.string().optional().default(''),
 });
 
 export type AiProcessedResultDto = z.infer<typeof aiProcessedResultSchema>;
