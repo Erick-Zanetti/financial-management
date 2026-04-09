@@ -39,6 +39,11 @@ export default function ConfiguracoesPage() {
   }, [systemConfig]);
 
   const handleSaveAiConfig = async () => {
+    if (aiEnabled && !openRouterToken.trim()) {
+      toast.error(t('openRouterTokenRequired'));
+      return;
+    }
+
     try {
       await updateConfigMutation.mutateAsync({
         aiIntegrationEnabled: aiEnabled,
