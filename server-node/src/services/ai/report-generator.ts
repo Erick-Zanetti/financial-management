@@ -25,11 +25,14 @@ export function generateReport(result: AggregatedResult): string {
     );
   }
 
-  // Excluded items (payments, fees, IOF, unmatched negatives)
+  // Excluded items (payments, unmatched credits, fees, IOF)
   const excludedRows: string[] = [];
 
   for (const p of preprocessed.payments) {
     excludedRows.push(`| Pagamento | ${p.merchant} | ${formatBrl(p.amount_brl)} |`);
+  }
+  for (const c of preprocessed.unmatched_credits) {
+    excludedRows.push(`| Crédito/Estorno | ${c.merchant} | ${formatBrl(Math.abs(c.amount_brl))} |`);
   }
   for (const entry of preprocessed.iof_entries) {
     excludedRows.push(
@@ -81,8 +84,12 @@ export function generateReport(result: AggregatedResult): string {
     (s, p) => s + Math.abs(p.amount_brl),
     0,
   );
-  const reversalsTotal = preprocessed.matched_reversals.reduce(
+  const matchedReversalsTotal = preprocessed.matched_reversals.reduce(
     (s, p) => s + p.positive_row.amount_brl,
+    0,
+  );
+  const unmatchedCreditsTotal = preprocessed.unmatched_credits.reduce(
+    (s, c) => s + Math.abs(c.amount_brl),
     0,
   );
   const feesTotal =
@@ -90,7 +97,7 @@ export function generateReport(result: AggregatedResult): string {
     preprocessed.iof_entries.reduce((s, e) => s + e.iof_row.amount_brl, 0);
 
   sections.push(
-    `---\n**Total categorizado:** R$ ${formatBrl(result.total)}\n**Pagamentos:** R$ ${formatBrl(paymentsTotal)}\n**Estornos:** R$ ${formatBrl(reversalsTotal)}\n**Taxas/IOF:** R$ ${formatBrl(feesTotal)}`,
+    `---\n**Total categorizado:** R$ ${formatBrl(result.total)}\n**Pagamentos:** R$ ${formatBrl(paymentsTotal)}\n**Estornos pareados:** R$ ${formatBrl(matchedReversalsTotal)}\n**Créditos não pareados:** R$ ${formatBrl(unmatchedCreditsTotal)}\n**Taxas/IOF:** R$ ${formatBrl(feesTotal)}`,
   );
 
   return sections.join('\n\n');

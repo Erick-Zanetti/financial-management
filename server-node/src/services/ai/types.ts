@@ -52,6 +52,7 @@ export interface PreprocessedData {
   expense_rows: CsvRow[];
   iof_entries: IofEntry[];
   matched_reversals: ReversalPair[];
+  unmatched_credits: CsvRow[];
   payments: CsvRow[];
   fees: CsvRow[];
 }

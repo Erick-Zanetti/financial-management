@@ -39,6 +39,13 @@ function detectIof(rows: CsvRow[]): { iof_entries: IofEntry[]; remaining: CsvRow
   };
 }
 
+const ESTORNO_PATTERNS = ['estorno', 'reversal', 'chargeback', 'cancelamento', 'credito em fatura'];
+
+function isEstornoDescription(merchant: string): boolean {
+  const norm = merchant.toLowerCase().trim();
+  return ESTORNO_PATTERNS.some((p) => norm.includes(p));
+}
+
 function detectMatchedReversals(rows: CsvRow[]): {
   matched_reversals: ReversalPair[];
   remaining: CsvRow[];
@@ -50,6 +57,7 @@ function detectMatchedReversals(rows: CsvRow[]): {
   const usedNegativeIds = new Set<number>();
   const matched_reversals: ReversalPair[] = [];
 
+  // Pass 1: exact merchant match
   for (const neg of negatives) {
     const negNorm = normalizeMerchant(neg.merchant);
     const absAmount = round2(Math.abs(neg.amount_brl));
@@ -59,6 +67,26 @@ function detectMatchedReversals(rows: CsvRow[]): {
         !usedPositiveIds.has(pos.row_id) &&
         round2(pos.amount_brl) === absAmount &&
         normalizeMerchant(pos.merchant) === negNorm,
+    );
+
+    if (match) {
+      matched_reversals.push({ positive_row: match, negative_row: neg });
+      usedPositiveIds.add(match.row_id);
+      usedNegativeIds.add(neg.row_id);
+    }
+  }
+
+  // Pass 2: "estorno" lines match by amount only (e.g. "Estorno Tarifa" pairs with "Anuidade 98.00")
+  for (const neg of negatives) {
+    if (usedNegativeIds.has(neg.row_id)) continue;
+    if (!isEstornoDescription(neg.merchant)) continue;
+
+    const absAmount = round2(Math.abs(neg.amount_brl));
+
+    const match = positives.find(
+      (pos) =>
+        !usedPositiveIds.has(pos.row_id) &&
+        round2(pos.amount_brl) === absAmount,
     );
 
     if (match) {
@@ -123,15 +151,15 @@ export function preprocess(rows: CsvRow[]): PreprocessedData {
   const step3 = detectPayments(step2.remaining);
   const step4 = detectFees(step3.remaining);
 
-  // Discard any remaining negative rows (unmatched credits)
   const expense_rows = step4.remaining.filter((r) => r.amount_brl > 0);
-  const unmatched_negatives = step4.remaining.filter((r) => r.amount_brl <= 0);
+  const unmatched_credits = step4.remaining.filter((r) => r.amount_brl <= 0);
 
   return {
     expense_rows,
     iof_entries: step1.iof_entries,
     matched_reversals: step2.matched_reversals,
-    payments: [...step3.payments, ...unmatched_negatives],
+    unmatched_credits,
+    payments: step3.payments,
     fees: step4.fees,
   };
 }

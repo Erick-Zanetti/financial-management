@@ -42,6 +42,7 @@ class AiService {
       `Preprocessed: ${preprocessed.expense_rows.length} expenses, ` +
         `${preprocessed.iof_entries.length} IOF, ` +
         `${preprocessed.matched_reversals.length} reversal pairs, ` +
+        `${preprocessed.unmatched_credits.length} unmatched credits, ` +
         `${preprocessed.payments.length} payments, ` +
         `${preprocessed.fees.length} fees`,
     );

@@ -42,6 +42,11 @@ export function aggregate(
     category_details.set(category, list);
   }
 
+  // Subtract unmatched credits from total (they reduce the bill)
+  const unmatched_credits_total = round2(
+    preprocessed.unmatched_credits.reduce((s, r) => s + Math.abs(r.amount_brl), 0),
+  );
+
   const subcategories: Array<{ name: string; value: number }> = [];
   let categorized_total = 0;
 
@@ -58,6 +63,11 @@ export function aggregate(
 
   subcategories.sort((a, b) => b.value - a.value);
 
+  // expected = gross expenses - unmatched credits
+  const adjusted_expected = round2(expected_total - unmatched_credits_total);
+  // final total after deducting unmatched credits
+  const final_total = round2(categorized_total - unmatched_credits_total);
+
   const matches = Math.abs(categorized_total - expected_total) <= 0.01;
 
   if (!matches) {
@@ -71,9 +81,13 @@ export function aggregate(
   }
 
   return {
-    total: categorized_total,
+    total: final_total,
     subcategories,
-    validation: { expected_total, categorized_total, matches },
+    validation: {
+      expected_total: adjusted_expected,
+      categorized_total: final_total,
+      matches,
+    },
     category_details,
     preprocessed,
   };
