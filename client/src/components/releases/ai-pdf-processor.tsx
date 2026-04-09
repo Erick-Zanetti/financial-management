@@ -157,44 +157,44 @@ export function AiPdfProcessor({
 
   if (phase === 'review') {
     return (
-      <div className="space-y-4">
-        <div>
+      <div className="flex flex-col h-full">
+        <div className="mb-3">
           <h3 className="text-sm font-medium">{t('aiReviewTitle')}</h3>
           <p className="text-xs text-muted-foreground">{t('aiReviewSubtitle')}</p>
         </div>
 
-        <div className="rounded-lg border p-3">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium">{t('aiTotal')}</span>
-            <span className="text-sm font-semibold">{formatDisplayValue(aiTotal)}</span>
-          </div>
+        <div className="flex items-center justify-between mb-3 px-1">
+          <span className="text-sm font-medium">{t('aiTotal')}</span>
+          <span className="text-sm font-semibold">{formatDisplayValue(aiTotal)}</span>
+        </div>
 
-          <div className="space-y-2">
-            {subcategories.map((sub, index) => (
-              <div key={index} className="flex items-start gap-2">
-                <div className="flex-1">
-                  <FloatingInput
-                    label={t('subcategoryName')}
-                    value={sub.name}
-                    onChange={(e) => handleSubNameChange(index, e.target.value)}
-                  />
-                </div>
-                <div className="w-32">
-                  <FloatingInput
-                    label={t('value')}
-                    type="text"
-                    inputMode="numeric"
-                    value={sub.displayValue}
-                    onChange={(e) => handleSubValueChange(index, e.target.value)}
-                  />
-                </div>
+        <div className="flex-1 min-h-0 overflow-y-auto rounded-lg border p-3 space-y-2">
+          {subcategories.map((sub, index) => (
+            <div key={index} className="flex items-start gap-2">
+              <div className="flex-1">
+                <FloatingInput
+                  label={t('subcategoryName')}
+                  value={sub.name}
+                  onChange={(e) => handleSubNameChange(index, e.target.value)}
+                />
               </div>
-            ))}
-          </div>
+              <div className="w-32">
+                <FloatingInput
+                  label={t('value')}
+                  type="text"
+                  inputMode="numeric"
+                  value={sub.displayValue}
+                  onChange={(e) => handleSubValueChange(index, e.target.value)}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
 
+        <div className="pt-3">
           <div
             className={cn(
-              'text-xs text-right mt-2',
+              'text-xs text-right',
               sumExceedsTotal
                 ? 'text-destructive font-medium'
                 : 'text-muted-foreground',
@@ -206,15 +206,15 @@ export function AiPdfProcessor({
           {sumExceedsTotal && (
             <p className="text-xs text-destructive mt-1">{t('aiSumExceedsTotal')}</p>
           )}
-        </div>
 
-        <div className="flex gap-2 justify-end pt-2">
-          <Button variant="outline" onClick={onBack}>
-            {t('aiBack')}
-          </Button>
-          <Button onClick={handleAccept} disabled={sumExceedsTotal}>
-            {t('aiAccept')}
-          </Button>
+          <div className="flex gap-2 justify-end pt-2">
+            <Button variant="outline" onClick={onBack}>
+              {t('aiBack')}
+            </Button>
+            <Button onClick={handleAccept} disabled={sumExceedsTotal}>
+              {t('aiAccept')}
+            </Button>
+          </div>
         </div>
       </div>
     );

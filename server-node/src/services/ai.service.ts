@@ -90,26 +90,30 @@ class AiService {
     outputLanguage: string,
     customPrompt: string,
   ): string {
-    let prompt = `You are a financial document analyzer. Your task is to analyze a credit card statement or bill and extract all line items.
+    let prompt = `You are a financial document analyzer specialized in categorizing expenses. Your task is to analyze a credit card statement or bill, group the transactions into meaningful spending categories, and return the categorized totals.
 
 Instructions:
-1. Identify every individual charge/transaction in the document.
-2. For each charge, extract the merchant/description name and the monetary value.
-3. Calculate the total sum of all charges.
-4. Output item names in ${outputLanguage} language. Keep proper nouns (brand names, store names) unchanged.
-5. Return ONLY a valid JSON object with this exact structure:
+1. Read all individual charges/transactions in the document.
+2. Group them into logical spending categories that YOU create (e.g., "Groceries", "Restaurants", "Transportation", "Subscriptions", "Health", "Entertainment", "Shopping", "Education", etc.). Use your judgment to pick the most appropriate category names.
+3. For each category, sum up all transactions that belong to it and return the category name and total value.
+4. Calculate the overall total of the bill.
+5. Output category names in ${outputLanguage} language.
+6. Return ONLY a valid JSON object with this exact structure:
 
 {
   "total": <number - the bill total as a decimal>,
   "subcategories": [
-    { "name": "<string - item description>", "value": <number - item value as a decimal> }
+    { "name": "<string - category name>", "value": <number - sum of transactions in this category as a decimal> }
   ]
 }
 
 Rules:
 - All monetary values must be positive numbers with up to 2 decimal places.
 - The "total" should be the overall bill total as stated on the document.
+- The sum of all subcategory values must equal the total.
 - Only current charges — no fees, interest, or previous balance.
+- Do NOT list individual transactions — group them into categories.
+- Aim for 5 to 15 categories. Merge very small or similar categories together.
 - If you cannot extract items, return: { "total": 0, "subcategories": [] }
 - Do NOT include any text outside the JSON object.`;
 
