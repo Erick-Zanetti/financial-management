@@ -1,12 +1,12 @@
 import { z } from 'zod';
 
 export const aiProcessedResultSchema = z.object({
-  total: z.coerce.number().nonnegative(),
+  total: z.coerce.number(),
   subcategories: z
     .array(
       z.object({
         name: z.string().min(1),
-        value: z.coerce.number().nonnegative(),
+        value: z.coerce.number(),
       }),
     )
     .min(1),

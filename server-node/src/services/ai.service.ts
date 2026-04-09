@@ -78,19 +78,11 @@ class AiService {
       throw new AppError(502, 'AI returned invalid JSON');
     }
 
-    // Filter out negative subcategories (e.g. refunds the model included despite instructions)
-    const obj = parsed as Record<string, unknown>;
-    if (Array.isArray(obj.subcategories)) {
-      obj.subcategories = (obj.subcategories as Array<Record<string, unknown>>).filter(
-        (s) => typeof s.value === 'number' ? s.value > 0 : true,
-      );
-    }
-
     try {
-      return aiProcessedResultSchema.parse(obj);
+      return aiProcessedResultSchema.parse(parsed);
     } catch (err) {
       logger.error('AI returned invalid structure', {
-        parsed: JSON.stringify(obj),
+        parsed: JSON.stringify(parsed),
         error: err instanceof Error ? err.message : String(err),
       });
       throw new AppError(502, 'AI returned invalid structure');
@@ -133,8 +125,8 @@ Rules:
 - All monetary values must be positive numbers with up to 2 decimal places.
 - The "total" MUST be the exact total printed on the document. Do NOT recalculate or estimate it.
 - The sum of all subcategory values MUST equal the total EXACTLY. This is mandatory.
-- Only current charges — no fees, interest, or previous balance.
-- EXCLUDE refunds, credits, chargebacks, and adjustments entirely. Do NOT include negative values.
+- Only current charges — no fees, interest, or previous balance carried from prior statements.
+- If there are refunds, credits, or chargebacks, include them as negative values within the appropriate category. They are part of the bill and affect the total.
 - Do NOT list individual transactions — group them into categories.
 - Aim for 5 to 15 categories. Merge very small or similar categories together.
 - If you cannot extract items, return: { "total": 0, "subcategories": [] }

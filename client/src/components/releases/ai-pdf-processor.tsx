@@ -133,7 +133,7 @@ export function AiPdfProcessor({
 
   const handleAccept = () => {
     onAccept({
-      total: Math.max(aiTotal, subcategorySum),
+      total: subcategorySum,
       subcategories: subcategories.map(({ name, value }) => ({ name, value })),
     });
   };
