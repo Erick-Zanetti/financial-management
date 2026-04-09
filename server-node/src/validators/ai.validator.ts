@@ -13,7 +13,7 @@ export const aiRawResponseSchema = z.object({
     .array(
       z.object({
         name: z.string().min(1),
-        value: z.coerce.number().positive(),
+        value: z.coerce.number().nonnegative(),
       }),
     )
     .min(1),

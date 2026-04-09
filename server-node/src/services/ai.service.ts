@@ -104,7 +104,7 @@ class AiService {
 
       return {
         total: raw.categorized_expense_total,
-        subcategories: raw.subcategories,
+        subcategories: raw.subcategories.filter((s) => s.value > 0),
         report: raw.report,
       };
     } catch (err) {
