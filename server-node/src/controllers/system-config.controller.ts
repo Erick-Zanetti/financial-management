@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import { systemConfigService } from '../services/system-config.service';
-import { updateSystemConfigSchema } from '../validators/system-config.validator';
+import {
+  updateSystemConfigSchema,
+  UpdateSystemConfigDto,
+} from '../validators/system-config.validator';
 
 function maskToken(token: string): string {
   if (!token || token.length < 10) return token ? '••••' : '';
@@ -16,11 +19,13 @@ export class SystemConfigController {
   }
 
   async update(req: Request, res: Response): Promise<void> {
-    const data = updateSystemConfigSchema.parse(req.body);
-    if (!data.openRouterToken || data.openRouterToken.includes('...')) {
-      delete data.openRouterToken;
+    const parsed = updateSystemConfigSchema.parse(req.body);
+    const { openRouterToken, ...rest } = parsed;
+    const data: Partial<UpdateSystemConfigDto> = { ...rest };
+    if (openRouterToken && !openRouterToken.includes('...')) {
+      data.openRouterToken = openRouterToken;
     }
-    const config = await systemConfigService.update(data);
+    const config = await systemConfigService.update(data as UpdateSystemConfigDto);
     const json = config.toJSON();
     json.openRouterToken = maskToken(json.openRouterToken);
     res.json(json);

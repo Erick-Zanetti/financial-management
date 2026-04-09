@@ -30,13 +30,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CalendarIcon, Plus, X } from 'lucide-react';
+import { CalendarIcon, Plus, Sparkles, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { FinancialRelease, FinancialReleaseType } from '@/types/financial-release';
 import { useCreateRelease, useUpdateRelease } from '@/hooks/use-releases';
 import { useCategories } from '@/hooks/use-categories';
 import { useSettings } from '@/providers/settings-provider';
+import { useSystemConfig } from '@/hooks/use-system-config';
+import { AiPdfProcessor } from './ai-pdf-processor';
 
 interface ReleaseDialogProps {
   open: boolean;
@@ -79,7 +81,11 @@ export function ReleaseDialog({
   const [displayValue, setDisplayValue] = useState('');
   const { t, getMonthLabel, formatDisplayValue } = useSettings();
   const { data: allCategories = [] } = useCategories();
+  const { data: systemConfig } = useSystemConfig();
   const categories = allCategories.filter((cat) => (cat.type as string) === type || cat.type === 'B');
+
+  const [aiViewActive, setAiViewActive] = useState(false);
+  const [aiProcessing, setAiProcessing] = useState(false);
 
   const subcategorySchema = z.object({
     name: z.string().min(1, t('descriptionRequired')),
@@ -117,11 +123,17 @@ export function ReleaseDialog({
   const selectedCategoryId = form.watch('category');
   const selectedCategory = allCategories.find((c) => c.id === selectedCategoryId);
   const showSubcategories = selectedCategory?.allowSubcategories === true;
+  const showAiIntegration =
+    showSubcategories &&
+    selectedCategory?.allowAiIntegration === true &&
+    systemConfig?.aiIntegrationEnabled === true;
 
   const [subDisplayValues, setSubDisplayValues] = useState<string[]>([]);
 
   useEffect(() => {
     if (open) {
+      setAiViewActive(false);
+      setAiProcessing(false);
       if (release) {
         const subs = release.subcategories ?? [];
         form.reset({
@@ -185,18 +197,54 @@ export function ReleaseDialog({
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen && aiProcessing) return;
+    if (!newOpen) {
+      setAiViewActive(false);
+      setAiProcessing(false);
+    }
+    onOpenChange(newOpen);
+  };
+
+  const handleAiAccept = async (result: {
+    total: number;
+    subcategories: Array<{ name: string; value: number }>;
+  }) => {
+    form.setValue('value', result.total);
+    form.setValue('subcategories', result.subcategories);
+    setDisplayValue(formatDisplayValue(result.total));
+    setSubDisplayValues(result.subcategories.map((s) => formatDisplayValue(s.value)));
+    setAiViewActive(false);
+
+    await form.handleSubmit(onSubmit)();
+  };
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right">
+    <Sheet open={open} onOpenChange={handleOpenChange}>
+      <SheetContent
+        side="right"
+        hideClose={aiProcessing}
+        onInteractOutside={(e) => { if (aiProcessing) e.preventDefault(); }}
+        onEscapeKeyDown={(e) => { if (aiProcessing) e.preventDefault(); }}
+      >
         <SheetHeader>
           <SheetTitle>
-            {isEditing ? t('edit') : t('add')}
+            {aiViewActive ? t('fillWithAi') : isEditing ? t('edit') : t('add')}
             <span className="text-sm font-normal text-muted-foreground ml-2">
               — {getMonthLabel(month)}/{year}
             </span>
           </SheetTitle>
         </SheetHeader>
 
+        {aiViewActive ? (
+          <div className="mt-8">
+            <AiPdfProcessor
+              onAccept={handleAiAccept}
+              onBack={() => setAiViewActive(false)}
+              onProcessingChange={setAiProcessing}
+            />
+          </div>
+        ) : (
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 mt-8">
             <FormField
@@ -334,18 +382,31 @@ export function ReleaseDialog({
               <div className="space-y-3 rounded-lg border p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">{t('subcategories')}</span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      append({ name: '', value: 0 });
-                      setSubDisplayValues((prev) => [...prev, '']);
-                    }}
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    {t('addSubcategory')}
-                  </Button>
+                  <div className="flex gap-1">
+                    {showAiIntegration && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setAiViewActive(true)}
+                      >
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        {t('fillWithAi')}
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        append({ name: '', value: 0 });
+                        setSubDisplayValues((prev) => [...prev, '']);
+                      }}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      {t('addSubcategory')}
+                    </Button>
+                  </div>
                 </div>
 
                 {fields.map((field, index) => (
@@ -461,6 +522,7 @@ export function ReleaseDialog({
             </SheetFooter>
           </form>
         </Form>
+        )}
       </SheetContent>
     </Sheet>
   );

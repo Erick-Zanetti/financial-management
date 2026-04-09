@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
+import multer from 'multer';
 import { logger } from '../config/logger.config';
 
 export class AppError extends Error {
@@ -19,6 +20,16 @@ export const errorHandler = (
   _next: NextFunction,
 ): void => {
   logger.error(err.message, { stack: err.stack });
+
+  if (err instanceof multer.MulterError) {
+    res.status(400).json({ message: err.message });
+    return;
+  }
+
+  if (err.message === 'Only PDF files are allowed') {
+    res.status(400).json({ message: err.message });
+    return;
+  }
 
   if (err instanceof ZodError) {
     res.status(400).json({

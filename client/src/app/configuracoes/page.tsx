@@ -30,6 +30,8 @@ export default function ConfiguracoesPage() {
   const [openRouterToken, setOpenRouterToken] = useState('');
   const [tokenTouched, setTokenTouched] = useState(false);
   const [aiCustomPrompt, setAiCustomPrompt] = useState('');
+  const [aiModel, setAiModel] = useState('');
+  const [aiOutputLanguage, setAiOutputLanguage] = useState('pt');
 
   useEffect(() => {
     if (systemConfig) {
@@ -37,6 +39,8 @@ export default function ConfiguracoesPage() {
       setOpenRouterToken(systemConfig.openRouterToken);
       setTokenTouched(false);
       setAiCustomPrompt(systemConfig.aiCustomPrompt);
+      setAiModel(systemConfig.aiModel);
+      setAiOutputLanguage(systemConfig.aiOutputLanguage);
     }
   }, [systemConfig]);
 
@@ -46,11 +50,18 @@ export default function ConfiguracoesPage() {
       return;
     }
 
+    if (aiEnabled && !aiModel.trim()) {
+      toast.error(t('aiModelRequired'));
+      return;
+    }
+
     try {
       await updateConfigMutation.mutateAsync({
         aiIntegrationEnabled: aiEnabled,
         ...(tokenTouched ? { openRouterToken } : {}),
         aiCustomPrompt,
+        aiModel,
+        aiOutputLanguage,
       });
       toast.success(t('aiConfigSaved'));
     } catch {
@@ -126,6 +137,23 @@ export default function ConfiguracoesPage() {
                   }}
                   onChange={(e) => setOpenRouterToken(e.target.value)}
                 />
+
+                <FloatingInput
+                  label={t('aiModel')}
+                  placeholder={t('aiModelPlaceholder')}
+                  value={aiModel}
+                  onChange={(e) => setAiModel(e.target.value)}
+                />
+
+                <FloatingSelect value={aiOutputLanguage} onValueChange={setAiOutputLanguage}>
+                  <FloatingSelectTrigger label={t('aiOutputLanguage')}>
+                    <FloatingSelectValue />
+                  </FloatingSelectTrigger>
+                  <FloatingSelectContent>
+                    <FloatingSelectItem value="pt">{t('portuguese')}</FloatingSelectItem>
+                    <FloatingSelectItem value="en">{t('english')}</FloatingSelectItem>
+                  </FloatingSelectContent>
+                </FloatingSelect>
 
                 <div className="relative">
                   <FloatingTextarea

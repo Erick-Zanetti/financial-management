@@ -65,5 +65,23 @@ export async function runMigrations(): Promise<void> {
     logger.info('Created default system config');
   }
 
+  const aiModelResult = await SystemConfig.updateMany(
+    { aiModel: { $exists: false } },
+    { $set: { aiModel: '' } },
+  );
+  if (aiModelResult.modifiedCount > 0) {
+    logger.info(`Set aiModel='' on ${aiModelResult.modifiedCount} system configs`);
+  }
+
+  const aiLangResult = await SystemConfig.updateMany(
+    { aiOutputLanguage: { $exists: false } },
+    { $set: { aiOutputLanguage: 'pt' } },
+  );
+  if (aiLangResult.modifiedCount > 0) {
+    logger.info(
+      `Set aiOutputLanguage='pt' on ${aiLangResult.modifiedCount} system configs`,
+    );
+  }
+
   logger.info('Migrations complete');
 }

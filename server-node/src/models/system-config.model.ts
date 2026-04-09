@@ -10,6 +10,8 @@ const systemConfigSchema = new Schema<SystemConfigDocument>(
     aiIntegrationEnabled: { type: Boolean, default: false },
     openRouterToken: { type: String, default: '' },
     aiCustomPrompt: { type: String, default: '' },
+    aiModel: { type: String, default: '' },
+    aiOutputLanguage: { type: String, default: 'pt' },
   },
   {
     collection: 'system-config',

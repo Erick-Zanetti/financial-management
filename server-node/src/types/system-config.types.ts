@@ -3,4 +3,6 @@ export interface ISystemConfig {
   aiIntegrationEnabled: boolean;
   openRouterToken: string;
   aiCustomPrompt: string;
+  aiModel: string;
+  aiOutputLanguage: string;
 }
