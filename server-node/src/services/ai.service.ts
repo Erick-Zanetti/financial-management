@@ -108,11 +108,10 @@ class AiService {
         report: raw.report,
       };
     } catch (err) {
-      logger.error('AI returned invalid structure', {
-        parsed: JSON.stringify(parsed),
-        error: err instanceof Error ? err.message : String(err),
-      });
-      throw new AppError(502, 'AI returned invalid structure');
+      const zodMsg = err instanceof Error ? err.message.slice(0, 500) : String(err);
+      const keys = parsed && typeof parsed === 'object' ? Object.keys(parsed as Record<string, unknown>).join(', ') : 'not-object';
+      logger.error(`AI invalid structure. Keys: [${keys}]. Zod: ${zodMsg}`);
+      throw new AppError(502, `AI invalid structure. Keys: [${keys}]. Zod: ${zodMsg.slice(0, 200)}`);
     }
   }
 
