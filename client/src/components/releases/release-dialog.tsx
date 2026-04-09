@@ -382,32 +382,31 @@ export function ReleaseDialog({
               <div className="space-y-3 rounded-lg border p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">{t('subcategories')}</span>
-                  <div className="flex gap-1">
-                    {showAiIntegration && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setAiViewActive(true)}
-                      >
-                        <Sparkles className="h-3 w-3 mr-1" />
-                        {t('fillWithAi')}
-                      </Button>
-                    )}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        append({ name: '', value: 0 });
-                        setSubDisplayValues((prev) => [...prev, '']);
-                      }}
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      {t('addSubcategory')}
-                    </Button>
-                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      append({ name: '', value: 0 });
+                      setSubDisplayValues((prev) => [...prev, '']);
+                    }}
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    {t('addSubcategory')}
+                  </Button>
                 </div>
+                {showAiIntegration && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setAiViewActive(true)}
+                  >
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    {t('fillWithAi')}
+                  </Button>
+                )}
 
                 {fields.map((field, index) => (
                   <div key={field.id} className="flex items-start gap-2">
