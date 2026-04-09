@@ -1,39 +1,64 @@
 import { logger } from '../../config/logger.config';
 import { AppError } from '../../middlewares/error-handler.middleware';
-import { CsvRow, ConsolidatedRow, LlmClassification, EXPENSE_CATEGORIES } from './types';
+import { CsvRow, ConsolidatedRow, LlmClassification, CategoryConfig } from './types';
 import { consolidateExpenses } from './preprocessor';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MAX_RETRIES = 3;
 
-const SYSTEM_PROMPT = `Você é um classificador de transações de cartão de crédito. Para cada transação, classifique em UMA das categorias do enum. Se o usuário fornecer instruções com regras de categorização, siga estritamente as regras do usuário. Se não houver instruções do usuário, use seu julgamento para classificar nas categorias do enum. Use 'outros' somente quando realmente não se encaixar em nenhuma outra categoria. Não invente row_ids. Retorne todos os row_ids enviados.`;
+const BASE_SYSTEM_PROMPT = `Você é um classificador de transações de cartão de crédito. Para cada transação, classifique em UMA das categorias permitidas. Se o usuário fornecer instruções com regras de categorização, siga estritamente as regras do usuário. Não invente row_ids. Retorne todos os row_ids enviados.`;
 
-const CLASSIFICATION_SCHEMA = {
-  name: 'classifications',
-  strict: true,
-  schema: {
-    type: 'object',
-    properties: {
-      classifications: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            row_id: { type: 'integer' },
-            category: {
-              type: 'string',
-              enum: [...EXPENSE_CATEGORIES],
+function buildSystemPrompt(
+  categories: CategoryConfig[],
+  customPrompt: string,
+): string {
+  const categoriesBlock = categories
+    .map((c, i) => {
+      const examples =
+        c.examples.length > 0 ? `\n   Exemplos: ${c.examples.join(', ')}` : '';
+      return `${i + 1}. ${c.slug}\n   Escopo: ${c.description}${examples}`;
+    })
+    .join('\n\n');
+
+  let prompt = `${BASE_SYSTEM_PROMPT}\n\nCATEGORIAS PERMITIDAS (use exatamente estes slugs):\n\n${categoriesBlock}`;
+
+  if (customPrompt && customPrompt.trim()) {
+    prompt += `\n\n${customPrompt}`;
+  }
+
+  return prompt;
+}
+
+function buildClassificationSchema(categories: CategoryConfig[]) {
+  const slugs = categories.map((c) => c.slug);
+
+  return {
+    name: 'classifications',
+    strict: true,
+    schema: {
+      type: 'object',
+      properties: {
+        classifications: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              row_id: { type: 'integer' },
+              category: {
+                type: 'string',
+                enum: slugs,
+              },
             },
+            required: ['row_id', 'category'],
+            additionalProperties: false,
           },
-          required: ['row_id', 'category'],
-          additionalProperties: false,
         },
       },
+      required: ['classifications'],
+      additionalProperties: false,
     },
-    required: ['classifications'],
-    additionalProperties: false,
-  },
-};
+  };
+}
 
 function formatBrl(value: number): string {
   return value.toLocaleString('pt-BR', {
@@ -50,13 +75,19 @@ function buildUserMessage(rows: ConsolidatedRow[]): string {
   return `Classifique cada transação em uma categoria:\n\n${lines.join('\n')}`;
 }
 
+interface ClassifierConfig {
+  openRouterToken: string;
+  aiModel: string;
+  customPrompt: string;
+  categories: CategoryConfig[];
+}
+
 async function callLlm(
   rows: ConsolidatedRow[],
-  config: { openRouterToken: string; aiModel: string; customPrompt: string },
+  config: ClassifierConfig,
 ): Promise<LlmClassification[]> {
-  const systemContent = config.customPrompt
-    ? `${SYSTEM_PROMPT}\n\n${config.customPrompt}`
-    : SYSTEM_PROMPT;
+  const systemContent = buildSystemPrompt(config.categories, config.customPrompt);
+  const schema = buildClassificationSchema(config.categories);
 
   let response: Response;
   try {
@@ -73,7 +104,7 @@ async function callLlm(
           { role: 'user', content: buildUserMessage(rows) },
         ],
         max_tokens: 8000,
-        response_format: { type: 'json_schema', json_schema: CLASSIFICATION_SCHEMA },
+        response_format: { type: 'json_schema', json_schema: schema },
       }),
     });
   } catch (err) {
@@ -88,7 +119,6 @@ async function callLlm(
       `OpenRouter API error [${response.status}]: ${errorBody.slice(0, 500)}`,
     );
 
-    // Fallback to json_object if json_schema is not supported
     if (response.status === 400 && errorBody.includes('json_schema')) {
       logger.info('Falling back to json_object response format');
       return callLlmFallback(rows, config);
@@ -125,11 +155,9 @@ async function callLlm(
 
 async function callLlmFallback(
   rows: ConsolidatedRow[],
-  config: { openRouterToken: string; aiModel: string; customPrompt: string },
+  config: ClassifierConfig,
 ): Promise<LlmClassification[]> {
-  const systemContent = config.customPrompt
-    ? `${SYSTEM_PROMPT}\n\n${config.customPrompt}`
-    : SYSTEM_PROMPT;
+  const systemContent = buildSystemPrompt(config.categories, config.customPrompt);
 
   const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
@@ -178,16 +206,23 @@ async function callLlmFallback(
 
 export async function classifyExpenses(
   rows: CsvRow[],
-  config: { openRouterToken: string; aiModel: string; customPrompt: string },
+  config: ClassifierConfig,
 ): Promise<LlmClassification[]> {
   if (rows.length === 0) return [];
 
-  // Consolidate identical merchants before sending to LLM
+  const fallbackSlug = config.categories.find((c) => c.slug === 'outros')?.slug
+    ?? config.categories[config.categories.length - 1].slug;
+
   const consolidated = consolidateExpenses(rows);
-  logger.info(`Consolidated ${rows.length} expense rows into ${consolidated.length} unique merchants`);
+  logger.info(
+    `Consolidated ${rows.length} expense rows into ${consolidated.length} unique merchants`,
+  );
 
   const validIds = new Set(consolidated.map((r) => r.consolidated_id));
-  const consolidatedClassifications: Array<{ consolidated_id: number; category: LlmClassification['category'] }> = [];
+  const consolidatedClassifications: Array<{
+    consolidated_id: number;
+    category: string;
+  }> = [];
   let remaining = [...consolidated];
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -205,33 +240,39 @@ export async function classifyExpenses(
 
     const results = await callLlm(remaining, config);
 
-    // Filter out invalid ids
-    const valid = results.filter((c) => validIds.has(c.row_id));
+    const validSlugs = new Set(config.categories.map((c) => c.slug));
+    const valid = results.filter(
+      (c) => validIds.has(c.row_id) && validSlugs.has(c.category),
+    );
     for (const v of valid) {
-      consolidatedClassifications.push({ consolidated_id: v.row_id, category: v.category });
+      consolidatedClassifications.push({
+        consolidated_id: v.row_id,
+        category: v.category,
+      });
     }
 
     const returnedIds = new Set(valid.map((c) => c.row_id));
     remaining = remaining.filter((r) => !returnedIds.has(r.consolidated_id));
   }
 
-  // Default remaining to "outros"
   for (const row of remaining) {
     logger.warn(
-      `Consolidated row ${row.consolidated_id} (${row.merchant}) defaulted to "outros" after ${MAX_RETRIES} retries`,
+      `Consolidated row ${row.consolidated_id} (${row.merchant}) defaulted to "${fallbackSlug}" after ${MAX_RETRIES} retries`,
     );
-    consolidatedClassifications.push({ consolidated_id: row.consolidated_id, category: 'outros' });
+    consolidatedClassifications.push({
+      consolidated_id: row.consolidated_id,
+      category: fallbackSlug,
+    });
   }
 
-  // Expand consolidated classifications back to original row_ids
-  const classMap = new Map<number, LlmClassification['category']>();
+  const classMap = new Map<number, string>();
   for (const c of consolidatedClassifications) {
     classMap.set(c.consolidated_id, c.category);
   }
 
   const allClassifications: LlmClassification[] = [];
   for (const cr of consolidated) {
-    const category = classMap.get(cr.consolidated_id) || 'outros';
+    const category = classMap.get(cr.consolidated_id) || fallbackSlug;
     for (const rowId of cr.original_row_ids) {
       allClassifications.push({ row_id: rowId, category });
     }

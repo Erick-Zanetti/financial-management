@@ -1,6 +1,6 @@
 import { logger } from '../../config/logger.config';
 import { AppError } from '../../middlewares/error-handler.middleware';
-import { AiConfig } from './types';
+import { AiConfig, DEFAULT_CATEGORIES } from './types';
 import { parseCsv } from './csv-parser';
 import { preprocess } from './preprocessor';
 import { classifyExpenses } from './llm-classifier';
@@ -32,11 +32,16 @@ class AiService {
       throw new AppError(422, 'File contains insufficient text content');
     }
 
-    // 2. Parse CSV
+    const categories =
+      config.aiCategories && config.aiCategories.length > 0
+        ? config.aiCategories
+        : DEFAULT_CATEGORIES;
+
+    logger.info(`Using ${categories.length} categories: ${categories.map((c) => c.slug).join(', ')}`);
+
     const rows = parseCsv(text);
     logger.info(`Parsed ${rows.length} CSV rows`);
 
-    // 3. Pre-process
     const preprocessed = preprocess(rows);
     logger.info(
       `Preprocessed: ${preprocessed.expense_rows.length} expenses, ` +
@@ -54,23 +59,22 @@ class AiService {
       );
     }
 
-    // 4. LLM classification
     const classifications = await classifyExpenses(preprocessed.expense_rows, {
       openRouterToken: config.openRouterToken,
       aiModel: config.aiModel,
       customPrompt: config.aiCustomPrompt || '',
+      categories,
     });
 
     logger.info(`LLM returned ${classifications.length} classifications`);
 
-    // 5. Aggregate
-    const result = aggregate(preprocessed, classifications);
+    const result = aggregate(preprocessed, classifications, categories);
     logger.info(
       `Aggregated: total=${result.total}, categories=${result.subcategories.length}, matches=${result.validation.matches}`,
     );
 
-    // 6. Generate report
-    const report = generateReport(result);
+    const displayNames = new Map(categories.map((c) => [c.slug, c.displayName]));
+    const report = generateReport(result, displayNames);
 
     return {
       total: result.total,

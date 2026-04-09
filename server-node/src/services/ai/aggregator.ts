@@ -4,8 +4,7 @@ import {
   LlmClassification,
   ClassifiedRow,
   AggregatedResult,
-  ExpenseCategory,
-  CATEGORY_DISPLAY_NAMES,
+  CategoryConfig,
 } from './types';
 
 function round2(n: number): number {
@@ -15,8 +14,14 @@ function round2(n: number): number {
 export function aggregate(
   preprocessed: PreprocessedData,
   classifications: LlmClassification[],
+  categories: CategoryConfig[],
 ): AggregatedResult {
-  const classMap = new Map<number, ExpenseCategory>();
+  const displayNames = new Map<string, string>();
+  for (const cat of categories) {
+    displayNames.set(cat.slug, cat.displayName);
+  }
+
+  const classMap = new Map<number, string>();
   for (const c of classifications) {
     classMap.set(c.row_id, c.category);
   }
@@ -27,11 +32,14 @@ export function aggregate(
     iofByParent.set(entry.parent_row_id, round2(current + entry.iof_row.amount_brl));
   }
 
-  const category_details = new Map<ExpenseCategory, ClassifiedRow[]>();
+  const fallbackSlug = categories.find((c) => c.slug === 'outros')?.slug
+    ?? categories[categories.length - 1].slug;
+
+  const category_details = new Map<string, ClassifiedRow[]>();
   let sumPositives = 0;
 
   for (const row of preprocessed.expense_rows) {
-    const category = classMap.get(row.row_id) || 'outros';
+    const category = classMap.get(row.row_id) || fallbackSlug;
     const iof_amount = iofByParent.get(row.row_id) || 0;
     const effective_amount = round2(row.amount_brl + iof_amount);
 
@@ -42,7 +50,6 @@ export function aggregate(
     category_details.set(category, list);
   }
 
-  // Build subcategories from positive expense categories
   const subcategories: Array<{ name: string; value: number }> = [];
   let categorized_total = 0;
 
@@ -51,13 +58,12 @@ export function aggregate(
     if (value <= 0) continue;
 
     subcategories.push({
-      name: CATEGORY_DISPLAY_NAMES[category],
+      name: displayNames.get(category) || category,
       value,
     });
     categorized_total = round2(categorized_total + value);
   }
 
-  // Add unmatched credits as a negative "Reembolsos/Créditos" category
   const unmatchedCreditsTotal = round2(
     preprocessed.unmatched_credits.reduce((s, r) => s + r.amount_brl, 0),
   );
@@ -70,19 +76,13 @@ export function aggregate(
     categorized_total = round2(categorized_total + unmatchedCreditsTotal);
   }
 
-  // Sort: positive categories desc, negative (reembolsos) always last
   subcategories.sort((a, b) => {
     if (a.value < 0 && b.value >= 0) return 1;
     if (a.value >= 0 && b.value < 0) return -1;
     return b.value - a.value;
   });
 
-  // Validation: expected = sumPositives + unmatchedCredits (negative, so algebraic sum)
-  const sumMatchedReversals = round2(
-    preprocessed.matched_reversals.reduce((s, p) => s + p.positive_row.amount_brl, 0),
-  );
   const expected_total = round2(sumPositives + unmatchedCreditsTotal);
-
   const matches = Math.abs(expected_total - categorized_total) <= 0.01;
 
   if (!matches) {

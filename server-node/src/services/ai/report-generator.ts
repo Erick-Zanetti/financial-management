@@ -1,4 +1,4 @@
-import { AggregatedResult, ClassifiedRow, CATEGORY_DISPLAY_NAMES, ExpenseCategory } from './types';
+import { AggregatedResult, ClassifiedRow } from './types';
 import { normalizeMerchant } from './preprocessor';
 
 interface ConsolidatedReportRow {
@@ -38,7 +38,10 @@ function formatBrl(value: number): string {
   });
 }
 
-export function generateReport(result: AggregatedResult): string {
+export function generateReport(
+  result: AggregatedResult,
+  displayNames?: Map<string, string>,
+): string {
   const sections: string[] = [];
   const { preprocessed, category_details } = result;
 
@@ -90,7 +93,7 @@ export function generateReport(result: AggregatedResult): string {
     const catTotal = rows.reduce((s, r) => s + r.effective_amount, 0);
     if (catTotal <= 0) continue;
 
-    const displayName = CATEGORY_DISPLAY_NAMES[category as ExpenseCategory];
+    const displayName = displayNames?.get(category) || category;
     const consolidated = consolidateForReport(rows);
     const rowLines = consolidated
       .sort((a, b) => b.total - a.total)

@@ -26,6 +26,7 @@ class AiController {
       aiModel: config.aiModel,
       aiOutputLanguage: config.aiOutputLanguage || 'pt',
       aiCustomPrompt: config.aiCustomPrompt || '',
+      aiCategories: config.aiCategories || [],
     });
 
     res.json(result);
