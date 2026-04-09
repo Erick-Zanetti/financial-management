@@ -1,7 +1,7 @@
 import pdfParse from 'pdf-parse';
 import { logger } from '../config/logger.config';
 import { AppError } from '../middlewares/error-handler.middleware';
-import { aiProcessedResultSchema, AiProcessedResultDto } from '../validators/ai.validator';
+import { aiRawResponseSchema, AiProcessedResultDto } from '../validators/ai.validator';
 
 interface AiConfig {
   openRouterToken: string;
@@ -31,10 +31,7 @@ class AiService {
       throw new AppError(422, 'File contains insufficient text content');
     }
 
-    const systemPrompt = this.buildSystemPrompt(
-      config.aiOutputLanguage,
-      config.aiCustomPrompt,
-    );
+    const systemPrompt = this.buildSystemPrompt(config.aiCustomPrompt);
 
     const response = await fetch(OPENROUTER_API_URL, {
       method: 'POST',
@@ -86,7 +83,13 @@ class AiService {
     }
 
     try {
-      return aiProcessedResultSchema.parse(parsed);
+      const raw = aiRawResponseSchema.parse(parsed);
+
+      return {
+        total: raw.categorized_expense_total,
+        subcategories: raw.subcategories,
+        report: raw.report,
+      };
     } catch (err) {
       logger.error('AI returned invalid structure', {
         parsed: JSON.stringify(parsed),
@@ -96,54 +99,137 @@ class AiService {
     }
   }
 
-  private buildSystemPrompt(
-    outputLanguage: string,
-    customPrompt: string,
-  ): string {
-    let prompt = `You are a financial document analyzer specialized in categorizing expenses. Your task is to analyze a credit card statement or bill, clean up the transactions, group them into categories, and return the results.
+  private buildSystemPrompt(customPrompt: string): string {
+    let prompt = `You are a financial transaction analyzer specialized in credit card CSV statements.
 
-Instructions:
-1. Extract ALL line items from the document (positive and negative).
-2. Identify and REMOVE matched pairs: when a negative transaction clearly reverses/cancels a positive one (e.g., "Anuidade Cartão +98.00" paired with "Estorno Anuidade -98.00", or "Seguro +15.00" paired with "Estorno Seguro -15.00"). Remove BOTH the charge and its reversal. Match by similar description and equal absolute value.
-3. After removing matched pairs, DISCARD any remaining negative transactions entirely.
-4. The working set is now only positive charges with no reversals.
-5. Group these charges into spending categories that YOU create. Use your judgment for category names.
-6. For each category, sum up all transactions that belong to it.
-7. The "total" in your response MUST be the sum of all remaining positive charges (after cleanup). Do NOT use the printed bill total — calculate it from the cleaned transactions.
-8. Output category names in ${outputLanguage} language.
-9. For each category, write a brief rationale and a markdown table listing every transaction with its value.
-10. Return ONLY a valid JSON object with this exact structure:
+Your input is a CSV export of a credit card statement. The CSV is the source of truth. Do not infer values from OCR or visual layout. Read the CSV rows exactly as provided.
+
+Your job is to:
+- classify each transaction correctly
+- remove reversals from expense categorization
+- keep payments/credits tracked separately
+- group real expenses into categories
+- consolidate repeated transactions
+- return a valid JSON object only
+
+PROCESSING RULES
+
+1. Read every CSV row as an individual transaction.
+2. Normalize each transaction into:
+   - date
+   - description
+   - amount
+3. Normalize merchant names:
+   - remove installment suffixes such as "Parcela 3/6", "1/10", etc. from the merchant label, but preserve installment info in a separate note if relevant
+   - remove card suffix noise, duplicated OCR fragments, and trailing technical tokens that do not change merchant identity
+   - keep merchant names consistent across similar rows
+4. Classify every row into exactly one of these types:
+   - expense
+   - credit_or_reversal
+   - payment
+   - fee_or_tax
+5. Classify as credit_or_reversal if the description indicates a refund, estorno, reversal, chargeback, credited amount, or cancellation.
+6. Classify as payment if the description indicates payment, bill payment, inclusão de pagamento, antecipação, or any account payment toward the bill.
+7. Classify as fee_or_tax if it is clearly IOF, annual fee, financing fee, interest, late fee, or similar.
+8. Only transactions classified as expense should be categorized into spending categories.
+9. credit_or_reversal, payment, and fee_or_tax must NEVER be mixed into expense categories.
+10. Detect matched reversal pairs:
+    - if one expense and one credit_or_reversal have the same absolute amount and clearly refer to the same merchant or transaction, mark them as a matched pair
+    - remove BOTH from expense categorization
+    - still list them in the audit report under removed pairs
+11. Unmatched credit_or_reversal rows must remain excluded from categories and must be listed in the audit section.
+12. payment rows must remain excluded from categories and must be listed in the audit section.
+13. fee_or_tax rows must remain excluded from categories by default, unless they are explicitly requested to be included as a separate category. If excluded, list them in the audit section.
+14. Consolidate repeated expense transactions inside the same category:
+    - if the same normalized merchant appears multiple times in the same category, combine them into one line
+    - include a count field
+    - example: "POSTO TREVO EC 2886934" occurring 4 times at 150.00 becomes one consolidated line with count=4 and value=600.00
+15. Create 5 to 15 spending categories using sensible financial grouping.
+16. The category total must equal the sum of its consolidated expense lines exactly.
+17. The overall categorized_expense_total must equal the sum of all category totals exactly.
+18. Never invent rows, values, merchants, or categories that are not supported by the CSV.
+19. If a row is ambiguous, keep it in a category called "Other" rather than guessing aggressively.
+20. Return ONLY valid JSON. No prose outside JSON.
+
+OUTPUT FORMAT
+
+Return exactly this JSON structure:
 
 {
-  "total": <number>,
+  "categorized_expense_total": <number>,
+  "excluded_total": <number>,
+  "excluded_breakdown": {
+    "matched_reversals_total": <number>,
+    "unmatched_credits_total": <number>,
+    "payments_total": <number>,
+    "fees_and_taxes_total": <number>
+  },
   "subcategories": [
-    { "name": "<string>", "value": <number> }
+    {
+      "name": "<string>",
+      "value": <number>
+    }
   ],
-  "report": "<string - markdown report>"
+  "report": "<markdown string>"
 }
 
-The "report" field must be a markdown string with this structure per category:
-## Category Name — $value
-**Rationale:** Brief explanation of grouping logic.
-| Transaction | Value |
-|---|---|
-| item name | $value |
+REPORT FORMAT
 
-At the top of the report, include a section listing removed pairs:
+The "report" field must be markdown and follow this structure exactly:
+
 ## Removed Pairs
 | Charge | Reversal | Value |
-|---|---|---|
-| Anuidade Cartão | Estorno Anuidade | 98.00 |
+|---|---|---:|
+| Merchant A | Estorno Merchant A | 197.91 |
 
-Rules:
-- All subcategory values MUST be positive.
-- The "total" MUST equal the sum of all subcategory values EXACTLY.
-- Do NOT use the printed bill total. Calculate from cleaned transactions.
-- Do NOT include any negative values in subcategories.
-- Do NOT list individual transactions in the JSON subcategories — only grouped category totals.
-- Aim for 5 to 15 categories. Merge very small or similar categories together.
-- If you cannot extract items, return: { "total": 0, "subcategories": [] }
-- Do NOT include any text outside the JSON object.`;
+## Excluded Credits / Payments / Fees
+| Type | Transaction | Value |
+|---|---|---:|
+| payment | Inclusao de Pagamento | 1000.00 |
+| credit_or_reversal | MERCADOLIVRE Estorno | 257.74 |
+| fee_or_tax | IOF Transações Exterior | 15.92 |
+
+## Category Name — 600.00
+**Rationale:** Brief explanation of why these transactions belong together.
+| Transaction | Count | Value |
+|---|---:|---:|
+| POSTO TREVO EC 2886934 | 4 | 600.00 |
+
+## Another Category — 320.50
+**Rationale:** Brief explanation.
+| Transaction | Count | Value |
+|---|---:|---:|
+| SPOTIFY | 1 | 40.90 |
+| DISNEY PLUS | 1 | 44.50 |
+| APPLE SERVICES | 3 | 235.10 |
+
+VALIDATION RULES
+
+- All subcategory values must be positive.
+- categorized_expense_total must equal the sum of subcategory values exactly.
+- excluded_total must equal:
+  matched_reversals_total + unmatched_credits_total + payments_total + fees_and_taxes_total
+- Transactions listed under Removed Pairs or Excluded sections must not appear in spending categories.
+- Each CSV row must be accounted for exactly once in one of:
+  - categorized expense
+  - removed pair
+  - excluded credit
+  - excluded payment
+  - excluded fee/tax
+- If classification is uncertain, prefer "Other" for expenses or "excluded credit" for clearly non-spending rows.
+- If you cannot parse the CSV, return:
+  {
+    "categorized_expense_total": 0,
+    "excluded_total": 0,
+    "excluded_breakdown": {
+      "matched_reversals_total": 0,
+      "unmatched_credits_total": 0,
+      "payments_total": 0,
+      "fees_and_taxes_total": 0
+    },
+    "subcategories": [],
+    "report": ""
+  }`;
 
     if (customPrompt && customPrompt.trim()) {
       prompt += `\n\nAdditional instructions from the user:\n${customPrompt}`;

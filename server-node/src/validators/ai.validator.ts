@@ -1,7 +1,14 @@
 import { z } from 'zod';
 
-export const aiProcessedResultSchema = z.object({
-  total: z.coerce.number().positive(),
+export const aiRawResponseSchema = z.object({
+  categorized_expense_total: z.coerce.number(),
+  excluded_total: z.coerce.number(),
+  excluded_breakdown: z.object({
+    matched_reversals_total: z.coerce.number(),
+    unmatched_credits_total: z.coerce.number(),
+    payments_total: z.coerce.number(),
+    fees_and_taxes_total: z.coerce.number(),
+  }),
   subcategories: z
     .array(
       z.object({
@@ -13,4 +20,10 @@ export const aiProcessedResultSchema = z.object({
   report: z.string().optional().default(''),
 });
 
-export type AiProcessedResultDto = z.infer<typeof aiProcessedResultSchema>;
+export type AiRawResponseDto = z.infer<typeof aiRawResponseSchema>;
+
+export interface AiProcessedResultDto {
+  total: number;
+  subcategories: Array<{ name: string; value: number }>;
+  report: string;
+}
