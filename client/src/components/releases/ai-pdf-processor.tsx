@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { Download, FileUp, Loader2 } from 'lucide-react';
+import { ClipboardCopy, FileUp, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -43,6 +43,7 @@ export function AiPdfProcessor({
   const [aiTotal, setAiTotal] = useState(0);
   const [subcategories, setSubcategories] = useState<ReviewSubcategory[]>([]);
   const [report, setReport] = useState('');
+  const copyRef = useRef<HTMLTextAreaElement>(null);
 
   const handleFile = useCallback((file: File) => {
     if (file.type !== 'application/pdf') {
@@ -195,20 +196,38 @@ export function AiPdfProcessor({
         </div>
 
         <div className="flex flex-wrap gap-2 justify-end">
+          <textarea
+            ref={copyRef}
+            value={report}
+            readOnly
+            aria-hidden
+            tabIndex={-1}
+            className="absolute opacity-0 h-px w-px overflow-hidden pointer-events-none"
+          />
           <Button
             variant="outline"
             disabled={!report}
             onClick={() => {
-              const blob = new Blob([report], { type: 'text/markdown' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = 'ai-report.md';
-              a.click();
-              URL.revokeObjectURL(url);
+              const el = copyRef.current;
+              if (!el) return;
+              el.style.opacity = '0.01';
+              el.style.height = 'auto';
+              el.style.width = 'auto';
+              el.style.position = 'fixed';
+              el.style.top = '0';
+              el.style.left = '0';
+              el.focus();
+              el.setSelectionRange(0, el.value.length);
+              const ok = document.execCommand('copy');
+              el.style.opacity = '0';
+              el.style.height = '1px';
+              el.style.width = '1px';
+              el.style.position = 'absolute';
+              if (ok) toast.success(t('aiReportCopied'));
+              else toast.error('Copy failed');
             }}
           >
-            <Download className="h-3 w-3 mr-1" />
+            <ClipboardCopy className="h-3 w-3 mr-1" />
             {t('aiCopyReport')}
           </Button>
           <Button variant="outline" onClick={onBack}>
