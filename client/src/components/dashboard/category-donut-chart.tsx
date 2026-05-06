@@ -62,7 +62,7 @@ function DonutHalf({ data, title }: { data: CategorySlice[]; title: string }) {
               const pct = total > 0 ? ((Number(entry.value) / total) * 100).toFixed(1) : '0';
               return (
                 <div
-                  className="rounded-lg border px-3 py-2 text-sm backdrop-blur-lg"
+                  className="rounded-lg border px-3 py-2 text-sm"
                   style={{
                     backgroundColor: 'hsl(var(--background) / 0.95)',
                     borderColor: 'hsl(var(--border))',

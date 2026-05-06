@@ -35,7 +35,7 @@ const FloatingTextarea = React.forwardRef<HTMLTextAreaElement, FloatingTextareaP
           placeholder=" "
           rows={3}
           className={cn(
-            "peer flex min-h-[80px] w-full rounded-lg border border-input bg-transparent px-3 pt-6 pb-2 text-base shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-vertical",
+            "peer flex min-h-[80px] w-full rounded-lg border border-input bg-transparent px-3 pt-6 pb-2 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-vertical",
             className
           )}
           onChange={(e) => {

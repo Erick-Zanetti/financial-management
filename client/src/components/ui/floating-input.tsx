@@ -17,7 +17,7 @@ const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputProps>(
           ref={ref}
           placeholder=" "
           className={cn(
-            "peer flex h-12 w-full rounded-lg border border-input bg-transparent px-3 pt-5 pb-1 text-base shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+            "peer flex h-12 w-full rounded-lg border border-input bg-transparent px-3 pt-5 pb-1 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
             className
           )}
           {...props}

@@ -105,7 +105,7 @@ export function CumulativeLineChart({ receipts, expenses }: CumulativeLineChartP
                   if (!active || !payload?.length) return null;
                   return (
                     <div
-                      className="rounded-lg border px-3 py-2 text-sm backdrop-blur-lg"
+                      className="rounded-lg border px-3 py-2 text-sm"
                       style={{
                         backgroundColor: 'hsl(var(--background) / 0.95)',
                         borderColor: 'hsl(var(--border))',

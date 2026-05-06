@@ -48,7 +48,7 @@ export function CategoryBarChart({ chartData, categories, title }: CategoryBarCh
                   if (nonZero.length === 0) return null;
                   return (
                     <div
-                      className="rounded-lg border px-3 py-2 text-sm backdrop-blur-lg max-h-[200px] overflow-y-auto"
+                      className="rounded-lg border px-3 py-2 text-sm max-h-[200px] overflow-y-auto"
                       style={{
                         backgroundColor: 'hsl(var(--background) / 0.95)',
                         borderColor: 'hsl(var(--border))',

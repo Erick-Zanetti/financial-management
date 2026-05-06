@@ -21,7 +21,6 @@ import { cn } from '@/lib/utils';
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { PieChart } from '@/components/charts/pie-chart';
@@ -182,21 +181,19 @@ export function ReleaseList({
                           <span className="flex items-center gap-1.5">
                             {release.name}
                             {release.subcategories && release.subcategories.length > 0 && (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Layers className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top" className="text-xs">
-                                    {release.subcategories.map((sub, i) => (
-                                      <div key={i} className="flex justify-between gap-4">
-                                        <span>{sub.name}</span>
-                                        <span>{formatCurrency(sub.value)}</span>
-                                      </div>
-                                    ))}
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Layers className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="text-xs">
+                                  {release.subcategories.map((sub, i) => (
+                                    <div key={i} className="flex justify-between gap-4">
+                                      <span>{sub.name}</span>
+                                      <span>{formatCurrency(sub.value)}</span>
+                                    </div>
+                                  ))}
+                                </TooltipContent>
+                              </Tooltip>
                             )}
                           </span>
                         </TableCell>

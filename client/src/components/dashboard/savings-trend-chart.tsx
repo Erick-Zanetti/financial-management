@@ -52,7 +52,7 @@ export function SavingsTrendChart({ data }: SavingsTrendChartProps) {
                   const value = Number(payload[0].value);
                   return (
                     <div
-                      className="rounded-lg border px-3 py-2 text-sm backdrop-blur-lg"
+                      className="rounded-lg border px-3 py-2 text-sm"
                       style={{
                         backgroundColor: 'hsl(var(--background) / 0.95)',
                         borderColor: 'hsl(var(--border))',

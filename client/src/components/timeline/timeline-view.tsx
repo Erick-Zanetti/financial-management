@@ -91,7 +91,7 @@ export function TimelineView({ month, year, currentBalance = 0 }: TimelineViewPr
             {currentBalance > 0 && (
               <div className="relative pl-10">
                 <div className="absolute left-2 top-2 h-4 w-4 rounded-full border-2 bg-background border-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border border-blue-500/30 p-4 bg-card/80 backdrop-blur-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border border-blue-500/30 p-4 bg-card">
                   <div className="flex-1">
                     <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                       {t('currentBalance')}
@@ -159,7 +159,7 @@ function TimelineItem({ release, isReceipt, isSettled, balance, formatCurrencyFn
         )}
       />
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border p-4 bg-card/80 backdrop-blur-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border p-4 bg-card">
         <div className="flex-1">
           <div className={cn('flex items-center gap-2', isSettled && 'line-through')}>
             <span className="text-sm text-muted-foreground">

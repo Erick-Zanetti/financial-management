@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useFieldArray, useForm, useWatch, Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -50,15 +50,15 @@ interface ReleaseDialogProps {
 }
 
 function SubcategorySummary({
-  subcategories,
-  total,
+  control,
   formatCurrency,
 }: {
-  subcategories: { name: string; value: number }[];
-  total: number;
+  control: Control<{ subcategories: { name: string; value: number }[]; value: number; [key: string]: unknown }>;
   formatCurrency: (v: number) => string;
 }) {
-  const sum = subcategories.reduce((acc, s) => acc + s.value, 0);
+  const subcategories = useWatch({ control, name: 'subcategories' }) ?? [];
+  const total = useWatch({ control, name: 'value' }) ?? 0;
+  const sum = subcategories.reduce((acc: number, s: { value: number }) => acc + s.value, 0);
   const match = sum <= total + 0.01;
   return (
     <div className={cn('text-xs text-right', match ? 'text-muted-foreground' : 'text-destructive font-medium')}>
@@ -259,7 +259,7 @@ export function ReleaseDialog({
                           <button
                             type="button"
                             className={cn(
-                              'flex h-12 w-full items-center rounded-lg border border-input bg-transparent px-3 pt-5 pb-1 text-sm shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary text-left',
+                              'flex h-12 w-full items-center rounded-lg border border-input bg-transparent px-3 pt-5 pb-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary text-left',
                               !field.value && 'text-muted-foreground'
                             )}
                           >
@@ -471,8 +471,7 @@ export function ReleaseDialog({
 
                 {fields.length > 0 && (
                   <SubcategorySummary
-                    subcategories={form.watch('subcategories') ?? []}
-                    total={form.watch('value')}
+                    control={form.control as unknown as Control<{ subcategories: { name: string; value: number }[]; value: number; [key: string]: unknown }>}
                     formatCurrency={formatDisplayValue}
                   />
                 )}
