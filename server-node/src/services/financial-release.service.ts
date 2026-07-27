@@ -12,11 +12,17 @@ import { IDashboardSummaryItem } from '../types/financial-release.types';
 
 export class FinancialReleaseService {
   async findAll(): Promise<FinancialReleaseDocument[]> {
-    return FinancialRelease.find().populate('category', 'name allowSubcategories allowAiIntegration').sort({ year: -1, month: -1, day: -1 });
+    return FinancialRelease.find().populate([
+      { path: 'category', select: 'name allowSubcategories allowAiIntegration' },
+      { path: 'subcategories.category', select: 'name' },
+    ]).sort({ year: -1, month: -1, day: -1 });
   }
 
   async findById(id: string): Promise<FinancialReleaseDocument | null> {
-    return FinancialRelease.findById(id).populate('category', 'name allowSubcategories allowAiIntegration');
+    return FinancialRelease.findById(id).populate([
+      { path: 'category', select: 'name allowSubcategories allowAiIntegration' },
+      { path: 'subcategories.category', select: 'name' },
+    ]);
   }
 
   async findByTypeAndMonthAndYear(
@@ -26,14 +32,20 @@ export class FinancialReleaseService {
       type: filter.type,
       month: filter.month,
       year: filter.year,
-    }).populate('category', 'name allowSubcategories allowAiIntegration').sort({ day: 1 });
+    }).populate([
+      { path: 'category', select: 'name allowSubcategories allowAiIntegration' },
+      { path: 'subcategories.category', select: 'name' },
+    ]).sort({ day: 1 });
   }
 
   async create(
     data: CreateFinancialReleaseDto,
   ): Promise<FinancialReleaseDocument> {
     const release = await new FinancialRelease(data).save();
-    return release.populate('category', 'name allowSubcategories allowAiIntegration');
+    return release.populate([
+      { path: 'category', select: 'name allowSubcategories allowAiIntegration' },
+      { path: 'subcategories.category', select: 'name' },
+    ]);
   }
 
   async update(
@@ -44,7 +56,10 @@ export class FinancialReleaseService {
       id,
       { $set: data },
       { new: true, runValidators: true },
-    ).populate('category', 'name allowSubcategories allowAiIntegration');
+    ).populate([
+      { path: 'category', select: 'name allowSubcategories allowAiIntegration' },
+      { path: 'subcategories.category', select: 'name' },
+    ]);
   }
 
   async findAvailableMonths(): Promise<{ year: number; month: number }[]> {

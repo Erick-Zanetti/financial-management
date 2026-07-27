@@ -20,6 +20,13 @@ import {
 } from '@/components/ui/form';
 import { FloatingInput } from '@/components/ui/floating-input';
 import { FloatingTextarea } from '@/components/ui/floating-textarea';
+import {
+  FloatingSelect,
+  FloatingSelectContent,
+  FloatingSelectItem,
+  FloatingSelectTrigger,
+  FloatingSelectValue,
+} from '@/components/ui/floating-select';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -53,7 +60,7 @@ function SubcategorySummary({
   control,
   formatCurrency,
 }: {
-  control: Control<{ subcategories: { name: string; value: number }[]; value: number; [key: string]: unknown }>;
+  control: Control<{ subcategories: { category: string; value: number }[]; value: number; [key: string]: unknown }>;
   formatCurrency: (v: number) => string;
 }) {
   const subcategories = useWatch({ control, name: 'subcategories' }) ?? [];
@@ -88,7 +95,7 @@ export function ReleaseDialog({
   const [aiProcessing, setAiProcessing] = useState(false);
 
   const subcategorySchema = z.object({
-    name: z.string().min(1, t('descriptionRequired')),
+    category: z.string().min(1, t('categoryRequired')),
     value: z.number(),
   });
 
@@ -121,6 +128,7 @@ export function ReleaseDialog({
   });
 
   const selectedCategoryId = form.watch('category');
+  const watchedSubcategories = form.watch('subcategories');
   const selectedCategory = allCategories.find((c) => c.id === selectedCategoryId);
   const showSubcategories = selectedCategory?.allowSubcategories === true;
   const showAiIntegration =
@@ -142,7 +150,10 @@ export function ReleaseDialog({
           day: release.day,
           category: release.category?.id || '',
           observations: release.observations || '',
-          subcategories: subs,
+          subcategories: subs.map((s) => ({
+            category: s.category?.id ?? '',
+            value: s.value,
+          })),
         });
         setDisplayValue(formatDisplayValue(release.value));
         setSubDisplayValues(subs.map((s) => formatDisplayValue(s.value)));
@@ -208,10 +219,13 @@ export function ReleaseDialog({
 
   const handleAiAccept = async (result: {
     total: number;
-    subcategories: Array<{ name: string; value: number }>;
+    subcategories: Array<{ categoryId: string; name: string; value: number }>;
   }) => {
     form.setValue('value', result.total);
-    form.setValue('subcategories', result.subcategories);
+    form.setValue(
+      'subcategories',
+      result.subcategories.map((s) => ({ category: s.categoryId, value: s.value })),
+    );
     setDisplayValue(formatDisplayValue(result.total));
     setSubDisplayValues(result.subcategories.map((s) => formatDisplayValue(s.value)));
     setAiViewActive(false);
@@ -387,7 +401,7 @@ export function ReleaseDialog({
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      append({ name: '', value: 0 });
+                      append({ category: '', value: 0 });
                       setSubDisplayValues((prev) => [...prev, '']);
                     }}
                   >
@@ -412,15 +426,38 @@ export function ReleaseDialog({
                   <div key={field.id} className="flex items-start gap-2">
                     <FormField
                       control={form.control}
-                      name={`subcategories.${index}.name`}
-                      render={({ field: nameField }) => (
+                      name={`subcategories.${index}.category`}
+                      render={({ field: categoryField }) => (
                         <FormItem className="flex-1">
-                          <FormControl>
-                            <FloatingInput
-                              label={t('subcategoryName')}
-                              {...nameField}
-                            />
-                          </FormControl>
+                          <FloatingSelect
+                            onValueChange={categoryField.onChange}
+                            value={categoryField.value}
+                          >
+                            <FormControl>
+                              <FloatingSelectTrigger
+                                label={t('subcategoryName')}
+                                className={cn(
+                                  !categoryField.value && 'text-muted-foreground'
+                                )}
+                              >
+                                <FloatingSelectValue placeholder={t('category')} />
+                              </FloatingSelectTrigger>
+                            </FormControl>
+                            <FloatingSelectContent>
+                              {categories.map((cat) => (
+                                <FloatingSelectItem
+                                  key={cat.id}
+                                  value={cat.id}
+                                  disabled={watchedSubcategories?.some(
+                                    (sub, subIndex) =>
+                                      subIndex !== index && sub.category === cat.id,
+                                  )}
+                                >
+                                  {cat.name}
+                                </FloatingSelectItem>
+                              ))}
+                            </FloatingSelectContent>
+                          </FloatingSelect>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -471,7 +508,7 @@ export function ReleaseDialog({
 
                 {fields.length > 0 && (
                   <SubcategorySummary
-                    control={form.control as unknown as Control<{ subcategories: { name: string; value: number }[]; value: number; [key: string]: unknown }>}
+                    control={form.control as unknown as Control<{ subcategories: { category: string; value: number }[]; value: number; [key: string]: unknown }>}
                     formatCurrency={formatDisplayValue}
                   />
                 )}

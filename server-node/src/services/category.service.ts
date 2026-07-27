@@ -2,6 +2,7 @@ import { Category, CategoryDocument } from '../models/category.model';
 import { FinancialRelease } from '../models/financial-release.model';
 import { CreateCategoryDto, UpdateCategoryDto } from '../validators/category.validator';
 import { AppError } from '../middlewares/error-handler.middleware';
+import { normalizeForMatch } from '../utils/slugify';
 
 class CategoryService {
   async findAll(): Promise<CategoryDocument[]> {
@@ -16,6 +17,14 @@ class CategoryService {
     return Category.find({ aiClassificationEnabled: true }).sort({ name: 1 });
   }
 
+  async findByName(name: string): Promise<CategoryDocument | null> {
+    const normalized = normalizeForMatch(name);
+    const categories = await Category.find();
+    return (
+      categories.find((c) => normalizeForMatch(c.name) === normalized) ?? null
+    );
+  }
+
   async create(data: CreateCategoryDto): Promise<CategoryDocument> {
     return new Category(data).save();
   }
@@ -28,7 +37,9 @@ class CategoryService {
   }
 
   async delete(id: string): Promise<CategoryDocument | null> {
-    const inUseCount = await FinancialRelease.countDocuments({ category: id });
+    const inUseCount = await FinancialRelease.countDocuments({
+      $or: [{ category: id }, { 'subcategories.category': id }],
+    });
     if (inUseCount > 0) {
       throw new AppError(409, 'Cannot delete category that is in use');
     }

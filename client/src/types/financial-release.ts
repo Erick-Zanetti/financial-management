@@ -4,7 +4,12 @@ export enum FinancialReleaseType {
 }
 
 export interface Subcategory {
-  name: string;
+  category: { id: string; name: string } | null;
+  value: number;
+}
+
+export interface SubcategoryInput {
+  category: string;
   value: number;
 }
 
@@ -41,5 +46,8 @@ export interface DashboardSummaryItem {
   count: number;
 }
 
-export type CreateFinancialRelease = Omit<FinancialRelease, 'id' | 'category'> & { category: string };
+export type CreateFinancialRelease = Omit<
+  FinancialRelease,
+  'id' | 'category' | 'subcategories'
+> & { category: string; subcategories?: SubcategoryInput[] };
 export type UpdateFinancialRelease = Partial<CreateFinancialRelease>;

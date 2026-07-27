@@ -9,7 +9,7 @@ import { generateReport } from './report-generator';
 
 export interface AiProcessedResultDto {
   total: number;
-  subcategories: Array<{ name: string; value: number }>;
+  subcategories: Array<{ categoryId: string; name: string; value: number }>;
   report: string;
   validation?: {
     expected_total: number;
@@ -65,7 +65,12 @@ class AiService {
 
     logger.info(`LLM returned ${classifications.length} classifications`);
 
-    const result = aggregate(preprocessed, classifications, categories);
+    const result = aggregate(
+      preprocessed,
+      classifications,
+      categories,
+      config.refundCategory,
+    );
     logger.info(
       `Aggregated: total=${result.total}, categories=${result.subcategories.length}, matches=${result.validation.matches}`,
     );

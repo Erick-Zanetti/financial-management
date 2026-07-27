@@ -13,7 +13,7 @@ import { useSettings } from '@/providers/settings-provider';
 interface AiPdfProcessorProps {
   onAccept: (result: {
     total: number;
-    subcategories: Array<{ name: string; value: number }>;
+    subcategories: Array<{ categoryId: string; name: string; value: number }>;
   }) => void;
   onBack: () => void;
   onProcessingChange: (processing: boolean) => void;
@@ -22,6 +22,7 @@ interface AiPdfProcessorProps {
 type Phase = 'upload' | 'processing' | 'review';
 
 interface ReviewSubcategory {
+  categoryId: string;
   name: string;
   value: number;
   displayValue: string;
@@ -107,12 +108,6 @@ export function AiPdfProcessor({
     }
   };
 
-  const handleSubNameChange = (index: number, name: string) => {
-    setSubcategories((prev) =>
-      prev.map((s, i) => (i === index ? { ...s, name } : s)),
-    );
-  };
-
   const handleSubValueChange = (index: number, rawInput: string) => {
     const digits = rawInput.replace(/\D/g, '');
     const cents = parseInt(digits, 10) || 0;
@@ -136,7 +131,11 @@ export function AiPdfProcessor({
   const handleAccept = () => {
     onAccept({
       total: subcategorySum,
-      subcategories: subcategories.map(({ name, value }) => ({ name, value })),
+      subcategories: subcategories.map(({ categoryId, name, value }) => ({
+        categoryId,
+        name,
+        value,
+      })),
     });
   };
 
@@ -177,7 +176,8 @@ export function AiPdfProcessor({
                 <FloatingInput
                   label={t('subcategoryName')}
                   value={sub.name}
-                  onChange={(e) => handleSubNameChange(index, e.target.value)}
+                  readOnly
+                  disabled
                 />
               </div>
               <div className="w-full sm:w-32">

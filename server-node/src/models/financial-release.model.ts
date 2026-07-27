@@ -76,7 +76,11 @@ const financialReleaseSchema = new Schema<FinancialReleaseDocument>(
     observations: { type: String, required: false, trim: true },
     subcategories: [
       {
-        name: { type: String, required: true, trim: true },
+        category: {
+          type: Schema.Types.ObjectId,
+          ref: 'Category',
+          required: true,
+        },
         value: { type: Number, required: true },
         _id: false,
       },

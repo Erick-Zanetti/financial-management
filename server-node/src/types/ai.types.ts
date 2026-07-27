@@ -1,6 +1,6 @@
 export interface IAiProcessedResult {
   total: number;
-  subcategories: Array<{ name: string; value: number }>;
+  subcategories: Array<{ categoryId: string; name: string; value: number }>;
   report: string;
   validation?: {
     expected_total: number;

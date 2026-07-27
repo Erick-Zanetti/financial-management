@@ -89,6 +89,104 @@ async function migrateLegacyAiCategories(): Promise<void> {
   );
 }
 
+const SUBCATEGORY_SEED_NAMES = [
+  'Contador',
+  'DAS',
+  'INSS',
+  'Polimed',
+  'Cartão PJ',
+  'Reembolsos/Créditos',
+];
+
+const LEGACY_SUBCATEGORY_TARGETS: Record<string, string> = {
+  educacao: 'Estudos',
+  cartao: 'Cartão PJ',
+  fatura: 'Cartão PJ',
+};
+
+interface LegacySubcategory {
+  name?: string;
+  value: number;
+  category?: unknown;
+}
+
+async function migrateSubcategoryLinks(): Promise<void> {
+  const byNormalizedName = new Map(
+    (await Category.find()).map((c) => [normalizeForMatch(c.name), c]),
+  );
+
+  for (const seedName of SUBCATEGORY_SEED_NAMES) {
+    if (!byNormalizedName.has(normalizeForMatch(seedName))) {
+      const created = await new Category({ name: seedName, type: 'E' }).save();
+      byNormalizedName.set(normalizeForMatch(created.name), created);
+      logger.info(`Created category "${seedName}" for subcategory links`);
+    }
+  }
+
+  // Native collection access: the new schema no longer has subcategories.name,
+  // and we want to keep the legacy name in place as a rollback backup.
+  const releases = await FinancialRelease.collection
+    .find({
+      subcategories: {
+        $elemMatch: { name: { $exists: true }, category: { $exists: false } },
+      },
+    })
+    .toArray();
+
+  let converted = 0;
+  let skipped = 0;
+
+  for (const release of releases) {
+    const subcategories = (release.subcategories ?? []) as LegacySubcategory[];
+    let unresolvedName: string | undefined;
+
+    const newSubcategories = [];
+    for (const sub of subcategories) {
+      if (sub.category || !sub.name) {
+        newSubcategories.push(sub);
+        continue;
+      }
+      const normalized = normalizeForMatch(sub.name);
+      const targetName = LEGACY_SUBCATEGORY_TARGETS[normalized];
+      let target = targetName
+        ? byNormalizedName.get(normalizeForMatch(targetName))
+        : byNormalizedName.get(normalized);
+      if (!target && targetName) {
+        // Manually-mapped target missing (e.g. fresh install): create it.
+        target = await new Category({ name: targetName, type: 'E' }).save();
+        byNormalizedName.set(normalizeForMatch(target.name), target);
+        logger.info(`Created category "${targetName}" for subcategory links`);
+      }
+      if (!target) {
+        unresolvedName = sub.name;
+        newSubcategories.push(sub);
+        continue;
+      }
+      newSubcategories.push({ ...sub, category: target._id });
+    }
+
+    if (unresolvedName) {
+      logger.error(
+        `Skipping release ${String(release._id)}: no category match for subcategory "${unresolvedName}"`,
+      );
+      skipped += 1;
+      continue;
+    }
+
+    await FinancialRelease.collection.updateOne(
+      { _id: release._id },
+      { $set: { subcategories: newSubcategories } },
+    );
+    converted += 1;
+  }
+
+  if (converted > 0 || skipped > 0) {
+    logger.info(
+      `Linked subcategories to categories: converted=${converted} skipped=${skipped}`,
+    );
+  }
+}
+
 export async function runMigrations(): Promise<void> {
   logger.info('Running migrations...');
 
@@ -210,6 +308,7 @@ export async function runMigrations(): Promise<void> {
   }
 
   await migrateLegacyAiCategories();
+  await migrateSubcategoryLinks();
 
   logger.info('Migrations complete');
 }

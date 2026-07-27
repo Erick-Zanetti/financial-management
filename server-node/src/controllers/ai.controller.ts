@@ -31,12 +31,21 @@ class AiController {
       );
     }
 
+    const refundCategory = await categoryService.findByName('Reembolsos/Créditos');
+    if (!refundCategory) {
+      throw new AppError(
+        500,
+        'Refund category "Reembolsos/Créditos" not found — run migrations',
+      );
+    }
+
     const result = await aiService.processFile(req.file.buffer, req.file.mimetype, {
       openRouterToken: config.openRouterToken,
       aiModel: config.aiModel,
       aiOutputLanguage: config.aiOutputLanguage || 'pt',
       aiCustomPrompt: config.aiCustomPrompt || '',
       aiCategories: buildCategoryConfigs(categories),
+      refundCategory: { id: refundCategory.id, name: refundCategory.name },
     });
 
     res.json(result);

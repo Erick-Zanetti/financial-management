@@ -1,9 +1,15 @@
 export interface CategoryConfig {
+  id: string;
   slug: string;
   displayName: string;
   description: string;
   examples: string[];
   prompt?: string;
+}
+
+export interface RefundCategory {
+  id: string;
+  name: string;
 }
 
 export interface CsvRow {
@@ -54,7 +60,7 @@ export interface ClassifiedRow {
 
 export interface AggregatedResult {
   total: number;
-  subcategories: Array<{ name: string; value: number }>;
+  subcategories: Array<{ categoryId: string; name: string; value: number }>;
   validation: {
     expected_total: number;
     categorized_total: number;
@@ -70,4 +76,5 @@ export interface AiConfig {
   aiOutputLanguage: string;
   aiCustomPrompt: string;
   aiCategories: CategoryConfig[];
+  refundCategory: RefundCategory;
 }

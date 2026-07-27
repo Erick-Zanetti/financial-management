@@ -5,6 +5,7 @@ import {
   ClassifiedRow,
   AggregatedResult,
   CategoryConfig,
+  RefundCategory,
 } from './types';
 
 function round2(n: number): number {
@@ -15,10 +16,11 @@ export function aggregate(
   preprocessed: PreprocessedData,
   classifications: LlmClassification[],
   categories: CategoryConfig[],
+  refundCategory: RefundCategory,
 ): AggregatedResult {
-  const displayNames = new Map<string, string>();
+  const categoriesBySlug = new Map<string, CategoryConfig>();
   for (const cat of categories) {
-    displayNames.set(cat.slug, cat.displayName);
+    categoriesBySlug.set(cat.slug, cat);
   }
 
   const classMap = new Map<number, string>();
@@ -34,6 +36,7 @@ export function aggregate(
 
   const fallbackSlug = categories.find((c) => c.slug === 'outros')?.slug
     ?? categories[categories.length - 1].slug;
+  const fallbackConfig = categoriesBySlug.get(fallbackSlug);
 
   const category_details = new Map<string, ClassifiedRow[]>();
   let sumPositives = 0;
@@ -50,15 +53,17 @@ export function aggregate(
     category_details.set(category, list);
   }
 
-  const subcategories: Array<{ name: string; value: number }> = [];
+  const subcategories: Array<{ categoryId: string; name: string; value: number }> = [];
   let categorized_total = 0;
 
   for (const [category, rows] of category_details.entries()) {
     const value = round2(rows.reduce((sum, r) => sum + r.effective_amount, 0));
     if (value <= 0) continue;
 
+    const config = categoriesBySlug.get(category) ?? fallbackConfig;
     subcategories.push({
-      name: displayNames.get(category) || category,
+      categoryId: config?.id ?? refundCategory.id,
+      name: config?.displayName || category,
       value,
     });
     categorized_total = round2(categorized_total + value);
@@ -70,7 +75,8 @@ export function aggregate(
 
   if (unmatchedCreditsTotal !== 0) {
     subcategories.push({
-      name: 'Reembolsos/Créditos',
+      categoryId: refundCategory.id,
+      name: refundCategory.name,
       value: unmatchedCreditsTotal,
     });
     categorized_total = round2(categorized_total + unmatchedCreditsTotal);

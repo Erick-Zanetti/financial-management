@@ -94,7 +94,10 @@ export function ReleaseList({
         month: nextMonth,
         year: nextYear,
         observations: release.observations,
-        subcategories: release.subcategories,
+        subcategories: release.subcategories?.map((sub) => ({
+          category: sub.category?.id ?? '',
+          value: sub.value,
+        })),
       });
       toast.success(t('releaseCloned'));
     } catch {
@@ -188,7 +191,7 @@ export function ReleaseList({
                                 <TooltipContent side="top" className="text-xs">
                                   {release.subcategories.map((sub, i) => (
                                     <div key={i} className="flex justify-between gap-4">
-                                      <span>{sub.name}</span>
+                                      <span>{sub.category?.name ?? '—'}</span>
                                       <span>{formatCurrency(sub.value)}</span>
                                     </div>
                                   ))}

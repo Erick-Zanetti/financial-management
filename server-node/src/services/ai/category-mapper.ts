@@ -24,6 +24,7 @@ export function buildCategoryConfigs(categories: ICategory[]): CategoryConfig[] 
     usedSlugs.add(slug);
 
     return {
+      id: category.id ?? '',
       slug,
       displayName: category.name,
       description: category.description || '',

@@ -1,8 +1,12 @@
 import { z } from 'zod';
 import { FinancialReleaseType } from '../types/financial-release.types';
 
+const objectIdSchema = z
+  .string()
+  .regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId');
+
 const subcategorySchema = z.object({
-  name: z.string().min(1, 'Subcategory name is required').max(100),
+  category: objectIdSchema,
   value: z.number(),
 });
 

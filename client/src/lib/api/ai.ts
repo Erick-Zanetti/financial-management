@@ -2,7 +2,7 @@ import { API_BASE_URL } from './client';
 
 export interface AiProcessedResult {
   total: number;
-  subcategories: Array<{ name: string; value: number }>;
+  subcategories: Array<{ categoryId: string; name: string; value: number }>;
   report: string;
 }
 

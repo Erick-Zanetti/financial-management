@@ -4,7 +4,7 @@ export enum FinancialReleaseType {
 }
 
 export interface ISubcategory {
-  name: string;
+  category: unknown;
   value: number;
 }
 
