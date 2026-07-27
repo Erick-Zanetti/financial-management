@@ -128,6 +128,82 @@ describe('agentService.chat', () => {
     expect(events.at(-1)).toMatchObject({ type: 'error' });
   });
 
+  it('aprovação executa o write pendente e continua o loop', async () => {
+    vi.mocked(streamChatCompletion).mockResolvedValueOnce({
+      content: 'Apagado com sucesso.',
+      toolCalls: [],
+    });
+    const { financialReleaseService } = await import(
+      '../../financial-release.service'
+    );
+    vi.mocked(financialReleaseService.delete).mockResolvedValue(true as never);
+    const history = [
+      { role: 'user' as const, content: 'apaga o lançamento X' },
+      {
+        role: 'assistant' as const,
+        content: null,
+        tool_calls: [
+          toolCall('tc9', 'delete_release', '{"id":"aaaaaaaaaaaaaaaaaaaaaaaa"}'),
+        ],
+      },
+    ];
+    const { events, emit } = collectEvents();
+    await agentService.chat(
+      { messages: history, decisions: { tc9: true } },
+      emit,
+    );
+    expect(financialReleaseService.delete).toHaveBeenCalledWith(
+      'aaaaaaaaaaaaaaaaaaaaaaaa',
+    );
+    expect(events.some((e) => e.type === 'tool_message')).toBe(true);
+    expect(events.at(-1)).toEqual({ type: 'done' });
+  });
+
+  it('rejeição vira tool_result de recusa sem executar', async () => {
+    vi.mocked(streamChatCompletion).mockResolvedValueOnce({
+      content: 'Ok, não vou apagar.',
+      toolCalls: [],
+    });
+    const { financialReleaseService } = await import(
+      '../../financial-release.service'
+    );
+    const history = [
+      { role: 'user' as const, content: 'apaga o lançamento X' },
+      {
+        role: 'assistant' as const,
+        content: null,
+        tool_calls: [
+          toolCall('tc9', 'delete_release', '{"id":"aaaaaaaaaaaaaaaaaaaaaaaa"}'),
+        ],
+      },
+    ];
+    const { events, emit } = collectEvents();
+    await agentService.chat(
+      { messages: history, decisions: { tc9: false } },
+      emit,
+    );
+    expect(financialReleaseService.delete).not.toHaveBeenCalled();
+    const toolMsg = events.find((e) => e.type === 'tool_message');
+    expect(JSON.stringify(toolMsg)).toContain('rejeitou');
+  });
+
+  it('write pendente sem decisão re-emite confirmation_request', async () => {
+    const history = [
+      { role: 'user' as const, content: 'apaga' },
+      {
+        role: 'assistant' as const,
+        content: null,
+        tool_calls: [
+          toolCall('tc9', 'delete_release', '{"id":"aaaaaaaaaaaaaaaaaaaaaaaa"}'),
+        ],
+      },
+    ];
+    const { events, emit } = collectEvents();
+    await agentService.chat({ messages: history }, emit);
+    expect(events.find((e) => e.type === 'confirmation_request')).toBeTruthy();
+    expect(streamChatCompletion).not.toHaveBeenCalled();
+  });
+
   it('sem token configurado: evento error amigável', async () => {
     vi.mocked(systemConfigService.get).mockResolvedValueOnce({
       openRouterToken: '',
