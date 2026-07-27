@@ -10,6 +10,8 @@ import {
 } from './stream-parser';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+// Sem timeout, um upstream travado pendura o turno para sempre.
+const CALL_TIMEOUT_MS = 180000;
 
 export async function streamChatCompletion(opts: {
   token: string;
@@ -19,9 +21,12 @@ export async function streamChatCompletion(opts: {
   onToken: (t: string) => void;
   signal?: AbortSignal;
 }): Promise<{ content: string; toolCalls: OpenRouterToolCall[] }> {
+  const signals = [AbortSignal.timeout(CALL_TIMEOUT_MS)];
+  if (opts.signal) signals.push(opts.signal);
+
   const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
-    signal: opts.signal,
+    signal: AbortSignal.any(signals),
     headers: {
       Authorization: `Bearer ${opts.token}`,
       'Content-Type': 'application/json',

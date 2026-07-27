@@ -31,11 +31,22 @@ class AgentController {
     const abort = new AbortController();
     res.on('close', () => abort.abort());
 
+    // Turnos longos podem passar minutos sem emitir nada (chamada ao modelo
+    // em andamento); sem tráfego a conexão SSE cai por idle. Comentário SSE
+    // a cada 15s mantém a conexão viva sem afetar o parse do cliente.
+    const heartbeat = setInterval(() => {
+      res.write(': keepalive\n\n');
+    }, 15000);
+
     const emit = (event: AgentEvent): void => {
       res.write(`data: ${JSON.stringify(event)}\n\n`);
     };
 
-    await agentService.chat(parsed.data, emit, abort.signal);
+    try {
+      await agentService.chat(parsed.data, emit, abort.signal);
+    } finally {
+      clearInterval(heartbeat);
+    }
     res.end();
   }
 }
