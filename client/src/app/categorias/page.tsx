@@ -48,6 +48,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { FloatingInput } from '@/components/ui/floating-input';
+import {
+  FloatingSelect,
+  FloatingSelectContent,
+  FloatingSelectItem,
+  FloatingSelectTrigger,
+  FloatingSelectValue,
+} from '@/components/ui/floating-select';
 import { FloatingTextarea } from '@/components/ui/floating-textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -81,6 +88,7 @@ export default function CategoriasPage() {
       name: z.string().min(1, t('categoryNameRequired')).max(50),
       type: z.nativeEnum(CategoryType, { message: t('categoryTypeRequired') }),
       allowSubcategories: z.boolean(),
+      subcategoryMode: z.enum(['multi', 'single']),
       allowAiIntegration: z.boolean(),
       description: z.string().max(200),
       aiClassificationEnabled: z.boolean(),
@@ -107,6 +115,7 @@ export default function CategoriasPage() {
     name: '',
     type: CategoryType.Expense,
     allowSubcategories: false,
+    subcategoryMode: 'multi',
     allowAiIntegration: false,
     description: '',
     aiClassificationEnabled: false,
@@ -135,6 +144,7 @@ export default function CategoriasPage() {
       name: category.name,
       type: category.type,
       allowSubcategories: category.allowSubcategories ?? false,
+      subcategoryMode: category.subcategoryMode ?? 'multi',
       allowAiIntegration: category.allowAiIntegration ?? false,
       description: category.description ?? '',
       aiClassificationEnabled: category.aiClassificationEnabled ?? false,
@@ -539,6 +549,36 @@ export default function CategoriasPage() {
                   </FormItem>
                 )}
               />
+
+              {form.watch('allowSubcategories') && (
+                <FormField
+                  control={form.control}
+                  name="subcategoryMode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FloatingSelect
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <FloatingSelectTrigger label={t('subcategoryMode')}>
+                            <FloatingSelectValue />
+                          </FloatingSelectTrigger>
+                        </FormControl>
+                        <FloatingSelectContent>
+                          <FloatingSelectItem value="multi">
+                            {t('subcategoryModeMulti')}
+                          </FloatingSelectItem>
+                          <FloatingSelectItem value="single">
+                            {t('subcategoryModeSingle')}
+                          </FloatingSelectItem>
+                        </FloatingSelectContent>
+                      </FloatingSelect>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               {form.watch('allowSubcategories') && (
                 <FormField

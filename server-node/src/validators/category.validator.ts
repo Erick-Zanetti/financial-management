@@ -5,6 +5,7 @@ const baseCategorySchema = z.object({
   name: z.string().min(1).max(50).trim(),
   type: z.nativeEnum(CategoryType),
   allowSubcategories: z.boolean().optional().default(false),
+  subcategoryMode: z.enum(['multi', 'single']).optional(),
   allowAiIntegration: z.boolean().optional().default(false),
   description: z.string().max(200).trim().optional().default(''),
   aiClassificationEnabled: z.boolean().optional().default(false),

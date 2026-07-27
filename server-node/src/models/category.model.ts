@@ -12,6 +12,11 @@ const categorySchema = new Schema<CategoryDocument>(
       required: true,
     },
     allowSubcategories: { type: Boolean, default: false },
+    subcategoryMode: {
+      type: String,
+      enum: ['multi', 'single'],
+      default: 'multi',
+    },
     allowAiIntegration: { type: Boolean, default: false },
     description: { type: String, default: '' },
     aiClassificationEnabled: { type: Boolean, default: false },

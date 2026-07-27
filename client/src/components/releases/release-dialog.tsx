@@ -172,10 +172,13 @@ export function ReleaseDialog({
   const createCategoryMutation = useCreateCategory();
   const [creatingSubIndex, setCreatingSubIndex] = useState<number | null>(null);
   const [newSubName, setNewSubName] = useState('');
+  // Modo "single": uma sub opcional, sem valor (o valor gravado é o total).
+  const [singleSubId, setSingleSubId] = useState('');
+  const [creatingSingle, setCreatingSingle] = useState(false);
 
-  const handleCreateInline = async (index: number) => {
+  const createSubInline = async (): Promise<string | null> => {
     const name = newSubName.trim();
-    if (!name || !selectedCategory) return;
+    if (!name || !selectedCategory) return null;
     try {
       const created = await createCategoryMutation.mutateAsync({
         name,
@@ -183,14 +186,30 @@ export function ReleaseDialog({
         parents: [selectedCategory.id],
         allowDirectEntry: false,
       });
-      form.setValue(`subcategories.${index}.category`, created.id);
-      setCreatingSubIndex(null);
       setNewSubName('');
+      return created.id;
     } catch {
       toast.error(t('saveFailed'));
+      return null;
     }
   };
+
+  const handleCreateInline = async (index: number) => {
+    const id = await createSubInline();
+    if (!id) return;
+    form.setValue(`subcategories.${index}.category`, id);
+    setCreatingSubIndex(null);
+  };
+
+  const handleCreateInlineSingle = async () => {
+    const id = await createSubInline();
+    if (!id) return;
+    setSingleSubId(id);
+    setCreatingSingle(false);
+  };
   const showSubcategories = selectedCategory?.allowSubcategories === true;
+  const singleSubMode =
+    showSubcategories && selectedCategory?.subcategoryMode === 'single';
   const showAiIntegration =
     showSubcategories &&
     selectedCategory?.allowAiIntegration === true &&
@@ -203,6 +222,8 @@ export function ReleaseDialog({
       setAiViewActive(false);
       setAiProcessing(false);
       pendingAiReportRef.current = null;
+      setCreatingSingle(false);
+      setSingleSubId(release?.subcategories?.[0]?.category?.id ?? '');
       if (release) {
         const subs = release.subcategories ?? [];
         form.reset({
@@ -234,11 +255,15 @@ export function ReleaseDialog({
   }, [open, release, form, formatDisplayValue]);
 
   const onSubmit = async (values: FormValues) => {
-    const subcategories = showSubcategories
-      ? (values.subcategories ?? [])
-      : undefined;
+    const subcategories = !showSubcategories
+      ? undefined
+      : singleSubMode
+        ? singleSubId
+          ? [{ category: singleSubId, value: values.value }]
+          : []
+        : (values.subcategories ?? []);
 
-    if (subcategories && subcategories.length > 0) {
+    if (!singleSubMode && subcategories && subcategories.length > 0) {
       const sum = subcategories.reduce((acc, s) => acc + s.value, 0);
       if (sum > values.value + 0.01) {
         form.setError('subcategories', { message: t('subcategorySumMismatch') });
@@ -458,7 +483,112 @@ export function ReleaseDialog({
               )}
             />
 
-            {showSubcategories && (
+            {singleSubMode && (
+              <div className="space-y-2 rounded-lg border p-3">
+                <FloatingSelect
+                  value={singleSubId || '__none__'}
+                  onValueChange={(value) => {
+                    if (value === '__create__') {
+                      setCreatingSingle(true);
+                      setNewSubName('');
+                      return;
+                    }
+                    setSingleSubId(value === '__none__' ? '' : value);
+                  }}
+                >
+                  <FloatingSelectTrigger
+                    label={t('subcategoryOptional')}
+                    className={cn(!singleSubId && 'text-muted-foreground')}
+                  >
+                    <FloatingSelectValue />
+                  </FloatingSelectTrigger>
+                  <FloatingSelectContent>
+                    <FloatingSelectItem value="__none__">
+                      {t('noSubcategory')}
+                    </FloatingSelectItem>
+                    {childCategories.length > 0 && (
+                      <>
+                        <FloatingSelectSeparator />
+                        <FloatingSelectGroup>
+                          <FloatingSelectLabel>
+                            {t('childrenOfPrefix')} {selectedCategory?.name}
+                          </FloatingSelectLabel>
+                          {childCategories.map((cat) => (
+                            <FloatingSelectItem key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </FloatingSelectItem>
+                          ))}
+                        </FloatingSelectGroup>
+                      </>
+                    )}
+                    {otherSubCategories.length > 0 && (
+                      <>
+                        <FloatingSelectSeparator />
+                        <FloatingSelectGroup>
+                          <FloatingSelectLabel>
+                            {t('otherCategories')}
+                          </FloatingSelectLabel>
+                          {otherSubCategories.map((cat) => (
+                            <FloatingSelectItem key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </FloatingSelectItem>
+                          ))}
+                        </FloatingSelectGroup>
+                      </>
+                    )}
+                    {canCreateInline && (
+                      <>
+                        <FloatingSelectSeparator />
+                        <FloatingSelectItem value="__create__">
+                          {t('createNewCategory')}
+                        </FloatingSelectItem>
+                      </>
+                    )}
+                  </FloatingSelectContent>
+                </FloatingSelect>
+
+                {creatingSingle && (
+                  <div className="flex items-center gap-2 pl-1">
+                    <div className="flex-1">
+                      <FloatingInput
+                        label={t('newCategoryName')}
+                        value={newSubName}
+                        maxLength={50}
+                        autoFocus
+                        onChange={(e) => setNewSubName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleCreateInlineSingle();
+                          }
+                        }}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={!newSubName.trim() || createCategoryMutation.isPending}
+                      onClick={handleCreateInlineSingle}
+                    >
+                      {createCategoryMutation.isPending ? t('saving') : t('save')}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setCreatingSingle(false);
+                        setNewSubName('');
+                      }}
+                    >
+                      {t('cancel')}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {showSubcategories && !singleSubMode && (
               <div className="space-y-3 rounded-lg border p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">{t('subcategories')}</span>

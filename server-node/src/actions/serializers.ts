@@ -53,6 +53,7 @@ export function serializeCategory(c: {
   name: string;
   type: string;
   allowSubcategories?: boolean;
+  subcategoryMode?: string;
   allowDirectEntry?: boolean;
 }): Record<string, unknown> {
   return {
@@ -60,6 +61,7 @@ export function serializeCategory(c: {
     name: c.name,
     type: c.type,
     allowSubcategories: c.allowSubcategories ?? false,
+    subcategoryMode: c.subcategoryMode ?? 'multi',
     allowDirectEntry: c.allowDirectEntry !== false,
   };
 }
