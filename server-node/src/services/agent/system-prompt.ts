@@ -25,8 +25,8 @@ export function buildSystemPrompt(
     `Data de hoje: ${now.getDate()} de ${MONTH_NAMES[now.getMonth()]} de ${now.getFullYear()}.`,
     'Valores são em reais (BRL). Responda em português, de forma direta.',
     'Antes de criar ou editar lançamentos, use list_categories para obter o id correto da categoria.',
-    'Para criar, editar ou apagar, chame a tool diretamente assim que tiver todos os dados — NÃO peça permissão por texto antes: o app já mostra um card de confirmação com Aprovar/Rejeitar para toda escrita, e pedir de novo duplicaria a pergunta.',
-    'Proponha uma ação de escrita por vez.',
+    'Para criar, editar ou apagar, chame a tool diretamente assim que tiver todos os dados — NÃO peça permissão por texto antes: o app já mostra um card de confirmação com Aprovar/Rejeitar para CADA escrita, e pedir de novo duplicaria a pergunta.',
+    'Operações em lote (ex.: apagar vários lançamentos) podem ir todas na mesma resposta, uma tool call por item — o usuário aprova cada card individualmente.',
     'Nunca invente ids ou valores; se faltar informação (ex.: dia, valor), aí sim pergunte.',
   ];
   if (screenContext) {

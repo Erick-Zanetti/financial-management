@@ -186,15 +186,25 @@ export function useAgentChat(errorMessage: string) {
                 args: event.args,
               };
               setPendingConfirmation(confirmation);
-              setDisplay((prev) => [
-                ...prev,
-                {
-                  id: nextEntryId(),
-                  role: 'assistant',
-                  content: '',
-                  confirmation,
-                },
-              ]);
+              setDisplay((prev) => {
+                // O servidor re-emite pedidos ainda pendentes a cada resume;
+                // se o card já está na tela sem resposta, não duplicar.
+                const alreadyShown = prev.some(
+                  (d) =>
+                    d.confirmation?.toolCallId === event.toolCallId &&
+                    !d.confirmation.resolved,
+                );
+                if (alreadyShown) return prev;
+                return [
+                  ...prev,
+                  {
+                    id: nextEntryId(),
+                    role: 'assistant',
+                    content: '',
+                    confirmation,
+                  },
+                ];
+              });
               break;
             }
             case 'error':
