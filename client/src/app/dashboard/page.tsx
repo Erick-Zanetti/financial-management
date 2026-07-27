@@ -29,9 +29,16 @@ export default function DashboardPage() {
     range.toMonth, range.toYear
   );
 
+  // Empilhado detalhado: mesma janela dos demais painéis (-5/+6).
+  const { data: segmentedRangeData = [], isLoading: isLoadingSegmented } =
+    useDashboardSummarySegmented(
+      range.fromMonth, range.fromYear,
+      range.toMonth, range.toYear
+    );
+
   // Grid de tendência: 12 meses até o mês corrente, sem futuro.
   const trailingRange = useMemo(() => getTrailingRange(), []);
-  const { data: segmentedData = [], isLoading: isLoadingSegmented } =
+  const { data: segmentedTrailingData = [], isLoading: isLoadingTrailing } =
     useDashboardSummarySegmented(
       trailingRange.fromMonth, trailingRange.fromYear,
       trailingRange.toMonth, trailingRange.toYear
@@ -67,7 +74,12 @@ export default function DashboardPage() {
     [data, range.months, getMonthLabel]
   );
 
-  if (isLoading || isLoadingSegmented) {
+  const segmentedExpensePerMonth = useMemo(
+    () => computeCategoryPerMonth(segmentedRangeData, range.months, getMonthLabel, FinancialReleaseType.Expense),
+    [segmentedRangeData, range.months, getMonthLabel]
+  );
+
+  if (isLoading || isLoadingSegmented || isLoadingTrailing) {
     return (
       <div className="max-w-7xl mx-auto py-6 px-4 md:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -108,10 +120,20 @@ export default function DashboardPage() {
           categories={expenseCategoryPerMonth.categories}
           title={`${t('expenses')} — ${t('dashboardCategoryBreakdown')}`}
         />
-        {segmentedData.length > 0 && (
+        {segmentedExpensePerMonth.categories.length > 0 && (
+          <div className="lg:col-span-2">
+            <CategoryBarChart
+              chartData={segmentedExpensePerMonth.chartData}
+              categories={segmentedExpensePerMonth.categories}
+              title={`${t('expenses')} — ${t('dashboardCategoryBreakdownDetailed')}`}
+              height={600}
+            />
+          </div>
+        )}
+        {segmentedTrailingData.length > 0 && (
           <div className="lg:col-span-2">
             <CategoryTrendGrid
-              data={segmentedData}
+              data={segmentedTrailingData}
               months={trailingRange.months}
               title={`${t('expenses')} — ${t('categoryTrendTitle')}`}
             />
