@@ -1,7 +1,7 @@
 # Agente de IA — integração do padrão agent-native na stack atual
 
 **Data:** 2026-07-27
-**Status:** aprovado por Erick
+**Status:** implementado (Fases 1-4) — MCP em `http://100.115.143.64:3000/mcp`
 **Página visual:** https://claude.ai/code/artifact/b5204fec-55d9-4121-8a19-b65b78bc12b0
 
 ## Contexto
