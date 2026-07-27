@@ -5,4 +5,5 @@ export interface ISystemConfig {
   aiCustomPrompt: string;
   aiModel: string;
   aiOutputLanguage: string;
+  agentModel: string;
 }

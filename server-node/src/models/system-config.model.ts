@@ -12,6 +12,7 @@ const systemConfigSchema = new Schema<SystemConfigDocument>(
     aiCustomPrompt: { type: String, default: '' },
     aiModel: { type: String, default: '' },
     aiOutputLanguage: { type: String, default: 'pt' },
+    agentModel: { type: String, default: '' },
   },
   {
     collection: 'system-config',
