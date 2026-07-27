@@ -1,9 +1,79 @@
 'use client';
 
 import { Cog } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
 import { useSettings } from '@/providers/settings-provider';
 import { DisplayEntry } from '@/types/agent';
+
+function AssistantMarkdown({ content }: { content: string }) {
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={{
+        h1: ({ children }) => (
+          <p className="mb-1 mt-2 text-sm font-bold first:mt-0">{children}</p>
+        ),
+        h2: ({ children }) => (
+          <p className="mb-1 mt-2 text-sm font-semibold first:mt-0">
+            {children}
+          </p>
+        ),
+        h3: ({ children }) => (
+          <p className="mb-0.5 mt-1.5 text-sm font-semibold first:mt-0">
+            {children}
+          </p>
+        ),
+        p: ({ children }) => <p className="my-1 first:mt-0 last:mb-0">{children}</p>,
+        ul: ({ children }) => (
+          <ul className="my-1 list-disc space-y-0.5 pl-4">{children}</ul>
+        ),
+        ol: ({ children }) => (
+          <ol className="my-1 list-decimal space-y-0.5 pl-4">{children}</ol>
+        ),
+        code: ({ children }) => (
+          <code className="rounded bg-background/60 px-1 py-0.5 text-[0.8em]">
+            {children}
+          </code>
+        ),
+        a: ({ children, href }) => (
+          <a
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-2"
+          >
+            {children}
+          </a>
+        ),
+        hr: () => <hr className="my-2 border-border" />,
+        table: ({ children }) => (
+          <div className="my-1.5 overflow-x-auto">
+            <table className="w-full border-collapse text-xs">{children}</table>
+          </div>
+        ),
+        th: ({ children }) => (
+          <th className="border border-border bg-background/40 px-2 py-1 text-left font-semibold">
+            {children}
+          </th>
+        ),
+        td: ({ children }) => (
+          <td className="border border-border px-2 py-1 align-top">
+            {children}
+          </td>
+        ),
+        blockquote: ({ children }) => (
+          <blockquote className="my-1 border-l-2 border-border pl-2 text-muted-foreground">
+            {children}
+          </blockquote>
+        ),
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+}
 
 interface AgentMessageListProps {
   entries: DisplayEntry[];
@@ -57,13 +127,17 @@ export function AgentMessageList({
           <div
             key={entry.id}
             className={cn(
-              'max-w-[88%] whitespace-pre-wrap rounded-xl px-3 py-2 text-sm leading-relaxed',
+              'max-w-[88%] rounded-xl px-3 py-2 text-sm leading-relaxed',
               entry.role === 'user'
-                ? 'self-end rounded-br-sm bg-primary text-primary-foreground'
+                ? 'self-end whitespace-pre-wrap rounded-br-sm bg-primary text-primary-foreground'
                 : 'self-start rounded-bl-sm bg-muted',
             )}
           >
-            {entry.content}
+            {entry.role === 'user' ? (
+              entry.content
+            ) : (
+              <AssistantMarkdown content={entry.content} />
+            )}
           </div>
         );
       })}
