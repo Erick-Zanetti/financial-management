@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useDashboardSummary } from '@/hooks/use-releases';
+import { useDashboardSummary, useDashboardSummarySegmented } from '@/hooks/use-releases';
 import { useSettings } from '@/providers/settings-provider';
 import { FinancialReleaseType } from '@/types/financial-release';
 import {
@@ -26,6 +26,12 @@ export default function DashboardPage() {
     range.fromMonth, range.fromYear,
     range.toMonth, range.toYear
   );
+
+  const { data: segmentedData = [], isLoading: isLoadingSegmented } =
+    useDashboardSummarySegmented(
+      range.fromMonth, range.fromYear,
+      range.toMonth, range.toYear
+    );
 
   const monthlyTotals = useMemo(
     () => computeMonthlyTotals(data, range.months, getMonthLabel),
@@ -57,7 +63,12 @@ export default function DashboardPage() {
     [data, range.months, getMonthLabel]
   );
 
-  if (isLoading) {
+  const segmentedExpensePerMonth = useMemo(
+    () => computeCategoryPerMonth(segmentedData, range.months, getMonthLabel, FinancialReleaseType.Expense),
+    [segmentedData, range.months, getMonthLabel]
+  );
+
+  if (isLoading || isLoadingSegmented) {
     return (
       <div className="max-w-7xl mx-auto py-6 px-4 md:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -98,6 +109,16 @@ export default function DashboardPage() {
           categories={expenseCategoryPerMonth.categories}
           title={`${t('expenses')} — ${t('dashboardCategoryBreakdown')}`}
         />
+        {segmentedExpensePerMonth.categories.length > 0 && (
+          <div className="lg:col-span-2">
+            <CategoryBarChart
+              chartData={segmentedExpensePerMonth.chartData}
+              categories={segmentedExpensePerMonth.categories}
+              title={`${t('expenses')} — ${t('dashboardCategoryBreakdownDetailed')}`}
+              height={600}
+            />
+          </div>
+        )}
         <div className="lg:col-span-2">
           <CategoryDonutChart
             incomeData={incomeDistribution}

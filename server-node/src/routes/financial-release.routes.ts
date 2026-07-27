@@ -86,6 +86,11 @@ router.get(
 );
 
 router.get(
+  '/dashboard-summary/segmented',
+  asyncHandler(financialReleaseController.getDashboardSummarySegmented.bind(financialReleaseController)),
+);
+
+router.get(
   '/by-type',
   asyncHandler(financialReleaseController.findByType.bind(financialReleaseController)),
 );

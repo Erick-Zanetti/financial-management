@@ -35,6 +35,13 @@ export class FinancialReleaseController {
     res.json(data);
   }
 
+  async getDashboardSummarySegmented(req: Request, res: Response): Promise<void> {
+    const filter = dashboardFilterSchema.parse(req.query);
+    const data =
+      await financialReleaseService.getDashboardSummarySegmented(filter);
+    res.json(data);
+  }
+
   async findByType(req: Request, res: Response): Promise<void> {
     const filter = filterByTypeSchema.parse(req.query);
     const releases =

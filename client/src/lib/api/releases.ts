@@ -45,4 +45,7 @@ export const releasesApi = {
 
   getDashboardSummary: (fromMonth: number, fromYear: number, toMonth: number, toYear: number) =>
     apiClient.get<DashboardSummaryItem[]>('/dashboard-summary', { fromMonth, fromYear, toMonth, toYear }),
+
+  getDashboardSummarySegmented: (fromMonth: number, fromYear: number, toMonth: number, toYear: number) =>
+    apiClient.get<DashboardSummaryItem[]>('/dashboard-summary/segmented', { fromMonth, fromYear, toMonth, toYear }),
 };

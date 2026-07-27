@@ -23,9 +23,10 @@ interface CategoryBarChartProps {
   chartData: Record<string, unknown>[];
   categories: string[];
   title: string;
+  height?: number;
 }
 
-export function CategoryBarChart({ chartData, categories, title }: CategoryBarChartProps) {
+export function CategoryBarChart({ chartData, categories, title, height = 300 }: CategoryBarChartProps) {
   const { formatCurrency } = useSettings();
 
   if (categories.length === 0) return null;
@@ -36,7 +37,7 @@ export function CategoryBarChart({ chartData, categories, title }: CategoryBarCh
         <CardTitle className="text-lg font-medium">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[300px]">
+        <div style={{ height }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />

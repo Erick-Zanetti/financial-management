@@ -17,6 +17,12 @@ const categorySchema = new Schema<CategoryDocument>(
     aiClassificationEnabled: { type: Boolean, default: false },
     aiKeywords: { type: [String], default: [] },
     aiPrompt: { type: String, default: '' },
+    dashboardSplitBySubcategories: { type: Boolean, default: false },
+    dashboardFallbackCategory: {
+      type: Schema.Types.ObjectId,
+      ref: 'Category',
+      default: null,
+    },
   },
   {
     collection: 'categories',

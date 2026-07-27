@@ -94,6 +94,14 @@ export function useDashboardSummary(fromMonth: number, fromYear: number, toMonth
   });
 }
 
+export function useDashboardSummarySegmented(fromMonth: number, fromYear: number, toMonth: number, toYear: number) {
+  return useQuery({
+    queryKey: ['dashboard-summary-segmented', fromMonth, fromYear, toMonth, toYear],
+    queryFn: () => releasesApi.getDashboardSummarySegmented(fromMonth, fromYear, toMonth, toYear),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export function useDeleteRelease() {
   const queryClient = useQueryClient();
 

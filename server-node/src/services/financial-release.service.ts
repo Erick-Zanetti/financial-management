@@ -1,7 +1,9 @@
+import { Types } from 'mongoose';
 import {
   FinancialRelease,
   FinancialReleaseDocument,
 } from '../models/financial-release.model';
+import { Category } from '../models/category.model';
 import {
   CreateFinancialReleaseDto,
   UpdateFinancialReleaseDto,
@@ -9,6 +11,29 @@ import {
   DashboardFilterDto,
 } from '../validators/financial-release.validator';
 import { IDashboardSummaryItem } from '../types/financial-release.types';
+import { logger } from '../config/logger.config';
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+interface LeanCategoryInfo {
+  _id: Types.ObjectId;
+  name: string;
+  type?: string;
+  allowSubcategories?: boolean;
+  dashboardSplitBySubcategories?: boolean;
+  dashboardFallbackCategory?: Types.ObjectId | null;
+}
+
+interface LeanReleaseForSummary {
+  year: number;
+  month: number;
+  type: string;
+  value: number;
+  category?: Types.ObjectId | null;
+  subcategories?: Array<{ category?: Types.ObjectId | null; value: number }>;
+}
 
 export class FinancialReleaseService {
   async findAll(): Promise<FinancialReleaseDocument[]> {
@@ -130,6 +155,113 @@ export class FinancialReleaseService {
         },
       },
     ]);
+  }
+
+  async getDashboardSummarySegmented(
+    filter: DashboardFilterDto,
+  ): Promise<IDashboardSummaryItem[]> {
+    const fromYM = filter.fromYear * 100 + filter.fromMonth;
+    const toYM = filter.toYear * 100 + filter.toMonth;
+
+    const releases: LeanReleaseForSummary[] = await FinancialRelease.aggregate([
+      {
+        $addFields: {
+          yearMonth: { $add: [{ $multiply: ['$year', 100] }, '$month'] },
+        },
+      },
+      {
+        $match: {
+          yearMonth: { $gte: fromYM, $lte: toYM },
+        },
+      },
+    ]);
+
+    const categories = await Category.find().lean<LeanCategoryInfo[]>();
+    const categoryById = new Map(categories.map((c) => [String(c._id), c]));
+
+    const buckets = new Map<string, { total: number; count: number }>();
+    const warnedCategories = new Set<string>();
+
+    const addTo = (
+      year: number,
+      month: number,
+      type: string,
+      categoryId: string,
+      value: number,
+    ) => {
+      const key = `${year}|${month}|${type}|${categoryId}`;
+      const bucket = buckets.get(key) ?? { total: 0, count: 0 };
+      bucket.total = round2(bucket.total + value);
+      bucket.count += 1;
+      buckets.set(key, bucket);
+    };
+
+    for (const release of releases) {
+      const categoryId = release.category ? String(release.category) : '';
+      const category = categoryById.get(categoryId);
+
+      const splitEnabled =
+        category?.dashboardSplitBySubcategories === true &&
+        category?.allowSubcategories === true;
+
+      if (!splitEnabled) {
+        addTo(release.year, release.month, release.type, categoryId, release.value);
+        continue;
+      }
+
+      const fallbackId = category?.dashboardFallbackCategory
+        ? String(category.dashboardFallbackCategory)
+        : '';
+      let effectiveFallbackId = fallbackId;
+      if (!fallbackId || !categoryById.has(fallbackId)) {
+        effectiveFallbackId = categoryId;
+        if (!warnedCategories.has(categoryId)) {
+          warnedCategories.add(categoryId);
+          logger.warn(
+            `Category "${category?.name}" has dashboard segmentation enabled but no valid fallback category; using the category itself`,
+          );
+        }
+      }
+
+      const subs = release.subcategories ?? [];
+      let subsSum = 0;
+      for (const sub of subs) {
+        const subCategoryId = sub.category ? String(sub.category) : effectiveFallbackId;
+        subsSum = round2(subsSum + sub.value);
+        addTo(release.year, release.month, release.type, subCategoryId, sub.value);
+      }
+
+      const remainder = round2(release.value - subsSum);
+      if (Math.abs(remainder) >= 0.01) {
+        addTo(release.year, release.month, release.type, effectiveFallbackId, remainder);
+      }
+    }
+
+    const items: IDashboardSummaryItem[] = [];
+    for (const [key, bucket] of buckets.entries()) {
+      const [year, month, type, categoryId] = key.split('|');
+      const category = categoryById.get(categoryId);
+      items.push({
+        year: Number(year),
+        month: Number(month),
+        type: type as IDashboardSummaryItem['type'],
+        categoryId,
+        categoryName: category?.name ?? 'Sem categoria',
+        categoryType: category?.type ?? 'B',
+        total: bucket.total,
+        count: bucket.count,
+      });
+    }
+
+    items.sort(
+      (a, b) =>
+        a.year - b.year ||
+        a.month - b.month ||
+        a.type.localeCompare(b.type) ||
+        a.categoryName.localeCompare(b.categoryName),
+    );
+
+    return items;
   }
 
   async delete(id: string): Promise<boolean> {

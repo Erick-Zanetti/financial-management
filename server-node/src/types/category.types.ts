@@ -14,4 +14,6 @@ export interface ICategory {
   aiClassificationEnabled?: boolean;
   aiKeywords?: string[];
   aiPrompt?: string;
+  dashboardSplitBySubcategories?: boolean;
+  dashboardFallbackCategory?: unknown;
 }

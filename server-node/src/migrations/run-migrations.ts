@@ -187,6 +187,57 @@ async function migrateSubcategoryLinks(): Promise<void> {
   }
 }
 
+async function configureDashboardSegmentation(
+  outrosId: unknown,
+): Promise<void> {
+  // Order matters: the one-shot Cartões step must run before the generic
+  // backfill sets dashboardSplitBySubcategories on every category, because
+  // its guard is the absence of that field.
+  // $exists in the query, not a JS check: Mongoose materializes the schema
+  // default (false) when hydrating docs that lack the field.
+  const candidates = await Category.find({
+    allowSubcategories: true,
+    dashboardSplitBySubcategories: { $exists: false },
+  });
+  const cartoes = candidates.find(
+    (c) => normalizeForMatch(c.name) === 'cartoes',
+  );
+  if (cartoes) {
+    await Category.updateOne(
+      { _id: cartoes._id },
+      {
+        $set: {
+          dashboardSplitBySubcategories: true,
+          dashboardFallbackCategory: outrosId,
+        },
+      },
+    );
+    logger.info(
+      `Enabled dashboard segmentation on "${cartoes.name}" with fallback "Outros"`,
+    );
+  }
+
+  const splitResult = await Category.updateMany(
+    { dashboardSplitBySubcategories: { $exists: false } },
+    { $set: { dashboardSplitBySubcategories: false } },
+  );
+  if (splitResult.modifiedCount > 0) {
+    logger.info(
+      `Set dashboardSplitBySubcategories=false on ${splitResult.modifiedCount} categories`,
+    );
+  }
+
+  const fallbackResult = await Category.updateMany(
+    { dashboardFallbackCategory: { $exists: false } },
+    { $set: { dashboardFallbackCategory: null } },
+  );
+  if (fallbackResult.modifiedCount > 0) {
+    logger.info(
+      `Set dashboardFallbackCategory=null on ${fallbackResult.modifiedCount} categories`,
+    );
+  }
+}
+
 export async function runMigrations(): Promise<void> {
   logger.info('Running migrations...');
 
@@ -309,6 +360,7 @@ export async function runMigrations(): Promise<void> {
 
   await migrateLegacyAiCategories();
   await migrateSubcategoryLinks();
+  await configureDashboardSegmentation(outros._id);
 
   logger.info('Migrations complete');
 }

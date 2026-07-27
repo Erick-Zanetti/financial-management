@@ -6,6 +6,7 @@ import { useSettings } from '@/providers/settings-provider';
 import { SummaryCard } from '@/components/dashboard/summary-card';
 import { ReleaseList } from '@/components/releases/release-list';
 import { CumulativeLineChart } from '@/components/charts/bar-chart';
+import { MonthCategoryChart } from '@/components/dashboard/month-category-chart';
 import { FinancialReleaseType } from '@/types/financial-release';
 import { TimelineView } from '@/components/timeline/timeline-view';
 
@@ -122,7 +123,10 @@ export default function LancamentosPage() {
             />
           </div>
 
-          <CumulativeLineChart receipts={receipts} expenses={expenses} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <CumulativeLineChart receipts={receipts} expenses={expenses} />
+            <MonthCategoryChart expenses={expenses} />
+          </div>
         </div>
       ) : (
         <TimelineView month={month} year={year} currentBalance={isCurrentMonth ? currentBalance : undefined} />

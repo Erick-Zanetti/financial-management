@@ -14,6 +14,8 @@ export interface Category {
   aiClassificationEnabled?: boolean;
   aiKeywords?: string[];
   aiPrompt?: string;
+  dashboardSplitBySubcategories?: boolean;
+  dashboardFallbackCategory?: string | null;
 }
 
 export type CreateCategory = Omit<Category, 'id'>;

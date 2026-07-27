@@ -76,16 +76,28 @@ export default function CategoriasPage() {
   const { data: systemConfig } = useSystemConfig();
   const isAiGloballyEnabled = systemConfig?.aiIntegrationEnabled === true;
 
-  const formSchema = z.object({
-    name: z.string().min(1, t('categoryNameRequired')).max(50),
-    type: z.nativeEnum(CategoryType, { message: t('categoryTypeRequired') }),
-    allowSubcategories: z.boolean(),
-    allowAiIntegration: z.boolean(),
-    description: z.string().max(200),
-    aiClassificationEnabled: z.boolean(),
-    aiKeywordsText: z.string(),
-    aiPrompt: z.string().max(2000),
-  });
+  const formSchema = z
+    .object({
+      name: z.string().min(1, t('categoryNameRequired')).max(50),
+      type: z.nativeEnum(CategoryType, { message: t('categoryTypeRequired') }),
+      allowSubcategories: z.boolean(),
+      allowAiIntegration: z.boolean(),
+      description: z.string().max(200),
+      aiClassificationEnabled: z.boolean(),
+      aiKeywordsText: z.string(),
+      aiPrompt: z.string().max(2000),
+      dashboardSplitBySubcategories: z.boolean(),
+      dashboardFallbackCategory: z.string(),
+    })
+    .superRefine((data, ctx) => {
+      if (data.dashboardSplitBySubcategories && !data.dashboardFallbackCategory) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['dashboardFallbackCategory'],
+          message: t('dashboardFallbackCategoryRequired'),
+        });
+      }
+    });
 
   type FormValues = z.infer<typeof formSchema>;
 
@@ -98,6 +110,8 @@ export default function CategoriasPage() {
     aiClassificationEnabled: false,
     aiKeywordsText: '',
     aiPrompt: '',
+    dashboardSplitBySubcategories: false,
+    dashboardFallbackCategory: '',
   };
 
   const form = useForm<FormValues>({
@@ -122,6 +136,9 @@ export default function CategoriasPage() {
       aiClassificationEnabled: category.aiClassificationEnabled ?? false,
       aiKeywordsText: (category.aiKeywords ?? []).join(', '),
       aiPrompt: category.aiPrompt ?? '',
+      dashboardSplitBySubcategories:
+        category.dashboardSplitBySubcategories ?? false,
+      dashboardFallbackCategory: category.dashboardFallbackCategory ?? '',
     });
     setSheetOpen(true);
   };
@@ -144,6 +161,7 @@ export default function CategoriasPage() {
         .split(/[,;]/)
         .map((keyword) => keyword.trim())
         .filter(Boolean),
+      dashboardFallbackCategory: values.dashboardFallbackCategory || null,
     };
     try {
       if (editingCategory) {
@@ -355,6 +373,8 @@ export default function CategoriasPage() {
                             field.onChange(e);
                             if (!e.target.checked) {
                               form.setValue('allowAiIntegration', false);
+                              form.setValue('dashboardSplitBySubcategories', false);
+                              form.setValue('dashboardFallbackCategory', '');
                             }
                           }}
                           className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
@@ -365,6 +385,80 @@ export default function CategoriasPage() {
                   </FormItem>
                 )}
               />
+
+              {form.watch('allowSubcategories') && (
+                <FormField
+                  control={form.control}
+                  name="dashboardSplitBySubcategories"
+                  render={({ field }) => (
+                    <FormItem>
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <FormControl>
+                          <input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              if (
+                                e.target.checked &&
+                                !form.getValues('dashboardFallbackCategory')
+                              ) {
+                                const outros = categories.find(
+                                  (c) => c.name.trim().toLowerCase() === 'outros',
+                                );
+                                if (outros) {
+                                  form.setValue('dashboardFallbackCategory', outros.id);
+                                }
+                              }
+                            }}
+                            className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+                          />
+                        </FormControl>
+                        <span className="text-sm">{t('dashboardSplitBySubcategories')}</span>
+                      </label>
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {form.watch('allowSubcategories') &&
+                form.watch('dashboardSplitBySubcategories') && (
+                <FormField
+                  control={form.control}
+                  name="dashboardFallbackCategory"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <div className="relative">
+                            <SelectTrigger
+                              className={cn(
+                                'h-12 rounded-lg pt-5 pb-1 text-sm',
+                                !field.value && 'text-muted-foreground'
+                              )}
+                            >
+                              <SelectValue placeholder={t('dashboardFallbackCategory')} />
+                            </SelectTrigger>
+                            <span className="absolute left-3 top-2.5 text-xs text-muted-foreground pointer-events-none">
+                              {t('dashboardFallbackCategory')}
+                            </span>
+                          </div>
+                        </FormControl>
+                        <SelectContent>
+                          {categories
+                            .filter((cat) => cat.id !== editingCategory?.id)
+                            .map((cat) => (
+                              <SelectItem key={cat.id} value={cat.id}>
+                                {cat.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               {form.watch('allowSubcategories') && isAiGloballyEnabled && (
                 <FormField

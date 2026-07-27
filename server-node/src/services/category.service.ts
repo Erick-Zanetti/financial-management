@@ -40,7 +40,10 @@ class CategoryService {
     const inUseCount = await FinancialRelease.countDocuments({
       $or: [{ category: id }, { 'subcategories.category': id }],
     });
-    if (inUseCount > 0) {
+    const fallbackUseCount = await Category.countDocuments({
+      dashboardFallbackCategory: id,
+    });
+    if (inUseCount > 0 || fallbackUseCount > 0) {
       throw new AppError(409, 'Cannot delete category that is in use');
     }
     return Category.findByIdAndDelete(id);
