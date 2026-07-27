@@ -23,6 +23,8 @@ const categorySchema = new Schema<CategoryDocument>(
       ref: 'Category',
       default: null,
     },
+    parents: { type: [Schema.Types.ObjectId], ref: 'Category', default: [] },
+    allowDirectEntry: { type: Boolean, default: true },
   },
   {
     collection: 'categories',

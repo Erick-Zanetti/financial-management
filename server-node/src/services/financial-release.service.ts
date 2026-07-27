@@ -24,6 +24,7 @@ interface LeanCategoryInfo {
   allowSubcategories?: boolean;
   dashboardSplitBySubcategories?: boolean;
   dashboardFallbackCategory?: Types.ObjectId | null;
+  parents?: Types.ObjectId[];
 }
 
 interface LeanReleaseForSummary {
@@ -63,10 +64,72 @@ export class FinancialReleaseService {
     ]).sort({ day: 1 });
   }
 
+  private async linkSubcategoryParents(
+    categoryId: string,
+    subcategories: Array<{ category?: unknown }> | undefined,
+  ): Promise<void> {
+    try {
+      if (!categoryId) return;
+      const subIds = [
+        ...new Set(
+          (subcategories ?? [])
+            .map((s) => (s.category ? String(s.category) : ''))
+            .filter((id) => id && id !== categoryId),
+        ),
+      ];
+      if (subIds.length === 0) return;
+
+      const docs = await Category.find({ _id: { $in: [categoryId, ...subIds] } })
+        .select('parents name')
+        .lean<LeanCategoryInfo[]>();
+      const byId = new Map(docs.map((d) => [String(d._id), d]));
+
+      const releaseCategory = byId.get(categoryId);
+      if ((releaseCategory?.parents ?? []).length > 0) {
+        logger.warn(
+          `Cannot auto-link subcategories: category "${releaseCategory?.name}" is itself a child`,
+        );
+        return;
+      }
+
+      const subsThatAreParents = new Set(
+        (
+          await Category.find({ parents: { $in: subIds } })
+            .select('parents')
+            .lean<Array<{ parents?: unknown[] }>>()
+        )
+          .flatMap((c) => (c.parents ?? []).map(String))
+          .filter((p) => subIds.includes(p)),
+      );
+
+      for (const subId of subIds) {
+        const sub = byId.get(subId);
+        if (!sub) continue;
+        if ((sub.parents ?? []).some((p) => String(p) === categoryId)) continue;
+        if (subsThatAreParents.has(subId)) {
+          logger.warn(
+            `Cannot auto-link "${sub.name}" under "${releaseCategory?.name}": it has children of its own`,
+          );
+          continue;
+        }
+        await Category.updateOne(
+          { _id: subId },
+          { $addToSet: { parents: categoryId } },
+        );
+        logger.info(
+          `Auto-linked category "${sub.name}" as child of "${releaseCategory?.name}"`,
+        );
+      }
+    } catch (error) {
+      logger.warn(`Failed to auto-link subcategory parents: ${String(error)}`);
+    }
+  }
+
   async create(
     data: CreateFinancialReleaseDto,
   ): Promise<FinancialReleaseDocument> {
     const release = await new FinancialRelease(data).save();
+    await this.linkSubcategoryParents(data.category, data.subcategories);
     return release.populate([
       { path: 'category', select: 'name allowSubcategories allowAiIntegration' },
       { path: 'subcategories.category', select: 'name' },
@@ -77,7 +140,7 @@ export class FinancialReleaseService {
     id: string,
     data: UpdateFinancialReleaseDto,
   ): Promise<FinancialReleaseDocument | null> {
-    return FinancialRelease.findByIdAndUpdate(
+    const updated = await FinancialRelease.findByIdAndUpdate(
       id,
       { $set: data },
       { new: true, runValidators: true },
@@ -85,6 +148,14 @@ export class FinancialReleaseService {
       { path: 'category', select: 'name allowSubcategories allowAiIntegration' },
       { path: 'subcategories.category', select: 'name' },
     ]);
+    if (updated && data.subcategories?.length) {
+      // updated.category is populated at this point; fall back to its _id.
+      const populated = updated.category as { _id?: unknown } | null;
+      const categoryId =
+        data.category ?? (populated?._id ? String(populated._id) : '');
+      await this.linkSubcategoryParents(categoryId, data.subcategories);
+    }
+    return updated;
   }
 
   async findAvailableMonths(): Promise<{ year: number; month: number }[]> {

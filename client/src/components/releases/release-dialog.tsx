@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useFieldArray, useForm, useWatch, Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -24,6 +24,9 @@ import {
   FloatingSelect,
   FloatingSelectContent,
   FloatingSelectItem,
+  FloatingSelectGroup,
+  FloatingSelectLabel,
+  FloatingSelectSeparator,
   FloatingSelectTrigger,
   FloatingSelectValue,
 } from '@/components/ui/floating-select';
@@ -42,7 +45,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { FinancialRelease, FinancialReleaseType } from '@/types/financial-release';
 import { useCreateRelease, useUpdateRelease } from '@/hooks/use-releases';
-import { useCategories } from '@/hooks/use-categories';
+import { useCategories, useCreateCategory } from '@/hooks/use-categories';
 import { useSettings } from '@/providers/settings-provider';
 import { useSystemConfig } from '@/hooks/use-system-config';
 import { AiPdfProcessor } from './ai-pdf-processor';
@@ -89,7 +92,10 @@ export function ReleaseDialog({
   const { t, getMonthLabel, formatDisplayValue } = useSettings();
   const { data: allCategories = [] } = useCategories();
   const { data: systemConfig } = useSystemConfig();
-  const categories = allCategories.filter((cat) => (cat.type as string) === type || cat.type === 'B');
+  const categories = useMemo(
+    () => allCategories.filter((cat) => (cat.type as string) === type || cat.type === 'B'),
+    [allCategories, type],
+  );
 
   const [aiViewActive, setAiViewActive] = useState(false);
   const [aiProcessing, setAiProcessing] = useState(false);
@@ -130,6 +136,56 @@ export function ReleaseDialog({
   const selectedCategoryId = form.watch('category');
   const watchedSubcategories = form.watch('subcategories');
   const selectedCategory = allCategories.find((c) => c.id === selectedCategoryId);
+
+  const directCategories = useMemo(() => {
+    const base = categories.filter((c) => c.allowDirectEntry !== false);
+    const currentId = release?.category?.id;
+    if (isEditing && currentId && !base.some((c) => c.id === currentId)) {
+      const current = allCategories.find((c) => c.id === currentId);
+      if (current) {
+        return [...base, current].sort((a, b) => a.name.localeCompare(b.name));
+      }
+    }
+    return base;
+  }, [categories, allCategories, isEditing, release]);
+
+  const childCategories = useMemo(
+    () =>
+      allCategories
+        .filter((c) => c.parents?.includes(selectedCategoryId))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [allCategories, selectedCategoryId],
+  );
+
+  const otherSubCategories = useMemo(() => {
+    const childIds = new Set(childCategories.map((c) => c.id));
+    return categories.filter(
+      (c) => c.id !== selectedCategoryId && !childIds.has(c.id),
+    );
+  }, [categories, childCategories, selectedCategoryId]);
+
+  const canCreateInline = (selectedCategory?.parents?.length ?? 0) === 0;
+  const createCategoryMutation = useCreateCategory();
+  const [creatingSubIndex, setCreatingSubIndex] = useState<number | null>(null);
+  const [newSubName, setNewSubName] = useState('');
+
+  const handleCreateInline = async (index: number) => {
+    const name = newSubName.trim();
+    if (!name || !selectedCategory) return;
+    try {
+      const created = await createCategoryMutation.mutateAsync({
+        name,
+        type: selectedCategory.type,
+        parents: [selectedCategory.id],
+        allowDirectEntry: false,
+      });
+      form.setValue(`subcategories.${index}.category`, created.id);
+      setCreatingSubIndex(null);
+      setNewSubName('');
+    } catch {
+      toast.error(t('saveFailed'));
+    }
+  };
   const showSubcategories = selectedCategory?.allowSubcategories === true;
   const showAiIntegration =
     showSubcategories &&
@@ -349,7 +405,7 @@ export function ReleaseDialog({
                       </div>
                     </FormControl>
                     <SelectContent>
-                      {categories.map((cat) => (
+                      {directCategories.map((cat) => (
                         <SelectItem key={cat.id} value={cat.id}>
                           {cat.name}
                         </SelectItem>
@@ -423,14 +479,28 @@ export function ReleaseDialog({
                 )}
 
                 {fields.map((field, index) => (
-                  <div key={field.id} className="flex items-start gap-2">
+                  <div key={field.id} className="space-y-2">
+                  <div className="flex items-start gap-2">
                     <FormField
                       control={form.control}
                       name={`subcategories.${index}.category`}
-                      render={({ field: categoryField }) => (
+                      render={({ field: categoryField }) => {
+                        const isUsedElsewhere = (catId: string) =>
+                          watchedSubcategories?.some(
+                            (sub, subIndex) =>
+                              subIndex !== index && sub.category === catId,
+                          );
+                        return (
                         <FormItem className="flex-1">
                           <FloatingSelect
-                            onValueChange={categoryField.onChange}
+                            onValueChange={(value) => {
+                              if (value === '__create__') {
+                                setCreatingSubIndex(index);
+                                setNewSubName('');
+                                return;
+                              }
+                              categoryField.onChange(value);
+                            }}
                             value={categoryField.value}
                           >
                             <FormControl>
@@ -444,23 +514,57 @@ export function ReleaseDialog({
                               </FloatingSelectTrigger>
                             </FormControl>
                             <FloatingSelectContent>
-                              {categories.map((cat) => (
-                                <FloatingSelectItem
-                                  key={cat.id}
-                                  value={cat.id}
-                                  disabled={watchedSubcategories?.some(
-                                    (sub, subIndex) =>
-                                      subIndex !== index && sub.category === cat.id,
+                              {childCategories.length > 0 && (
+                                <FloatingSelectGroup>
+                                  <FloatingSelectLabel>
+                                    {t('childrenOfPrefix')} {selectedCategory?.name}
+                                  </FloatingSelectLabel>
+                                  {childCategories.map((cat) => (
+                                    <FloatingSelectItem
+                                      key={cat.id}
+                                      value={cat.id}
+                                      disabled={isUsedElsewhere(cat.id)}
+                                    >
+                                      {cat.name}
+                                    </FloatingSelectItem>
+                                  ))}
+                                </FloatingSelectGroup>
+                              )}
+                              {otherSubCategories.length > 0 && (
+                                <>
+                                  {childCategories.length > 0 && (
+                                    <FloatingSelectSeparator />
                                   )}
-                                >
-                                  {cat.name}
-                                </FloatingSelectItem>
-                              ))}
+                                  <FloatingSelectGroup>
+                                    <FloatingSelectLabel>
+                                      {t('otherCategories')}
+                                    </FloatingSelectLabel>
+                                    {otherSubCategories.map((cat) => (
+                                      <FloatingSelectItem
+                                        key={cat.id}
+                                        value={cat.id}
+                                        disabled={isUsedElsewhere(cat.id)}
+                                      >
+                                        {cat.name}
+                                      </FloatingSelectItem>
+                                    ))}
+                                  </FloatingSelectGroup>
+                                </>
+                              )}
+                              {canCreateInline && (
+                                <>
+                                  <FloatingSelectSeparator />
+                                  <FloatingSelectItem value="__create__">
+                                    {t('createNewCategory')}
+                                  </FloatingSelectItem>
+                                </>
+                              )}
                             </FloatingSelectContent>
                           </FloatingSelect>
                           <FormMessage />
                         </FormItem>
-                      )}
+                        );
+                      }}
                     />
                     <FormField
                       control={form.control}
@@ -499,10 +603,58 @@ export function ReleaseDialog({
                       onClick={() => {
                         remove(index);
                         setSubDisplayValues((prev) => prev.filter((_, i) => i !== index));
+                        setCreatingSubIndex((cur) => {
+                          if (cur === null) return null;
+                          if (cur === index) {
+                            setNewSubName('');
+                            return null;
+                          }
+                          return cur > index ? cur - 1 : cur;
+                        });
                       }}
                     >
                       <X className="h-4 w-4" />
                     </Button>
+                  </div>
+
+                  {creatingSubIndex === index && (
+                    <div className="flex items-center gap-2 pl-1">
+                      <div className="flex-1">
+                        <FloatingInput
+                          label={t('newCategoryName')}
+                          value={newSubName}
+                          maxLength={50}
+                          autoFocus
+                          onChange={(e) => setNewSubName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleCreateInline(index);
+                            }
+                          }}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={!newSubName.trim() || createCategoryMutation.isPending}
+                        onClick={() => handleCreateInline(index)}
+                      >
+                        {createCategoryMutation.isPending ? t('saving') : t('save')}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setCreatingSubIndex(null);
+                          setNewSubName('');
+                        }}
+                      >
+                        {t('cancel')}
+                      </Button>
+                    </div>
+                  )}
                   </div>
                 ))}
 

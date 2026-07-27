@@ -238,6 +238,79 @@ async function configureDashboardSegmentation(
   }
 }
 
+async function migrateCategoryHierarchy(): Promise<void> {
+  // Step A — one-shot allowDirectEntry: true for categories with direct
+  // releases, false otherwise. Must run before any generic backfill of the
+  // field (the guard is its absence).
+  const directIds = (await FinancialRelease.distinct('category')).filter(
+    (id) => id != null,
+  );
+  const directResult = await Category.updateMany(
+    { allowDirectEntry: { $exists: false }, _id: { $in: directIds } },
+    { $set: { allowDirectEntry: true } },
+  );
+  const nonDirectResult = await Category.updateMany(
+    { allowDirectEntry: { $exists: false } },
+    { $set: { allowDirectEntry: false } },
+  );
+  if (directResult.modifiedCount > 0 || nonDirectResult.modifiedCount > 0) {
+    logger.info(
+      `Set allowDirectEntry: true on ${directResult.modifiedCount}, false on ${nonDirectResult.modifiedCount} categories`,
+    );
+  }
+
+  // Step B — derive parents from real usage (one-shot: guard is the absence
+  // of the parents field, so manual removals are never resurrected).
+  const pairs: Array<{ _id: { parent: unknown; child: unknown } }> =
+    await FinancialRelease.aggregate([
+      { $unwind: '$subcategories' },
+      { $match: { 'subcategories.category': { $ne: null } } },
+      {
+        $group: {
+          _id: { parent: '$category', child: '$subcategories.category' },
+        },
+      },
+    ]);
+
+  const parentsByChild = new Map<string, Set<string>>();
+  const allParents = new Set(pairs.map((p) => String(p._id.parent)));
+  for (const pair of pairs) {
+    const parent = String(pair._id.parent);
+    const child = String(pair._id.child);
+    if (parent === child) continue;
+    if (allParents.has(child)) {
+      logger.warn(
+        `Skipping hierarchy pair ${parent} -> ${child}: child is also a parent (1-level limit)`,
+      );
+      continue;
+    }
+    const set = parentsByChild.get(child) ?? new Set<string>();
+    set.add(parent);
+    parentsByChild.set(child, set);
+  }
+
+  let derived = 0;
+  for (const [child, parentSet] of parentsByChild.entries()) {
+    const result = await Category.updateOne(
+      { _id: child, parents: { $exists: false } },
+      { $set: { parents: [...parentSet] } },
+    );
+    if (result.modifiedCount > 0) derived += 1;
+  }
+  if (derived > 0) {
+    logger.info(`Derived parents from usage on ${derived} categories`);
+  }
+
+  // Step C — generic backfill (must run after B).
+  const parentsResult = await Category.updateMany(
+    { parents: { $exists: false } },
+    { $set: { parents: [] } },
+  );
+  if (parentsResult.modifiedCount > 0) {
+    logger.info(`Set parents=[] on ${parentsResult.modifiedCount} categories`);
+  }
+}
+
 export async function runMigrations(): Promise<void> {
   logger.info('Running migrations...');
 
@@ -361,6 +434,7 @@ export async function runMigrations(): Promise<void> {
   await migrateLegacyAiCategories();
   await migrateSubcategoryLinks();
   await configureDashboardSegmentation(outros._id);
+  await migrateCategoryHierarchy();
 
   logger.info('Migrations complete');
 }

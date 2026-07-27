@@ -16,6 +16,8 @@ export interface Category {
   aiPrompt?: string;
   dashboardSplitBySubcategories?: boolean;
   dashboardFallbackCategory?: string | null;
+  parents?: string[];
+  allowDirectEntry?: boolean;
 }
 
 export type CreateCategory = Omit<Category, 'id'>;

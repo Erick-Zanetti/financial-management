@@ -43,14 +43,18 @@ export function CategoryBarChart({ chartData, categories, title, height = 300 }:
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />
               <YAxis tickFormatter={(v) => formatCurrency(v)} width={110} />
               <Tooltip
+                wrapperStyle={{ pointerEvents: 'auto' }}
                 content={({ active, payload, label }) => {
                   if (!active || !payload?.length) return null;
-                  const nonZero = payload.filter(p => Number(p.value) > 0);
+                  const nonZero = payload
+                    .filter(p => Number(p.value) > 0)
+                    .sort((a, b) => Number(b.value) - Number(a.value));
                   if (nonZero.length === 0) return null;
                   return (
                     <div
-                      className="rounded-lg border px-3 py-2 text-sm max-h-[200px] overflow-y-auto"
+                      className="rounded-lg border px-3 py-2 text-sm overflow-y-auto"
                       style={{
+                        maxHeight: Math.max(200, height - 80),
                         backgroundColor: 'hsl(var(--background) / 0.95)',
                         borderColor: 'hsl(var(--border))',
                         color: 'hsl(var(--foreground))',

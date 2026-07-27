@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Fragment, useMemo, useState } from 'react';
+import { ChevronDown, ChevronRight, Plus, Pencil, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -88,6 +88,8 @@ export default function CategoriasPage() {
       aiPrompt: z.string().max(2000),
       dashboardSplitBySubcategories: z.boolean(),
       dashboardFallbackCategory: z.string(),
+      allowDirectEntry: z.boolean(),
+      parents: z.array(z.string()),
     })
     .superRefine((data, ctx) => {
       if (data.dashboardSplitBySubcategories && !data.dashboardFallbackCategory) {
@@ -112,6 +114,8 @@ export default function CategoriasPage() {
     aiPrompt: '',
     dashboardSplitBySubcategories: false,
     dashboardFallbackCategory: '',
+    allowDirectEntry: true,
+    parents: [],
   };
 
   const form = useForm<FormValues>({
@@ -139,6 +143,8 @@ export default function CategoriasPage() {
       dashboardSplitBySubcategories:
         category.dashboardSplitBySubcategories ?? false,
       dashboardFallbackCategory: category.dashboardFallbackCategory ?? '',
+      allowDirectEntry: category.allowDirectEntry ?? true,
+      parents: category.parents ?? [],
     });
     setSheetOpen(true);
   };
@@ -201,6 +207,54 @@ export default function CategoriasPage() {
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
+  const childrenByParent = useMemo(() => {
+    const map = new Map<string, Category[]>();
+    for (const category of categories) {
+      for (const parentId of category.parents ?? []) {
+        const list = map.get(parentId) ?? [];
+        list.push(category);
+        map.set(parentId, list);
+      }
+    }
+    map.forEach((list) => {
+      list.sort((a, b) => a.name.localeCompare(b.name));
+    });
+    return map;
+  }, [categories]);
+
+  // Top level: structural roots AND any launchable category, even when it
+  // also lives under one or more parents (it then shows in both places).
+  const rootCategories = useMemo(
+    () =>
+      categories.filter(
+        (c) => !(c.parents?.length) || c.allowDirectEntry !== false,
+      ),
+    [categories],
+  );
+
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const toggleExpanded = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const editingHasChildren =
+    !!editingCategory && childrenByParent.has(editingCategory.id);
+  const eligibleParents = useMemo(
+    () =>
+      categories.filter(
+        (c) => !(c.parents?.length) && c.id !== editingCategory?.id,
+      ),
+    [categories, editingCategory],
+  );
+
   return (
     <div className="container mx-auto py-6 px-4">
       <Card>
@@ -232,51 +286,82 @@ export default function CategoriasPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {categories.map((category) => (
-                  <TableRow key={category.id}>
-                    <TableCell className="font-medium">
-                      {category.name}
-                      {category.allowSubcategories && (
-                        <span className="ml-2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                          {t('subcategories')}
+                {rootCategories.map((root) => {
+                  const children = childrenByParent.get(root.id) ?? [];
+                  const isExpanded = expanded.has(root.id);
+                  const renderRow = (category: Category, isChild: boolean) => (
+                    <TableRow key={`${isChild ? root.id + ':' : ''}${category.id}`}>
+                      <TableCell className={cn('font-medium', isChild && 'pl-10')}>
+                        <span className="inline-flex items-center gap-1">
+                          {!isChild && children.length > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 -ml-1"
+                              onClick={() => toggleExpanded(category.id)}
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                            </Button>
+                          )}
+                          {category.name}
                         </span>
-                      )}
-                      {category.allowAiIntegration && (
-                        <span className="ml-2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                          {t('aiIntegrationBadge')}
-                        </span>
-                      )}
-                      {category.aiClassificationEnabled && (
-                        <span className="ml-2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                          {t('aiClassificationBadge')}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {getTypeLabel(category.type)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleEdit(category)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDelete(category)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        {category.allowSubcategories && (
+                          <span className="ml-2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            {t('subcategories')}
+                          </span>
+                        )}
+                        {category.allowAiIntegration && (
+                          <span className="ml-2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            {t('aiIntegrationBadge')}
+                          </span>
+                        )}
+                        {category.aiClassificationEnabled && (
+                          <span className="ml-2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            {t('aiClassificationBadge')}
+                          </span>
+                        )}
+                        {isChild && category.allowDirectEntry !== false && (
+                          <span className="ml-2 text-xs text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                            {t('directEntryBadge')}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {getTypeLabel(category.type)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleEdit(category)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDelete(category)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                  return (
+                    <Fragment key={root.id}>
+                      {renderRow(root, false)}
+                      {isExpanded && children.map((child) => renderRow(child, true))}
+                    </Fragment>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
@@ -358,6 +443,75 @@ export default function CategoriasPage() {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="allowDirectEntry"
+                render={({ field }) => (
+                  <FormItem>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+                        />
+                      </FormControl>
+                      <span className="text-sm">{t('allowDirectEntry')}</span>
+                    </label>
+                  </FormItem>
+                )}
+              />
+
+              <div className="space-y-2 rounded-lg border p-3">
+                <span className="text-sm font-medium">{t('hierarchySection')}</span>
+                {editingHasChildren ? (
+                  <p className="text-xs text-muted-foreground">
+                    {t('categoryWithChildrenNoParent')}
+                  </p>
+                ) : eligibleParents.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    {t('noEligibleParents')}
+                  </p>
+                ) : (
+                  <FormField
+                    control={form.control}
+                    name="parents"
+                    render={({ field }) => (
+                      <FormItem>
+                        <p className="text-xs text-muted-foreground">{t('childOfLabel')}</p>
+                        <div className="max-h-48 overflow-y-auto space-y-1">
+                          {eligibleParents.map((parent) => {
+                            const checked = field.value.includes(parent.id);
+                            return (
+                              <label
+                                key={parent.id}
+                                className="flex items-center gap-3 cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() =>
+                                    field.onChange(
+                                      checked
+                                        ? field.value.filter((id) => id !== parent.id)
+                                        : [...field.value, parent.id],
+                                    )
+                                  }
+                                  className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+                                />
+                                <span className="text-sm">{parent.name}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
 
               <FormField
                 control={form.control}

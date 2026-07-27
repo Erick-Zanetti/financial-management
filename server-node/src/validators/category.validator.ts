@@ -17,10 +17,30 @@ const baseCategorySchema = z.object({
     .nullable()
     .optional()
     .default(null),
+  parents: z
+    .array(z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId'))
+    .max(5)
+    .optional()
+    .default([]),
+  allowDirectEntry: z.boolean().optional().default(true),
 });
+
+function validateParentsDuplicates(
+  parents: string[] | undefined,
+  ctx: z.RefinementCtx,
+): void {
+  if (parents && new Set(parents).size !== parents.length) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['parents'],
+      message: 'Duplicate parent categories',
+    });
+  }
+}
 
 export const createCategorySchema = baseCategorySchema.superRefine(
   (data, ctx) => {
+    validateParentsDuplicates(data.parents, ctx);
     if (data.dashboardSplitBySubcategories) {
       if (!data.allowSubcategories) {
         ctx.addIssue({
@@ -45,6 +65,7 @@ export const createCategorySchema = baseCategorySchema.superRefine(
 export const updateCategorySchema = baseCategorySchema
   .partial()
   .superRefine((data, ctx) => {
+    validateParentsDuplicates(data.parents, ctx);
     if (data.dashboardSplitBySubcategories === true) {
       if (!data.dashboardFallbackCategory) {
         ctx.addIssue({

@@ -91,10 +91,42 @@ const FloatingSelectItem = React.forwardRef<
 ))
 FloatingSelectItem.displayName = "FloatingSelectItem"
 
+const FloatingSelectGroup = SelectPrimitive.Group
+
+const FloatingSelectLabel = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Label>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>
+>(({ className, ...props }, ref) => (
+  <SelectPrimitive.Label
+    ref={ref}
+    className={cn(
+      "py-1.5 pl-2 pr-8 text-xs font-medium text-muted-foreground",
+      className
+    )}
+    {...props}
+  />
+))
+FloatingSelectLabel.displayName = "FloatingSelectLabel"
+
+const FloatingSelectSeparator = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Separator>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>
+>(({ className, ...props }, ref) => (
+  <SelectPrimitive.Separator
+    ref={ref}
+    className={cn("-mx-1 my-1 h-px bg-muted", className)}
+    {...props}
+  />
+))
+FloatingSelectSeparator.displayName = "FloatingSelectSeparator"
+
 export {
   FloatingSelect,
   FloatingSelectValue,
   FloatingSelectTrigger,
   FloatingSelectContent,
   FloatingSelectItem,
+  FloatingSelectGroup,
+  FloatingSelectLabel,
+  FloatingSelectSeparator,
 }

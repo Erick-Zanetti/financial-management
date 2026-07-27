@@ -16,4 +16,6 @@ export interface ICategory {
   aiPrompt?: string;
   dashboardSplitBySubcategories?: boolean;
   dashboardFallbackCategory?: unknown;
+  parents?: unknown[];
+  allowDirectEntry?: boolean;
 }
