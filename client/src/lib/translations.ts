@@ -183,7 +183,8 @@ export const pt = {
   fallbackSelf: 'Nenhuma — usa a própria categoria',
   categoryTrendTitle: 'Tendência por Categoria',
   trendCaption:
-    'Últimos 12 meses até o mês atual · linha tracejada = mediana da categoria',
+    'Últimos 12 meses até o mês atual · linha tracejada = média da categoria',
+  avgPrefix: 'média',
   categoryDescription: 'Descrição (opcional)',
   allowDirectEntry: 'Permitir lançamento direto',
   directEntryBadge: 'Lançável',
@@ -413,7 +414,8 @@ export const en: Record<keyof typeof pt, string> = {
   fallbackSelf: 'None — keeps the category itself',
   categoryTrendTitle: 'Category Trends',
   trendCaption:
-    'Last 12 months up to the current month · dashed line = category median',
+    'Last 12 months up to the current month · dashed line = category average',
+  avgPrefix: 'avg',
   categoryDescription: 'Description (optional)',
   allowDirectEntry: 'Allow direct entry',
   directEntryBadge: 'Direct entry',

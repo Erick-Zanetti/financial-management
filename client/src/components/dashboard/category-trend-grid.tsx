@@ -36,18 +36,8 @@ interface CategorySeries {
   color: string;
   points: TrendPoint[];
   total: number;
-  median: number;
   max: number;
-  currentValue: number;
-}
-
-function median(values: number[]): number {
-  if (values.length === 0) return 0;
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0
-    ? (sorted[mid - 1] + sorted[mid]) / 2
-    : sorted[mid];
+  average: number;
 }
 
 export function CategoryTrendGrid({ data, months, title }: CategoryTrendGridProps) {
@@ -73,14 +63,14 @@ export function CategoryTrendGrid({ data, months, title }: CategoryTrendGridProp
           value: byKey.get(`${name}|${m.year}|${m.month}`) ?? 0,
         }));
         const values = points.map((p) => p.value);
+        const total = values.reduce((s, v) => s + v, 0);
         return {
           name,
           color: colorMap[name],
           points,
-          total: values.reduce((s, v) => s + v, 0),
-          median: median(values),
+          total,
           max: Math.max(...values),
-          currentValue: values[values.length - 1] ?? 0,
+          average: values.length > 0 ? total / values.length : 0,
         };
       })
       .filter((s) => s.total > 0)
@@ -111,7 +101,7 @@ export function CategoryTrendGrid({ data, months, title }: CategoryTrendGridProp
                 </span>
               </div>
               <p className="mb-1 text-xs text-muted-foreground">
-                {formatCurrency(s.currentValue)}
+                {t('avgPrefix')} {formatCurrency(s.average)}
               </p>
               <div className="h-20">
                 <ResponsiveContainer width="100%" height="100%">
@@ -141,9 +131,9 @@ export function CategoryTrendGrid({ data, months, title }: CategoryTrendGridProp
                         );
                       }}
                     />
-                    {s.median > 0 && (
+                    {s.average > 0 && (
                       <ReferenceLine
-                        y={s.median}
+                        y={s.average}
                         stroke="hsl(var(--muted-foreground) / 0.6)"
                         strokeDasharray="4 3"
                         strokeWidth={1}
