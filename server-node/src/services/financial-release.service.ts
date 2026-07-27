@@ -302,11 +302,13 @@ export class FinancialReleaseService {
         : '';
       let effectiveFallbackId = fallbackId;
       if (!fallbackId || !categoryById.has(fallbackId)) {
+        // Sem fallback configurado é um estado válido: usa a própria
+        // categoria. Só avisa quando havia um configurado que sumiu.
         effectiveFallbackId = categoryId;
-        if (!warnedCategories.has(categoryId)) {
+        if (fallbackId && !warnedCategories.has(categoryId)) {
           warnedCategories.add(categoryId);
           logger.warn(
-            `Category "${category?.name}" has dashboard segmentation enabled but no valid fallback category; using the category itself`,
+            `Category "${category?.name}" has an invalid dashboard fallback category; using the category itself`,
           );
         }
       }

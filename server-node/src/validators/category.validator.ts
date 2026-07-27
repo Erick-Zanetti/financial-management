@@ -51,14 +51,7 @@ export const createCategorySchema = baseCategorySchema.superRefine(
             'dashboardSplitBySubcategories requires allowSubcategories',
         });
       }
-      if (!data.dashboardFallbackCategory) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['dashboardFallbackCategory'],
-          message:
-            'dashboardFallbackCategory is required when dashboardSplitBySubcategories is enabled',
-        });
-      }
+      // dashboardFallbackCategory é opcional: vazio = a própria categoria.
     }
   },
 );
@@ -68,14 +61,6 @@ export const updateCategorySchema = baseCategorySchema
   .superRefine((data, ctx) => {
     validateParentsDuplicates(data.parents, ctx);
     if (data.dashboardSplitBySubcategories === true) {
-      if (!data.dashboardFallbackCategory) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['dashboardFallbackCategory'],
-          message:
-            'dashboardFallbackCategory is required when dashboardSplitBySubcategories is enabled',
-        });
-      }
       if (data.allowSubcategories === false) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,

@@ -99,14 +99,8 @@ export default function CategoriasPage() {
       allowDirectEntry: z.boolean(),
       parents: z.array(z.string()),
     })
-    .superRefine((data, ctx) => {
-      if (data.dashboardSplitBySubcategories && !data.dashboardFallbackCategory) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['dashboardFallbackCategory'],
-          message: t('dashboardFallbackCategoryRequired'),
-        });
-      }
+    .superRefine(() => {
+      // dashboardFallbackCategory é opcional: vazio = a própria categoria.
     });
 
   type FormValues = z.infer<typeof formSchema>;
@@ -591,20 +585,7 @@ export default function CategoriasPage() {
                           <input
                             type="checkbox"
                             checked={field.value}
-                            onChange={(e) => {
-                              field.onChange(e);
-                              if (
-                                e.target.checked &&
-                                !form.getValues('dashboardFallbackCategory')
-                              ) {
-                                const outros = categories.find(
-                                  (c) => c.name.trim().toLowerCase() === 'outros',
-                                );
-                                if (outros) {
-                                  form.setValue('dashboardFallbackCategory', outros.id);
-                                }
-                              }
-                            }}
+                            onChange={field.onChange}
                             className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
                           />
                         </FormControl>
@@ -622,7 +603,17 @@ export default function CategoriasPage() {
                   name="dashboardFallbackCategory"
                   render={({ field }) => (
                     <FormItem>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={(value) =>
+                          field.onChange(value === '__none__' ? '' : value)
+                        }
+                        value={
+                          !field.value ||
+                          field.value === editingCategory?.id
+                            ? '__none__'
+                            : field.value
+                        }
+                      >
                         <FormControl>
                           <div className="relative">
                             <SelectTrigger
@@ -639,6 +630,9 @@ export default function CategoriasPage() {
                           </div>
                         </FormControl>
                         <SelectContent>
+                          <SelectItem value="__none__">
+                            {t('fallbackSelf')}
+                          </SelectItem>
                           {categories
                             .filter((cat) => cat.id !== editingCategory?.id)
                             .map((cat) => (
