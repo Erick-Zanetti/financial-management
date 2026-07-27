@@ -64,6 +64,23 @@ export class FinancialReleaseService {
     ]).sort({ day: 1 });
   }
 
+  async searchByName(
+    text: string,
+    year?: number,
+  ): Promise<FinancialReleaseDocument[]> {
+    const escaped = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return FinancialRelease.find({
+      name: { $regex: escaped, $options: 'i' },
+      ...(year !== undefined ? { year } : {}),
+    })
+      .populate([
+        { path: 'category', select: 'name allowSubcategories allowAiIntegration' },
+        { path: 'subcategories.category', select: 'name' },
+      ])
+      .sort({ year: -1, month: -1, day: -1 })
+      .limit(50);
+  }
+
   private async linkSubcategoryParents(
     categoryId: string,
     subcategories: Array<{ category?: unknown }> | undefined,
