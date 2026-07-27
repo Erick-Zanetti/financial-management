@@ -30,7 +30,6 @@ interface CategoryTrendGridProps {
 interface TrendPoint {
   label: string;
   value: number;
-  isPartial: boolean;
   isFuture: boolean;
 }
 
@@ -81,8 +80,7 @@ export function CategoryTrendGrid({ data, months, title }: CategoryTrendGridProp
             label: `${getMonthLabel(m.month)}/${String(m.year).slice(2)}`,
             value: byKey.get(`${name}|${m.year}|${m.month}`) ?? 0,
             // Mês corrente já está completo (dados lançados adiantado);
-            // o mês seguinte é o parcial, ainda em preenchimento.
-            isPartial: ym === nextYM(currentYM),
+            // dali em diante tudo ainda está em preenchimento.
             isFuture: ym > currentYM,
           };
         });
@@ -159,7 +157,7 @@ export function CategoryTrendGrid({ data, months, title }: CategoryTrendGridProp
                           >
                             <span className="font-medium">{p.label}</span>{' '}
                             {formatCurrency(p.value)}
-                            {p.isPartial ? ` · ${t('partialLabel')}` : ''}
+                            {p.isFuture ? ` · ${t('futureLabel')}` : ''}
                           </div>
                         );
                       }}
@@ -191,7 +189,7 @@ export function CategoryTrendGrid({ data, months, title }: CategoryTrendGridProp
                         <Cell
                           key={p.label}
                           fill={s.color}
-                          fillOpacity={p.isPartial ? 0.4 : 1}
+                          fillOpacity={p.isFuture ? 0.4 : 1}
                         />
                       ))}
                     </Bar>
@@ -206,8 +204,3 @@ export function CategoryTrendGrid({ data, months, title }: CategoryTrendGridProp
   );
 }
 
-function nextYM(ym: number): number {
-  const year = Math.floor(ym / 100);
-  const month = ym % 100;
-  return month === 12 ? (year + 1) * 100 + 1 : ym + 1;
-}
