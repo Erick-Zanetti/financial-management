@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFieldArray, useForm, useWatch, Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -40,7 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CalendarIcon, Plus, Sparkles, X } from 'lucide-react';
+import { CalendarIcon, ClipboardCopy, Plus, Sparkles, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { FinancialRelease, FinancialReleaseType } from '@/types/financial-release';
@@ -165,6 +165,10 @@ export function ReleaseDialog({
   }, [categories, childCategories, selectedCategoryId]);
 
   const canCreateInline = (selectedCategory?.parents?.length ?? 0) === 0;
+  // Ref, not state: the AI accept auto-submits in the same tick, so a state
+  // update would not be visible to onSubmit yet.
+  const pendingAiReportRef = useRef<string | null>(null);
+  const savedReportRef = useRef<HTMLTextAreaElement>(null);
   const createCategoryMutation = useCreateCategory();
   const [creatingSubIndex, setCreatingSubIndex] = useState<number | null>(null);
   const [newSubName, setNewSubName] = useState('');
@@ -198,6 +202,7 @@ export function ReleaseDialog({
     if (open) {
       setAiViewActive(false);
       setAiProcessing(false);
+      pendingAiReportRef.current = null;
       if (release) {
         const subs = release.subcategories ?? [];
         form.reset({
@@ -248,6 +253,9 @@ export function ReleaseDialog({
         month,
         year,
         subcategories,
+        ...(pendingAiReportRef.current !== null
+          ? { aiReport: pendingAiReportRef.current }
+          : {}),
       };
       if (isEditing && release?.id) {
         await updateMutation.mutateAsync({ id: release.id, data: payload });
@@ -276,7 +284,9 @@ export function ReleaseDialog({
   const handleAiAccept = async (result: {
     total: number;
     subcategories: Array<{ categoryId: string; name: string; value: number }>;
+    report: string;
   }) => {
+    pendingAiReportRef.current = result.report;
     form.setValue('value', result.total);
     form.setValue(
       'subcategories',
@@ -670,6 +680,52 @@ export function ReleaseDialog({
                     {form.formState.errors.subcategories.message}
                   </p>
                 )}
+              </div>
+            )}
+
+            {isEditing && release?.aiReport && (
+              <div className="space-y-2 rounded-lg border p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">{t('aiReportSection')}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const el = savedReportRef.current;
+                      if (!el) return;
+                      el.style.opacity = '0.01';
+                      el.style.height = 'auto';
+                      el.style.width = 'auto';
+                      el.style.position = 'fixed';
+                      el.style.top = '0';
+                      el.style.left = '0';
+                      el.focus();
+                      el.setSelectionRange(0, el.value.length);
+                      const ok = document.execCommand('copy');
+                      el.style.opacity = '0';
+                      el.style.height = '1px';
+                      el.style.width = '1px';
+                      el.style.position = 'absolute';
+                      if (ok) toast.success(t('aiReportCopied'));
+                      else toast.error('Copy failed');
+                    }}
+                  >
+                    <ClipboardCopy className="h-3 w-3 mr-1" />
+                    {t('aiCopyReport')}
+                  </Button>
+                </div>
+                <textarea
+                  ref={savedReportRef}
+                  value={release.aiReport}
+                  readOnly
+                  aria-hidden
+                  tabIndex={-1}
+                  className="absolute opacity-0 h-px w-px overflow-hidden pointer-events-none"
+                />
+                <div className="max-h-40 overflow-y-auto whitespace-pre-wrap text-xs text-muted-foreground">
+                  {release.aiReport}
+                </div>
               </div>
             )}
 

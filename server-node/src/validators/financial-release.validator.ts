@@ -24,6 +24,7 @@ const baseFinancialReleaseSchema = z.object({
   settled: z.boolean().optional().default(false),
   subcategories: z.array(subcategorySchema).optional(),
   useAiIntegration: z.boolean().optional().default(false),
+  aiReport: z.string().max(200000).optional(),
 });
 
 export const createFinancialReleaseSchema = baseFinancialReleaseSchema.refine(

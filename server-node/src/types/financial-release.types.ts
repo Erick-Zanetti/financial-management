@@ -22,6 +22,7 @@ export interface IFinancialRelease {
   observations?: string;
   subcategories?: ISubcategory[];
   useAiIntegration?: boolean;
+  aiReport?: string;
 }
 
 export interface IFinancialReleaseFilter {

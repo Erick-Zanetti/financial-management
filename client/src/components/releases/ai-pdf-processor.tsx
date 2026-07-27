@@ -14,6 +14,7 @@ interface AiPdfProcessorProps {
   onAccept: (result: {
     total: number;
     subcategories: Array<{ categoryId: string; name: string; value: number }>;
+    report: string;
   }) => void;
   onBack: () => void;
   onProcessingChange: (processing: boolean) => void;
@@ -136,6 +137,7 @@ export function AiPdfProcessor({
         name,
         value,
       })),
+      report,
     });
   };
 

@@ -86,6 +86,7 @@ const financialReleaseSchema = new Schema<FinancialReleaseDocument>(
       },
     ],
     useAiIntegration: { type: Boolean, default: false },
+    aiReport: { type: String, default: '' },
   },
   {
     collection: 'financialreleases',

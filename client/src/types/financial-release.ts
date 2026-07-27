@@ -28,6 +28,7 @@ export interface FinancialRelease {
   observations?: string;
   subcategories?: Subcategory[];
   useAiIntegration?: boolean;
+  aiReport?: string;
 }
 
 export interface Month {
