@@ -34,6 +34,16 @@ export function AgentPanel() {
     (d) => d.confirmation && !d.confirmation.resolved,
   ).length;
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize até ~8 linhas; depois vira scroll interno.
+  const MAX_INPUT_HEIGHT = 176;
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, MAX_INPUT_HEIGHT)}px`;
+  }, [input]);
 
   useEffect(() => {
     publishScreenContext({ route: pathname ?? '/' });
@@ -129,6 +139,7 @@ export function AgentPanel() {
 
           <div className="flex items-end gap-2 border-t p-3">
             <textarea
+              ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
@@ -138,8 +149,9 @@ export function AgentPanel() {
                 }
               }}
               placeholder={t('agentPlaceholder')}
-              rows={Math.min(3, Math.max(1, input.split('\n').length))}
-              className="flex-1 resize-none rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              rows={1}
+              style={{ maxHeight: MAX_INPUT_HEIGHT }}
+              className="flex-1 resize-none overflow-y-auto rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
             <Button
               size="icon"
