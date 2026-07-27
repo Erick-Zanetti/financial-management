@@ -21,8 +21,18 @@ export function AgentPanel() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
-  const { display, sending, sendMessage, respondToConfirmation, clear } =
-    useAgentChat(t('agentErrorGeneric'));
+  const {
+    display,
+    sending,
+    sendMessage,
+    respondToConfirmation,
+    respondToAll,
+    clear,
+  } = useAgentChat(t('agentErrorGeneric'));
+
+  const pendingCount = display.filter(
+    (d) => d.confirmation && !d.confirmation.resolved,
+  ).length;
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -91,6 +101,31 @@ export function AgentPanel() {
               </span>
             )}
           </div>
+
+          {pendingCount > 1 && !sending && (
+            <div className="flex items-center justify-between border-t px-3 py-2">
+              <span className="text-xs text-muted-foreground">
+                {pendingCount} {t('agentPendingActions')}
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => void respondToAll(true)}
+                >
+                  {t('agentApproveAll')}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                  onClick={() => void respondToAll(false)}
+                >
+                  {t('agentRejectAll')}
+                </Button>
+              </div>
+            </div>
+          )}
 
           <div className="flex items-end gap-2 border-t p-3">
             <textarea

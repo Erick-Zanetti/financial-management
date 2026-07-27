@@ -253,6 +253,71 @@ describe('agentService.chat', () => {
     expect(financialReleaseService.delete).toHaveBeenCalledTimes(1);
   });
 
+  it('resultado de tool gigante é truncado antes de virar mensagem', async () => {
+    const { categoryService } = await import('../../category.service');
+    const huge = Array.from({ length: 3000 }, (_, i) => ({
+      id: `c${i}`,
+      name: `Categoria com nome bem comprido número ${i}`,
+      type: 'E',
+      allowSubcategories: false,
+      allowDirectEntry: true,
+    }));
+    vi.mocked(categoryService.findAll).mockResolvedValueOnce(huge as never);
+    vi.mocked(streamChatCompletion)
+      .mockResolvedValueOnce({
+        content: '',
+        toolCalls: [toolCall('tcBig', 'list_categories', '{}')],
+      })
+      .mockResolvedValueOnce({ content: 'ok', toolCalls: [] });
+    const { events, emit } = collectEvents();
+    await agentService.chat(
+      { messages: [{ role: 'user', content: 'categorias' }] },
+      emit,
+    );
+    const toolMsg = events.find((e) => e.type === 'tool_message');
+    const content =
+      toolMsg && 'message' in toolMsg && toolMsg.message.role === 'tool'
+        ? toolMsg.message.content
+        : '';
+    expect(content.length).toBeLessThan(51000);
+    expect(content).toContain('TRUNCADO');
+  });
+
+  it('várias decisões no mesmo request executam todas de uma vez', async () => {
+    const { AgentService } = await import('../agent.service');
+    const service = new AgentService();
+    vi.mocked(streamChatCompletion).mockResolvedValueOnce({
+      content: 'Criados.',
+      toolCalls: [],
+    });
+    const { financialReleaseService } = await import(
+      '../../financial-release.service'
+    );
+    vi.mocked(financialReleaseService.delete).mockResolvedValue(true as never);
+    const history = [
+      { role: 'user' as const, content: 'apaga os dois' },
+      {
+        role: 'assistant' as const,
+        content: null,
+        tool_calls: [
+          toolCall('tcM1', 'delete_release', '{"id":"aaaaaaaaaaaaaaaaaaaaaaaa"}'),
+          toolCall('tcM2', 'delete_release', '{"id":"bbbbbbbbbbbbbbbbbbbbbbbb"}'),
+        ],
+      },
+    ];
+    const { events, emit } = collectEvents();
+    await service.chat(
+      { messages: history, decisions: { tcM1: true, tcM2: true } },
+      emit,
+    );
+    expect(financialReleaseService.delete).toHaveBeenCalledTimes(2);
+    expect(events.filter((e) => e.type === 'tool_message')).toHaveLength(2);
+    expect(
+      events.find((e) => e.type === 'confirmation_request'),
+    ).toBeUndefined();
+    expect(events.at(-1)).toEqual({ type: 'done' });
+  });
+
   it('signal abortado interrompe antes de chamar o modelo', async () => {
     const controller = new AbortController();
     controller.abort();

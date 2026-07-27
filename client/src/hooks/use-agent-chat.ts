@@ -18,13 +18,28 @@ const STORAGE_KEY = 'agent-chat-v1';
 const MAX_HISTORY = 80;
 const MAX_DISPLAY = 300;
 
+// Abaixo do teto do validator do servidor (100k); cobre histórico antigo
+// gravado antes do truncamento server-side.
+const MAX_TOOL_CONTENT = 60000;
+
+function sanitizeHistory(messages: ChatMessage[]): ChatMessage[] {
+  return messages.map((m) =>
+    m.role === 'tool' && m.content.length > MAX_TOOL_CONTENT
+      ? {
+          ...m,
+          content: m.content.slice(0, MAX_TOOL_CONTENT) + '\n[TRUNCADO]',
+        }
+      : m,
+  );
+}
+
 function trimHistory(messages: ChatMessage[]): ChatMessage[] {
-  if (messages.length <= MAX_HISTORY) return messages;
+  if (messages.length <= MAX_HISTORY) return sanitizeHistory(messages);
   const from = messages.length - MAX_HISTORY;
   for (let i = from; i < messages.length; i++) {
-    if (messages[i].role === 'user') return messages.slice(i);
+    if (messages[i].role === 'user') return sanitizeHistory(messages.slice(i));
   }
-  return messages.slice(from);
+  return sanitizeHistory(messages.slice(from));
 }
 
 interface StoredState {
@@ -281,6 +296,39 @@ export function useAgentChat(errorMessage: string) {
     [runTurn, sending],
   );
 
+  const respondToAll = useCallback(
+    async (approved: boolean) => {
+      if (sending) return;
+      const pendingIds = displayRef.current
+        .filter((d) => d.confirmation && !d.confirmation.resolved)
+        .map((d) => d.confirmation!.toolCallId);
+      if (pendingIds.length === 0) return;
+      setPendingConfirmation(null);
+      setDisplay((prev) =>
+        prev.map((d) =>
+          d.confirmation && !d.confirmation.resolved
+            ? {
+                ...d,
+                confirmation: {
+                  ...d.confirmation,
+                  resolved: approved ? 'approved' : 'rejected',
+                },
+              }
+            : d,
+        ),
+      );
+      const decisions = Object.fromEntries(
+        pendingIds.map((id) => [id, approved]),
+      );
+      await runTurn({
+        messages: historyRef.current,
+        screenContext: getScreenContext(),
+        decisions,
+      });
+    },
+    [runTurn, sending],
+  );
+
   const clear = useCallback(() => {
     historyRef.current = [];
     setDisplay([]);
@@ -298,6 +346,7 @@ export function useAgentChat(errorMessage: string) {
     pendingConfirmation,
     sendMessage,
     respondToConfirmation,
+    respondToAll,
     clear,
   };
 }

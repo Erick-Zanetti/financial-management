@@ -12,6 +12,18 @@ import {
 
 const MAX_TOOL_ITERATIONS = 10;
 const EXECUTED_WRITES_CAP = 200;
+// Resultados de tool ficam no histórico do cliente e são reenviados a cada
+// turno; sem teto, um mês cheio de lançamentos estoura o validator (100k)
+// e trava a conversa inteira.
+const MAX_TOOL_RESULT_CHARS = 50000;
+
+function boundToolResult(json: string): string {
+  if (json.length <= MAX_TOOL_RESULT_CHARS) return json;
+  return (
+    json.slice(0, MAX_TOOL_RESULT_CHARS) +
+    '\n[TRUNCADO: resultado muito grande. Refaça a consulta com filtros mais específicos (período menor, um type só) ou use get_dashboard_summary para agregados.]'
+  );
+}
 
 function safeParseArgs(raw: string): unknown {
   try {
@@ -143,7 +155,7 @@ export class AgentService {
       return {
         role: 'tool',
         tool_call_id: tc.id,
-        content: JSON.stringify(result),
+        content: boundToolResult(JSON.stringify(result)),
       };
     } catch (error) {
       emit({ type: 'tool_result', toolCallId: tc.id, ok: false });
