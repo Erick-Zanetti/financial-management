@@ -64,13 +64,16 @@ export function CategoryTrendGrid({ data, months, title }: CategoryTrendGridProp
         }));
         const values = points.map((p) => p.value);
         const total = values.reduce((s, v) => s + v, 0);
+        // Média só sobre meses com movimento: mês sem lançamento não é
+        // "gastei zero", é ausência de dado.
+        const activeMonths = values.filter((v) => v > 0);
         return {
           name,
           color: colorMap[name],
           points,
           total,
           max: Math.max(...values),
-          average: values.length > 0 ? total / values.length : 0,
+          average: activeMonths.length > 0 ? total / activeMonths.length : 0,
         };
       })
       .filter((s) => s.total > 0)
