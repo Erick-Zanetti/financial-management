@@ -12,18 +12,6 @@ const systemConfigSchema = new Schema<SystemConfigDocument>(
     aiCustomPrompt: { type: String, default: '' },
     aiModel: { type: String, default: '' },
     aiOutputLanguage: { type: String, default: 'pt' },
-    aiCategories: {
-      type: [
-        {
-          slug: { type: String, required: true },
-          displayName: { type: String, required: true },
-          description: { type: String, default: '' },
-          examples: { type: [String], default: [] },
-          _id: false,
-        },
-      ],
-      default: [],
-    },
   },
   {
     collection: 'system-config',

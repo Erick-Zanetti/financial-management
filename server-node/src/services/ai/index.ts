@@ -1,6 +1,6 @@
 import { logger } from '../../config/logger.config';
 import { AppError } from '../../middlewares/error-handler.middleware';
-import { AiConfig, DEFAULT_CATEGORIES } from './types';
+import { AiConfig } from './types';
 import { parseCsv } from './csv-parser';
 import { preprocess } from './preprocessor';
 import { classifyExpenses } from './llm-classifier';
@@ -32,10 +32,7 @@ class AiService {
       throw new AppError(422, 'File contains insufficient text content');
     }
 
-    const categories =
-      config.aiCategories && config.aiCategories.length > 0
-        ? config.aiCategories
-        : DEFAULT_CATEGORIES;
+    const categories = config.aiCategories;
 
     logger.info(`Using ${categories.length} categories: ${categories.map((c) => c.slug).join(', ')}`);
 

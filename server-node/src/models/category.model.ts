@@ -13,6 +13,10 @@ const categorySchema = new Schema<CategoryDocument>(
     },
     allowSubcategories: { type: Boolean, default: false },
     allowAiIntegration: { type: Boolean, default: false },
+    description: { type: String, default: '' },
+    aiClassificationEnabled: { type: Boolean, default: false },
+    aiKeywords: { type: [String], default: [] },
+    aiPrompt: { type: String, default: '' },
   },
   {
     collection: 'categories',

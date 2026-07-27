@@ -48,6 +48,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { FloatingInput } from '@/components/ui/floating-input';
+import { FloatingTextarea } from '@/components/ui/floating-textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useSettings } from '@/providers/settings-provider';
@@ -80,24 +81,48 @@ export default function CategoriasPage() {
     type: z.nativeEnum(CategoryType, { message: t('categoryTypeRequired') }),
     allowSubcategories: z.boolean(),
     allowAiIntegration: z.boolean(),
+    description: z.string().max(200),
+    aiClassificationEnabled: z.boolean(),
+    aiKeywordsText: z.string(),
+    aiPrompt: z.string().max(2000),
   });
 
   type FormValues = z.infer<typeof formSchema>;
 
+  const emptyFormValues: FormValues = {
+    name: '',
+    type: CategoryType.Expense,
+    allowSubcategories: false,
+    allowAiIntegration: false,
+    description: '',
+    aiClassificationEnabled: false,
+    aiKeywordsText: '',
+    aiPrompt: '',
+  };
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: '', type: CategoryType.Expense, allowSubcategories: false, allowAiIntegration: false },
+    defaultValues: emptyFormValues,
   });
 
   const handleAdd = () => {
     setEditingCategory(null);
-    form.reset({ name: '', type: CategoryType.Expense, allowSubcategories: false, allowAiIntegration: false });
+    form.reset(emptyFormValues);
     setSheetOpen(true);
   };
 
   const handleEdit = (category: Category) => {
     setEditingCategory(category);
-    form.reset({ name: category.name, type: category.type, allowSubcategories: category.allowSubcategories ?? false, allowAiIntegration: category.allowAiIntegration ?? false });
+    form.reset({
+      name: category.name,
+      type: category.type,
+      allowSubcategories: category.allowSubcategories ?? false,
+      allowAiIntegration: category.allowAiIntegration ?? false,
+      description: category.description ?? '',
+      aiClassificationEnabled: category.aiClassificationEnabled ?? false,
+      aiKeywordsText: (category.aiKeywords ?? []).join(', '),
+      aiPrompt: category.aiPrompt ?? '',
+    });
     setSheetOpen(true);
   };
 
@@ -112,12 +137,20 @@ export default function CategoriasPage() {
   };
 
   const onSubmit = async (values: FormValues) => {
+    const { aiKeywordsText, ...rest } = values;
+    const payload = {
+      ...rest,
+      aiKeywords: aiKeywordsText
+        .split(/[,;]/)
+        .map((keyword) => keyword.trim())
+        .filter(Boolean),
+    };
     try {
       if (editingCategory) {
-        await updateMutation.mutateAsync({ id: editingCategory.id, data: values });
+        await updateMutation.mutateAsync({ id: editingCategory.id, data: payload });
         toast.success(t('categoryUpdated'));
       } else {
-        await createMutation.mutateAsync(values);
+        await createMutation.mutateAsync(payload);
         toast.success(t('categoryCreated'));
       }
       handleSheetClose();
@@ -193,6 +226,11 @@ export default function CategoriasPage() {
                       {category.allowAiIntegration && (
                         <span className="ml-2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                           {t('aiIntegrationBadge')}
+                        </span>
+                      )}
+                      {category.aiClassificationEnabled && (
+                        <span className="ml-2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          {t('aiClassificationBadge')}
                         </span>
                       )}
                     </TableCell>
@@ -288,6 +326,23 @@ export default function CategoriasPage() {
 
               <FormField
                 control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <FloatingInput
+                        label={t('categoryDescription')}
+                        maxLength={200}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="allowSubcategories"
                 render={({ field }) => (
                   <FormItem>
@@ -331,6 +386,72 @@ export default function CategoriasPage() {
                     </FormItem>
                   )}
                 />
+              )}
+
+              {isAiGloballyEnabled && (
+                <div className="space-y-3 rounded-lg border p-3">
+                  <span className="text-sm font-medium">
+                    {t('aiClassificationSection')}
+                  </span>
+
+                  <FormField
+                    control={form.control}
+                    name="aiClassificationEnabled"
+                    render={({ field }) => (
+                      <FormItem>
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+                            />
+                          </FormControl>
+                          <span className="text-sm">{t('aiClassificationEnabled')}</span>
+                        </label>
+                      </FormItem>
+                    )}
+                  />
+
+                  {form.watch('aiClassificationEnabled') && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="aiKeywordsText"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <FloatingInput
+                                label={t('aiKeywords')}
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="aiPrompt"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <FloatingTextarea
+                                label={t('aiCategoryPrompt')}
+                                maxLength={2000}
+                                className="min-h-[100px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
+                </div>
               )}
 
               <SheetFooter className="gap-2 pt-4">

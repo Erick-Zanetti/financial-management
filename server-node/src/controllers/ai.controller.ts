@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { aiService } from '../services/ai.service';
+import { buildCategoryConfigs } from '../services/ai/category-mapper';
+import { categoryService } from '../services/category.service';
 import { systemConfigService } from '../services/system-config.service';
 import { AppError } from '../middlewares/error-handler.middleware';
 
@@ -21,12 +23,20 @@ class AiController {
       throw new AppError(400, 'AI model is not configured');
     }
 
+    const categories = await categoryService.findAiEnabled();
+    if (categories.length === 0) {
+      throw new AppError(
+        400,
+        'No categories enabled for AI classification. Enable "AI classification" on at least one category.',
+      );
+    }
+
     const result = await aiService.processFile(req.file.buffer, req.file.mimetype, {
       openRouterToken: config.openRouterToken,
       aiModel: config.aiModel,
       aiOutputLanguage: config.aiOutputLanguage || 'pt',
       aiCustomPrompt: config.aiCustomPrompt || '',
-      aiCategories: config.aiCategories || [],
+      aiCategories: buildCategoryConfigs(categories),
     });
 
     res.json(result);

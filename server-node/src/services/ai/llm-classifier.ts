@@ -16,7 +16,10 @@ function buildSystemPrompt(
     .map((c, i) => {
       const examples =
         c.examples.length > 0 ? `\n   Exemplos: ${c.examples.join(', ')}` : '';
-      return `${i + 1}. ${c.slug}\n   Escopo: ${c.description}${examples}`;
+      const instructions = c.prompt?.trim()
+        ? `\n   Instruções: ${c.prompt.trim()}`
+        : '';
+      return `${i + 1}. ${c.slug}\n   Escopo: ${c.description}${examples}${instructions}`;
     })
     .join('\n\n');
 

@@ -12,6 +12,10 @@ class CategoryService {
     return Category.findById(id);
   }
 
+  async findAiEnabled(): Promise<CategoryDocument[]> {
+    return Category.find({ aiClassificationEnabled: true }).sort({ name: 1 });
+  }
+
   async create(data: CreateCategoryDto): Promise<CategoryDocument> {
     return new Category(data).save();
   }

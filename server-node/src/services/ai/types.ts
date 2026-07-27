@@ -3,22 +3,8 @@ export interface CategoryConfig {
   displayName: string;
   description: string;
   examples: string[];
+  prompt?: string;
 }
-
-export const DEFAULT_CATEGORIES: CategoryConfig[] = [
-  { slug: 'supermercado', displayName: 'Supermercados', description: 'Supermercados, atacadistas e padarias', examples: [] },
-  { slug: 'restaurante', displayName: 'Restaurantes', description: 'Delivery, bares, bistrôs e restaurantes', examples: [] },
-  { slug: 'combustivel_transporte', displayName: 'Combustível e Transporte', description: 'Postos de combustível e estacionamento', examples: [] },
-  { slug: 'saas_assinaturas', displayName: 'Assinaturas/Serviços', description: 'Ferramentas de dev, hospedagem, IA e SaaS', examples: [] },
-  { slug: 'saude_farmacia', displayName: 'Saúde', description: 'Farmácias, odontologia e fitness', examples: [] },
-  { slug: 'educacao', displayName: 'Educação', description: 'Faculdade, cursos e treinamentos', examples: [] },
-  { slug: 'viagem', displayName: 'Viagens', description: 'Passagens aéreas, hospedagem e turismo', examples: [] },
-  { slug: 'marketplace_eletronicos', displayName: 'Compras em Marketplaces', description: 'Amazon, Mercado Livre e similares', examples: [] },
-  { slug: 'vestuario_beleza', displayName: 'Vestuário e Beleza', description: 'Lojas de roupa, beleza e estética', examples: [] },
-  { slug: 'lazer_streaming', displayName: 'Assinaturas/Lazer', description: 'Streaming, jogos e entretenimento digital', examples: [] },
-  { slug: 'casa_utilidades', displayName: 'Casa e Utilidades', description: 'Lojas de departamento e utilidades domésticas', examples: [] },
-  { slug: 'outros', displayName: 'Outros', description: 'Tudo que não se encaixar nas categorias acima', examples: [] },
-];
 
 export interface CsvRow {
   row_id: number;

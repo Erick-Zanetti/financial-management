@@ -10,6 +10,10 @@ export interface Category {
   type: CategoryType;
   allowSubcategories?: boolean;
   allowAiIntegration?: boolean;
+  description?: string;
+  aiClassificationEnabled?: boolean;
+  aiKeywords?: string[];
+  aiPrompt?: string;
 }
 
 export type CreateCategory = Omit<Category, 'id'>;
