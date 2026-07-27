@@ -9,6 +9,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppShell } from '@/components/layout/app-shell';
 import { Header } from '@/components/layout/header';
 import { Toaster } from '@/components/ui/sonner';
+import { AgentPanel } from '@/components/agent/agent-panel';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -37,6 +38,7 @@ export default function RootLayout({
                 </TooltipProvider>
               </SidebarProvider>
               <Toaster />
+              <AgentPanel />
             </QueryProvider>
           </SettingsProvider>
         </ThemeProvider>
