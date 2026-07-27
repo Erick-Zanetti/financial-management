@@ -16,11 +16,14 @@ class AgentController {
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
+    const abort = new AbortController();
+    res.on('close', () => abort.abort());
+
     const emit = (event: AgentEvent): void => {
       res.write(`data: ${JSON.stringify(event)}\n\n`);
     };
 
-    await agentService.chat(parsed.data, emit);
+    await agentService.chat(parsed.data, emit, abort.signal);
     res.end();
   }
 }

@@ -13,6 +13,19 @@ import {
 } from '@/types/agent';
 
 const STORAGE_KEY = 'agent-chat-v1';
+// Servidor rejeita >200 mensagens; manter folga e cortar em fronteira de
+// turno (mensagem user) para nunca órfãos de tool_calls no protocolo.
+const MAX_HISTORY = 80;
+const MAX_DISPLAY = 300;
+
+function trimHistory(messages: ChatMessage[]): ChatMessage[] {
+  if (messages.length <= MAX_HISTORY) return messages;
+  const from = messages.length - MAX_HISTORY;
+  for (let i = from; i < messages.length; i++) {
+    if (messages[i].role === 'user') return messages.slice(i);
+  }
+  return messages.slice(from);
+}
 
 interface StoredState {
   history: ChatMessage[];
@@ -116,11 +129,15 @@ export function useAgentChat(errorMessage: string) {
   }, [display, persist]);
 
   const runTurn = useCallback(
-    async (request: TurnRequest) => {
+    async (requestInput: TurnRequest) => {
       setSending(true);
+      historyRef.current = trimHistory(historyRef.current);
+      const request = { ...requestInput, messages: historyRef.current };
       const streamingId = nextEntryId();
       let streamedText = '';
-      let hadWriteResult = false;
+      const approvedWrite = Object.values(request.decisions ?? {}).some(
+        Boolean,
+      );
 
       try {
         await streamAgentEvents(request, (event) => {
@@ -155,7 +172,6 @@ export function useAgentChat(errorMessage: string) {
             }
             case 'tool_message':
               historyRef.current = [...historyRef.current, event.message];
-              if (request.decisions) hadWriteResult = true;
               break;
             case 'tool_start':
               setDisplay((prev) => [
@@ -199,8 +215,11 @@ export function useAgentChat(errorMessage: string) {
         ]);
       } finally {
         setSending(false);
+        setDisplay((prev) =>
+          prev.length > MAX_DISPLAY ? prev.slice(-MAX_DISPLAY) : prev,
+        );
         persist();
-        if (hadWriteResult) {
+        if (approvedWrite) {
           queryClient.invalidateQueries();
         }
       }

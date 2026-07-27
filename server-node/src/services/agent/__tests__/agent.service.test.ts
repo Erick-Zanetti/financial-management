@@ -143,13 +143,13 @@ describe('agentService.chat', () => {
         role: 'assistant' as const,
         content: null,
         tool_calls: [
-          toolCall('tc9', 'delete_release', '{"id":"aaaaaaaaaaaaaaaaaaaaaaaa"}'),
+          toolCall('tcA', 'delete_release', '{"id":"aaaaaaaaaaaaaaaaaaaaaaaa"}'),
         ],
       },
     ];
     const { events, emit } = collectEvents();
     await agentService.chat(
-      { messages: history, decisions: { tc9: true } },
+      { messages: history, decisions: { tcA: true } },
       emit,
     );
     expect(financialReleaseService.delete).toHaveBeenCalledWith(
@@ -173,13 +173,13 @@ describe('agentService.chat', () => {
         role: 'assistant' as const,
         content: null,
         tool_calls: [
-          toolCall('tc9', 'delete_release', '{"id":"aaaaaaaaaaaaaaaaaaaaaaaa"}'),
+          toolCall('tcR', 'delete_release', '{"id":"aaaaaaaaaaaaaaaaaaaaaaaa"}'),
         ],
       },
     ];
     const { events, emit } = collectEvents();
     await agentService.chat(
-      { messages: history, decisions: { tc9: false } },
+      { messages: history, decisions: { tcR: false } },
       emit,
     );
     expect(financialReleaseService.delete).not.toHaveBeenCalled();
@@ -194,7 +194,7 @@ describe('agentService.chat', () => {
         role: 'assistant' as const,
         content: null,
         tool_calls: [
-          toolCall('tc9', 'delete_release', '{"id":"aaaaaaaaaaaaaaaaaaaaaaaa"}'),
+          toolCall('tcP', 'delete_release', '{"id":"aaaaaaaaaaaaaaaaaaaaaaaa"}'),
         ],
       },
     ];
@@ -202,6 +202,68 @@ describe('agentService.chat', () => {
     await agentService.chat({ messages: history }, emit);
     expect(events.find((e) => e.type === 'confirmation_request')).toBeTruthy();
     expect(streamChatCompletion).not.toHaveBeenCalled();
+  });
+
+  it('reenvio após queda do stream não executa o write de novo (ledger)', async () => {
+    const { AgentService } = await import('../agent.service');
+    const service = new AgentService();
+    vi.mocked(streamChatCompletion).mockResolvedValue({
+      content: 'Feito.',
+      toolCalls: [],
+    });
+    const { financialReleaseService } = await import(
+      '../../financial-release.service'
+    );
+    vi.mocked(financialReleaseService.delete).mockResolvedValue(true as never);
+    const history = [
+      { role: 'user' as const, content: 'apaga o lançamento X' },
+      {
+        role: 'assistant' as const,
+        content: null,
+        tool_calls: [
+          toolCall('tcL', 'delete_release', '{"id":"aaaaaaaaaaaaaaaaaaaaaaaa"}'),
+        ],
+      },
+    ];
+    // 1º request: aprova e executa
+    let collected = collectEvents();
+    await service.chat(
+      { messages: history, decisions: { tcL: true } },
+      collected.emit,
+    );
+    expect(financialReleaseService.delete).toHaveBeenCalledTimes(1);
+
+    // 2º request: mesmo histórico (cliente perdeu o tool result), SEM decisão
+    collected = collectEvents();
+    await service.chat({ messages: history }, collected.emit);
+    // não re-pergunta nem re-executa: replay do resultado + loop continua
+    expect(financialReleaseService.delete).toHaveBeenCalledTimes(1);
+    expect(
+      collected.events.find((e) => e.type === 'confirmation_request'),
+    ).toBeUndefined();
+    expect(collected.events.some((e) => e.type === 'tool_message')).toBe(true);
+    expect(collected.events.at(-1)).toEqual({ type: 'done' });
+
+    // 3º request: re-aprovação explícita também não executa de novo
+    collected = collectEvents();
+    await service.chat(
+      { messages: history, decisions: { tcL: true } },
+      collected.emit,
+    );
+    expect(financialReleaseService.delete).toHaveBeenCalledTimes(1);
+  });
+
+  it('signal abortado interrompe antes de chamar o modelo', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const { events, emit } = collectEvents();
+    await agentService.chat(
+      { messages: [{ role: 'user', content: 'oi' }] },
+      emit,
+      controller.signal,
+    );
+    expect(streamChatCompletion).not.toHaveBeenCalled();
+    expect(events.find((e) => e.type === 'error')).toBeUndefined();
   });
 
   it('sem token configurado: evento error amigável', async () => {

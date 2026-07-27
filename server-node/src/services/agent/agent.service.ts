@@ -11,6 +11,7 @@ import {
 } from './agent.types';
 
 const MAX_TOOL_ITERATIONS = 10;
+const EXECUTED_WRITES_CAP = 200;
 
 function safeParseArgs(raw: string): unknown {
   try {
@@ -21,9 +22,18 @@ function safeParseArgs(raw: string): unknown {
 }
 
 export class AgentService {
+  /**
+   * Write tool calls already executed, keyed by tool_call_id. If the SSE
+   * stream drops after the DB commit but before the client persists the
+   * tool result, the resumed request replays the stored result instead of
+   * executing (or re-confirming) the write a second time.
+   */
+  private readonly executedWrites = new Map<string, ChatMessage>();
+
   async chat(
     req: AgentChatRequest,
     emit: (e: AgentEvent) => void,
+    signal?: AbortSignal,
   ): Promise<void> {
     try {
       const config = await systemConfigService.get();
@@ -56,12 +66,14 @@ export class AgentService {
       }
 
       for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
+        if (signal?.aborted) return;
         const { content, toolCalls } = await streamChatCompletion({
           token: config.openRouterToken,
           model: config.agentModel,
           messages,
           tools: actionRegistry.toOpenAiTools(),
           onToken: (t) => emit({ type: 'token', content: t }),
+          signal,
         });
 
         const assistantMessage: ChatMessage = {
@@ -106,6 +118,7 @@ export class AgentService {
           'Limite de ações por mensagem atingido. Tente uma pergunta mais específica.',
       });
     } catch (error) {
+      if (signal?.aborted) return; // cliente desconectou: nada a reportar
       logger.error('Agent chat failed', {
         error: error instanceof Error ? error.message : String(error),
       });
@@ -181,16 +194,35 @@ export class AgentService {
     }
   }
 
-  /** Executa (ou rejeita) writes pendentes que receberam decisão neste request. */
+  private recordExecutedWrite(id: string, message: ChatMessage): void {
+    this.executedWrites.set(id, message);
+    if (this.executedWrites.size > EXECUTED_WRITES_CAP) {
+      const oldest = this.executedWrites.keys().next().value;
+      if (oldest !== undefined) this.executedWrites.delete(oldest);
+    }
+  }
+
+  /**
+   * Executa (ou rejeita) writes pendentes que receberam decisão neste
+   * request. Writes já executados (ledger) são reaproveitados sem rodar
+   * de novo, mesmo sem decisão — cobre reenvio após queda do stream.
+   */
   private async resolvePendingWrites(
     messages: ChatMessage[],
     decisions: Record<string, boolean>,
   ): Promise<ChatMessage[]> {
     const results: ChatMessage[] = [];
     for (const tc of this.undecidedWrites(messages)) {
+      const executed = this.executedWrites.get(tc.id);
+      if (executed) {
+        results.push(executed);
+        continue;
+      }
       if (!(tc.id in decisions)) continue;
       if (decisions[tc.id]) {
-        results.push(await this.runTool(tc, () => undefined));
+        const result = await this.runTool(tc, () => undefined);
+        this.recordExecutedWrite(tc.id, result);
+        results.push(result);
       } else {
         results.push({
           role: 'tool',

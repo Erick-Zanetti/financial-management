@@ -17,9 +17,11 @@ export async function streamChatCompletion(opts: {
   messages: ChatMessage[];
   tools: OpenAiTool[];
   onToken: (t: string) => void;
+  signal?: AbortSignal;
 }): Promise<{ content: string; toolCalls: OpenRouterToolCall[] }> {
   const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
+    signal: opts.signal,
     headers: {
       Authorization: `Bearer ${opts.token}`,
       'Content-Type': 'application/json',
