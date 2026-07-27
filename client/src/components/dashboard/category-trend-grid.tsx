@@ -184,7 +184,7 @@ export function CategoryTrendGrid({ data, months, title }: CategoryTrendGridProp
                         strokeWidth={1}
                       />
                     )}
-                    <Bar dataKey="value" radius={[2, 2, 0, 0]}>
+                    <Bar dataKey="value" radius={[2, 2, 0, 0]} minPointSize={2}>
                       {s.points.map((p) => (
                         <Cell
                           key={p.label}
