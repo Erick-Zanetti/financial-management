@@ -53,22 +53,20 @@ export function AgentPanel() {
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="right" className="flex w-full flex-col p-0 sm:max-w-md">
+          {/* Mesmo estilo/posicionamento do X que o SheetContent injeta (right-4 top-4) */}
+          <button
+            type="button"
+            onClick={clear}
+            aria-label={t('agentClear')}
+            className="absolute right-12 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
           <SheetHeader className="border-b px-4 py-3">
-            <div className="flex items-center justify-between pr-8">
-              <SheetTitle className="flex items-center gap-2 text-base">
-                <Sparkles className="h-4 w-4 text-primary" />
-                {t('agentTitle')}
-              </SheetTitle>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={clear}
-                aria-label={t('agentClear')}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
+            <SheetTitle className="flex items-center gap-2 text-base">
+              <Sparkles className="h-4 w-4 text-primary" />
+              {t('agentTitle')}
+            </SheetTitle>
           </SheetHeader>
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-3">
