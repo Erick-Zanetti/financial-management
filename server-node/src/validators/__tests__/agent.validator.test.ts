@@ -32,6 +32,22 @@ describe('agentChatSchema', () => {
     expect(parsed.success).toBe(true);
   });
 
+  it('aceita lote grande de tool_calls (ex.: 12 meses)', () => {
+    const calls = Array.from({ length: 12 }, (_, i) => ({
+      id: `tc${i}`,
+      type: 'function' as const,
+      function: { name: 'create_release', arguments: '{}' },
+    }));
+    const parsed = agentChatSchema.safeParse({
+      messages: [
+        { role: 'user', content: 'cria 12 meses' },
+        { role: 'assistant', content: null, tool_calls: calls },
+      ],
+      decisions: Object.fromEntries(calls.map((c) => [c.id, true])),
+    });
+    expect(parsed.success).toBe(true);
+  });
+
   it('rejeita role system vinda do cliente e histórico gigante', () => {
     expect(
       agentChatSchema.safeParse({

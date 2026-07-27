@@ -14,7 +14,8 @@ const messageSchema = z.discriminatedUnion('role', [
   z.object({
     role: z.literal('assistant'),
     content: z.string().max(20000).nullable(),
-    tool_calls: z.array(toolCallSchema).max(10).optional(),
+    // Lotes legítimos (ex.: 12 meses de salário) passam de 10 tool calls.
+    tool_calls: z.array(toolCallSchema).max(50).optional(),
   }),
   z.object({
     role: z.literal('tool'),
