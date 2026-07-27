@@ -181,6 +181,11 @@ export const pt = {
   subcategoryOptional: 'Subcategoria (opcional)',
   noSubcategory: 'Nenhuma',
   fallbackSelf: 'Nenhuma — usa a própria categoria',
+  categoryTrendTitle: 'Tendência por Categoria',
+  trendCaption:
+    'Linha tracejada = mediana (meses fechados) · faixa sombreada = futuro agendado · barra translúcida = mês parcial',
+  futureLabel: 'futuro',
+  partialLabel: 'parcial',
   categoryDescription: 'Descrição (opcional)',
   allowDirectEntry: 'Permitir lançamento direto',
   directEntryBadge: 'Lançável',
@@ -408,6 +413,11 @@ export const en: Record<keyof typeof pt, string> = {
   subcategoryOptional: 'Subcategory (optional)',
   noSubcategory: 'None',
   fallbackSelf: 'None — keeps the category itself',
+  categoryTrendTitle: 'Category Trends',
+  trendCaption:
+    'Dashed line = median (closed months) · shaded band = scheduled future · translucent bar = partial month',
+  futureLabel: 'future',
+  partialLabel: 'partial',
   categoryDescription: 'Description (optional)',
   allowDirectEntry: 'Allow direct entry',
   directEntryBadge: 'Direct entry',

@@ -15,6 +15,7 @@ import { MonthlyLineChart } from '@/components/dashboard/monthly-line-chart';
 import { SavingsTrendChart } from '@/components/dashboard/savings-trend-chart';
 import { CategoryDonutChart } from '@/components/dashboard/category-donut-chart';
 import { CategoryBarChart } from '@/components/dashboard/category-bar-chart';
+import { CategoryTrendGrid } from '@/components/dashboard/category-trend-grid';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -63,11 +64,6 @@ export default function DashboardPage() {
     [data, range.months, getMonthLabel]
   );
 
-  const segmentedExpensePerMonth = useMemo(
-    () => computeCategoryPerMonth(segmentedData, range.months, getMonthLabel, FinancialReleaseType.Expense),
-    [segmentedData, range.months, getMonthLabel]
-  );
-
   if (isLoading || isLoadingSegmented) {
     return (
       <div className="max-w-7xl mx-auto py-6 px-4 md:px-6">
@@ -109,13 +105,12 @@ export default function DashboardPage() {
           categories={expenseCategoryPerMonth.categories}
           title={`${t('expenses')} — ${t('dashboardCategoryBreakdown')}`}
         />
-        {segmentedExpensePerMonth.categories.length > 0 && (
+        {segmentedData.length > 0 && (
           <div className="lg:col-span-2">
-            <CategoryBarChart
-              chartData={segmentedExpensePerMonth.chartData}
-              categories={segmentedExpensePerMonth.categories}
-              title={`${t('expenses')} — ${t('dashboardCategoryBreakdownDetailed')}`}
-              height={600}
+            <CategoryTrendGrid
+              data={segmentedData}
+              months={range.months}
+              title={`${t('expenses')} — ${t('categoryTrendTitle')}`}
             />
           </div>
         )}

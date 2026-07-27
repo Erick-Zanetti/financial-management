@@ -11,13 +11,7 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSettings } from '@/providers/settings-provider';
-
-const COLORS = [
-  '#10b981', '#06b6d4', '#8b5cf6', '#f59e0b',
-  '#ec4899', '#14b8a6', '#6366f1', '#f97316',
-  '#22d3ee', '#a855f7', '#84cc16', '#e879f9',
-  '#2dd4bf', '#fb923c', '#818cf8', '#34d399',
-];
+import { buildCategoryColorMap } from '@/lib/category-colors';
 
 interface CategoryBarChartProps {
   chartData: Record<string, unknown>[];
@@ -28,6 +22,7 @@ interface CategoryBarChartProps {
 
 export function CategoryBarChart({ chartData, categories, title, height = 300 }: CategoryBarChartProps) {
   const { formatCurrency } = useSettings();
+  const colorMap = buildCategoryColorMap(categories);
 
   if (categories.length === 0) return null;
 
@@ -76,12 +71,12 @@ export function CategoryBarChart({ chartData, categories, title, height = 300 }:
                 }}
               />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              {categories.map((cat, i) => (
+              {categories.map((cat) => (
                 <Bar
                   key={cat}
                   dataKey={cat}
                   name={cat}
-                  fill={COLORS[i % COLORS.length]}
+                  fill={colorMap[cat]}
                   stackId="stack"
                 />
               ))}
