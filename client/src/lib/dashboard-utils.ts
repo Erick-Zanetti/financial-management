@@ -51,6 +51,29 @@ export function getDateRange(): DateRange {
   };
 }
 
+/** Últimos 12 meses terminando no mês corrente (sem futuro). */
+export function getTrailingRange(): DateRange {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
+  const months: { year: number; month: number }[] = [];
+  for (let i = -11; i <= 0; i++) {
+    let m = currentMonth + i;
+    let y = currentYear;
+    while (m < 1) { m += 12; y--; }
+    months.push({ year: y, month: m });
+  }
+
+  return {
+    fromMonth: months[0].month,
+    fromYear: months[0].year,
+    toMonth: months[months.length - 1].month,
+    toYear: months[months.length - 1].year,
+    months,
+  };
+}
+
 export function computeMonthlyTotals(
   data: DashboardSummaryItem[],
   months: { year: number; month: number }[],

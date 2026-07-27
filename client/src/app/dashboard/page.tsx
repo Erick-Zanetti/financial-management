@@ -6,6 +6,7 @@ import { useSettings } from '@/providers/settings-provider';
 import { FinancialReleaseType } from '@/types/financial-release';
 import {
   getDateRange,
+  getTrailingRange,
   computeMonthlyTotals,
   computeSavingsTrend,
   computeCategoryDistribution,
@@ -28,10 +29,12 @@ export default function DashboardPage() {
     range.toMonth, range.toYear
   );
 
+  // Grid de tendência: 12 meses até o mês corrente, sem futuro.
+  const trailingRange = useMemo(() => getTrailingRange(), []);
   const { data: segmentedData = [], isLoading: isLoadingSegmented } =
     useDashboardSummarySegmented(
-      range.fromMonth, range.fromYear,
-      range.toMonth, range.toYear
+      trailingRange.fromMonth, trailingRange.fromYear,
+      trailingRange.toMonth, trailingRange.toYear
     );
 
   const monthlyTotals = useMemo(
@@ -109,7 +112,7 @@ export default function DashboardPage() {
           <div className="lg:col-span-2">
             <CategoryTrendGrid
               data={segmentedData}
-              months={range.months}
+              months={trailingRange.months}
               title={`${t('expenses')} — ${t('categoryTrendTitle')}`}
             />
           </div>

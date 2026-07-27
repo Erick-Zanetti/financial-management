@@ -5,7 +5,6 @@ import {
   Bar,
   BarChart,
   Cell,
-  ReferenceArea,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -30,7 +29,6 @@ interface CategoryTrendGridProps {
 interface TrendPoint {
   label: string;
   value: number;
-  isFuture: boolean;
 }
 
 interface CategorySeries {
@@ -40,7 +38,7 @@ interface CategorySeries {
   total: number;
   median: number;
   max: number;
-  lastClosedValue: number;
+  currentValue: number;
 }
 
 function median(values: number[]): number {
@@ -56,10 +54,6 @@ export function CategoryTrendGrid({ data, months, title }: CategoryTrendGridProp
   const { formatCurrency, getMonthLabel, t } = useSettings();
 
   const series = useMemo<CategorySeries[]>(() => {
-    const now = new Date();
-    const currentYM = now.getFullYear() * 100 + (now.getMonth() + 1);
-    const ymOf = (m: Month) => m.year * 100 + m.month;
-
     const expenses = data.filter(
       (d) => d.type === FinancialReleaseType.Expense,
     );
@@ -74,30 +68,19 @@ export function CategoryTrendGrid({ data, months, title }: CategoryTrendGridProp
 
     return names
       .map((name) => {
-        const points: TrendPoint[] = months.map((m) => {
-          const ym = ymOf(m);
-          return {
-            label: `${getMonthLabel(m.month)}/${String(m.year).slice(2)}`,
-            value: byKey.get(`${name}|${m.year}|${m.month}`) ?? 0,
-            // Mês corrente já está completo (dados lançados adiantado);
-            // dali em diante tudo ainda está em preenchimento.
-            isFuture: ym > currentYM,
-          };
-        });
-        const realized = points
-          .filter((p) => !p.isFuture)
-          .map((p) => p.value);
-        const lastClosed = [...points]
-          .reverse()
-          .find((p) => !p.isFuture);
+        const points: TrendPoint[] = months.map((m) => ({
+          label: `${getMonthLabel(m.month)}/${String(m.year).slice(2)}`,
+          value: byKey.get(`${name}|${m.year}|${m.month}`) ?? 0,
+        }));
+        const values = points.map((p) => p.value);
         return {
           name,
           color: colorMap[name],
           points,
-          total: points.reduce((s, p) => s + p.value, 0),
-          median: median(realized),
-          max: Math.max(...points.map((p) => p.value)),
-          lastClosedValue: lastClosed?.value ?? 0,
+          total: values.reduce((s, v) => s + v, 0),
+          median: median(values),
+          max: Math.max(...values),
+          currentValue: values[values.length - 1] ?? 0,
         };
       })
       .filter((s) => s.total > 0)
@@ -105,9 +88,6 @@ export function CategoryTrendGrid({ data, months, title }: CategoryTrendGridProp
   }, [data, months, getMonthLabel]);
 
   if (series.length === 0) return null;
-
-  const futureStart = series[0].points.find((p) => p.isFuture)?.label;
-  const lastLabel = series[0].points[series[0].points.length - 1]?.label;
 
   return (
     <Card>
@@ -131,7 +111,7 @@ export function CategoryTrendGrid({ data, months, title }: CategoryTrendGridProp
                 </span>
               </div>
               <p className="mb-1 text-xs text-muted-foreground">
-                {formatCurrency(s.lastClosedValue)}
+                {formatCurrency(s.currentValue)}
               </p>
               <div className="h-20">
                 <ResponsiveContainer width="100%" height="100%">
@@ -157,25 +137,10 @@ export function CategoryTrendGrid({ data, months, title }: CategoryTrendGridProp
                           >
                             <span className="font-medium">{p.label}</span>{' '}
                             {formatCurrency(p.value)}
-                            {p.isFuture ? ` · ${t('futureLabel')}` : ''}
                           </div>
                         );
                       }}
                     />
-                    {futureStart && lastLabel && (
-                      <ReferenceArea
-                        x1={futureStart}
-                        x2={lastLabel}
-                        fill="hsl(var(--muted-foreground) / 0.08)"
-                        strokeOpacity={0}
-                        label={{
-                          value: t('futureLabel'),
-                          position: 'insideTopRight',
-                          fontSize: 9,
-                          fill: 'hsl(var(--muted-foreground))',
-                        }}
-                      />
-                    )}
                     {s.median > 0 && (
                       <ReferenceLine
                         y={s.median}
@@ -186,11 +151,7 @@ export function CategoryTrendGrid({ data, months, title }: CategoryTrendGridProp
                     )}
                     <Bar dataKey="value" radius={[2, 2, 0, 0]} minPointSize={2}>
                       {s.points.map((p) => (
-                        <Cell
-                          key={p.label}
-                          fill={s.color}
-                          fillOpacity={p.isFuture ? 0.4 : 1}
-                        />
+                        <Cell key={p.label} fill={s.color} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -203,4 +164,3 @@ export function CategoryTrendGrid({ data, months, title }: CategoryTrendGridProp
     </Card>
   );
 }
-
