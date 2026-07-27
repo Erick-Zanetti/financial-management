@@ -14,15 +14,15 @@ import { useSettings } from '@/providers/settings-provider';
 import { useAgentChat } from '@/hooks/use-agent-chat';
 import { publishScreenContext } from '@/lib/agent-screen-context';
 import { AgentMessageList } from './agent-message-list';
+import { AgentConfirmationCard } from './agent-confirmation-card';
 
 export function AgentPanel() {
   const { t } = useSettings();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
-  const { display, sending, sendMessage, clear } = useAgentChat(
-    t('agentErrorGeneric'),
-  );
+  const { display, sending, sendMessage, respondToConfirmation, clear } =
+    useAgentChat(t('agentErrorGeneric'));
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,7 +72,20 @@ export function AgentPanel() {
           </SheetHeader>
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-3">
-            <AgentMessageList entries={display} />
+            <AgentMessageList
+              entries={display}
+              renderConfirmation={(entry) =>
+                entry.confirmation ? (
+                  <AgentConfirmationCard
+                    confirmation={entry.confirmation}
+                    onRespond={(toolCallId, approved) =>
+                      void respondToConfirmation(toolCallId, approved)
+                    }
+                    disabled={sending}
+                  />
+                ) : null
+              }
+            />
             {sending && (
               <span className="mb-2 ml-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Loader2 className="h-3 w-3 animate-spin" />
