@@ -6,7 +6,7 @@ export const updateSystemConfigSchema = z.object({
   aiCustomPrompt: z.string().max(5000).optional().default(''),
   aiModel: z.string().max(100).optional().default(''),
   aiOutputLanguage: z.string().max(10).optional().default('pt'),
-  agentModel: z.string().max(200).optional().default(''),
+  agentModel: z.string().max(200).optional(),
 });
 
 export type UpdateSystemConfigDto = z.infer<typeof updateSystemConfigSchema>;

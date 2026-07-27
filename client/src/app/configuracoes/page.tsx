@@ -32,6 +32,7 @@ export default function ConfiguracoesPage() {
   const [aiCustomPrompt, setAiCustomPrompt] = useState('');
   const [aiModel, setAiModel] = useState('');
   const [aiOutputLanguage, setAiOutputLanguage] = useState('pt');
+  const [agentModel, setAgentModel] = useState('');
 
   useEffect(() => {
     if (systemConfig) {
@@ -41,6 +42,7 @@ export default function ConfiguracoesPage() {
       setAiCustomPrompt(systemConfig.aiCustomPrompt);
       setAiModel(systemConfig.aiModel);
       setAiOutputLanguage(systemConfig.aiOutputLanguage);
+      setAgentModel(systemConfig.agentModel ?? '');
     }
   }, [systemConfig]);
 
@@ -62,6 +64,7 @@ export default function ConfiguracoesPage() {
         aiCustomPrompt,
         aiModel,
         aiOutputLanguage,
+        agentModel,
       });
       toast.success(t('aiConfigSaved'));
     } catch {
@@ -144,6 +147,17 @@ export default function ConfiguracoesPage() {
                   value={aiModel}
                   onChange={(e) => setAiModel(e.target.value)}
                 />
+
+                <div>
+                  <FloatingInput
+                    label={t('agentModelLabel')}
+                    value={agentModel}
+                    onChange={(e) => setAgentModel(e.target.value)}
+                  />
+                  <p className="mt-1 px-1 text-xs text-muted-foreground">
+                    {t('agentModelHint')}
+                  </p>
+                </div>
 
                 <FloatingSelect value={aiOutputLanguage} onValueChange={setAiOutputLanguage}>
                   <FloatingSelectTrigger label={t('aiOutputLanguage')}>

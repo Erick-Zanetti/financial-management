@@ -5,6 +5,7 @@ export interface SystemConfig {
   aiCustomPrompt: string;
   aiModel: string;
   aiOutputLanguage: string;
+  agentModel?: string;
 }
 
 export type UpdateSystemConfig = Partial<Omit<SystemConfig, 'id'>>;

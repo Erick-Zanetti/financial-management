@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useMonth } from '@/providers/month-provider';
+import { publishScreenContext } from '@/lib/agent-screen-context';
 import { useExpenses, useReceipts } from '@/hooks/use-releases';
 import { useSettings } from '@/providers/settings-provider';
 import { SummaryCard } from '@/components/dashboard/summary-card';
@@ -13,6 +15,10 @@ import { TimelineView } from '@/components/timeline/timeline-view';
 export default function LancamentosPage() {
   const { currentYear: year, currentMonth: month, activeTab, currentBalance } = useMonth();
   const { t } = useSettings();
+
+  useEffect(() => {
+    publishScreenContext({ year, month });
+  }, [year, month]);
 
   const now = new Date();
   const isCurrentMonth = month === now.getMonth() + 1 && year === now.getFullYear();
