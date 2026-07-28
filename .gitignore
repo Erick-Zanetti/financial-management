@@ -6,3 +6,5 @@ backups/*
 !backups/.gitkeep 
 .vs
 package-lock.json
+
+server-node/dist/
