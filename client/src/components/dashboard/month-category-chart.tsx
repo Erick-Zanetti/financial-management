@@ -85,6 +85,11 @@ export function MonthCategoryChart({ expenses }: MonthCategoryChartProps) {
     return groupExpenses(expenses, categoriesById, detailed);
   }, [expenses, categories, detailed]);
 
+  const total = useMemo(
+    () => rows.reduce((sum, row) => sum + row.value, 0),
+    [rows],
+  );
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -128,6 +133,7 @@ export function MonthCategoryChart({ expenses }: MonthCategoryChartProps) {
                   content={({ active, payload }) => {
                     if (!active || !payload?.length) return null;
                     const row = payload[0].payload as CategoryRow;
+                    const pct = total > 0 ? ((row.value / total) * 100).toFixed(1) : '0';
                     return (
                       <div
                         className="rounded-lg border px-3 py-2 text-sm"
@@ -139,7 +145,7 @@ export function MonthCategoryChart({ expenses }: MonthCategoryChartProps) {
                       >
                         <p className="font-medium">{row.name}</p>
                         <span style={{ color: EXPENSE_COLOR }}>
-                          {formatCurrency(row.value)}
+                          {formatCurrency(row.value)} ({pct}%)
                         </span>
                       </div>
                     );
