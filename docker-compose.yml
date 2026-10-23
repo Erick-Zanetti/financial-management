@@ -8,6 +8,8 @@ services:
   api-financial-management:
     build: ./server-node
     container_name: financial-management_api
+    ports:
+      - "100.115.143.64:${API_PORT:-3000}:3000"
     environment:
       - NODE_ENV=production
       - MONGODB_URI=mongodb://mongodb-fm:27017/financial-management
