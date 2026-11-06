@@ -5,10 +5,12 @@ import routes from './routes';
 import { swaggerSpec } from './config/swagger.config';
 import { errorHandler } from './middlewares/error-handler.middleware';
 import { requestLogger } from './middlewares/request-logger.middleware';
+import { metricsMiddleware } from './middlewares/metrics.middleware';
 
 export const createApp = (): Application => {
   const app = express();
 
+  app.use(metricsMiddleware);
   app.use(cors({ origin: true, credentials: true }));
   app.use(express.json());
   app.use(requestLogger);
