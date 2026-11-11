@@ -52,3 +52,26 @@ export type CreateFinancialRelease = Omit<
   'id' | 'category' | 'subcategories'
 > & { category: string; subcategories?: SubcategoryInput[] };
 export type UpdateFinancialRelease = Partial<CreateFinancialRelease>;
+
+export interface SnapshotRelease {
+  releaseId: string;
+  name: string;
+  value: number;
+  type: FinancialReleaseType;
+  day: number;
+  categoryId: string | null;
+  categoryName: string;
+  person?: string;
+  settled: boolean;
+  observations?: string;
+  subcategories: { categoryId: string | null; categoryName: string; value: number }[];
+}
+
+export interface MonthSnapshot {
+  id: string;
+  year: number;
+  month: number;
+  capturedAt: string;
+  source: 'scheduled' | 'backup-import';
+  releases: SnapshotRelease[];
+}
