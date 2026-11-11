@@ -38,7 +38,8 @@ interface ReleaseListProps {
   variant: 'receipt' | 'expense';
   allMonthSettled?: boolean;
   /** Comparison tab mode: no settled status, diff marks per row, optionally read-only. */
-  comparison?: { marks: Map<string, RowMark>; readOnly: boolean };
+  /** `rows` is the aligned row order; `null` renders an empty line where the other side has a release. */
+  comparison?: { marks: Map<string, RowMark>; readOnly: boolean; rows: (FinancialRelease | null)[] };
 }
 
 const MARK_ROW_CLASS: Record<RowMark['kind'], string> = {
@@ -81,6 +82,7 @@ export function ReleaseList({
     : releases.filter((r) => !r.settled);
 
   const sortedReleases = [...releases].sort((a, b) => a.day - b.day);
+  const displayRows: (FinancialRelease | null)[] = comparison?.rows ?? sortedReleases;
 
   const settledLabel = variant === 'receipt' ? t('received') : t('paid');
 
@@ -174,7 +176,7 @@ export function ReleaseList({
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>
-          ) : releases.length === 0 ? (
+          ) : displayRows.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               {t('noData')}
             </div>
@@ -192,7 +194,14 @@ export function ReleaseList({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedReleases.map((release) => {
+                  {displayRows.map((release, index) => {
+                    if (!release) {
+                      return (
+                        <TableRow key={`empty-${index}`} aria-hidden>
+                          <TableCell colSpan={4} className="select-none text-transparent">—</TableCell>
+                        </TableRow>
+                      );
+                    }
                     const isSettled = showStatus && !!release.settled;
                     const mark = comparison?.marks.get(String(release.id));
                     return (

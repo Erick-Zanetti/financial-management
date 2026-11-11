@@ -77,6 +77,32 @@ export function diffReleases(snapshot: FinancialRelease[], current: FinancialRel
   return { currentMarks, snapshotMarks, currentTotal, snapshotTotal, delta: round2(currentTotal - snapshotTotal) };
 }
 
+export interface AlignedRows {
+  snapshot: (FinancialRelease | null)[];
+  current: (FinancialRelease | null)[];
+}
+
+/**
+ * Puts each release on the same line index on both sides, with `null` where it doesn't exist
+ * (new on the current side, removed on the snapshot side). Ordered by the current day, ties stable.
+ */
+export function alignRows(snapshot: FinancialRelease[], current: FinancialRelease[]): AlignedRows {
+  const snapshotById = new Map(snapshot.map((r) => [String(r.id), r]));
+  const currentIds = new Set(current.map((r) => String(r.id)));
+
+  const pairs = [
+    ...current.map((r) => ({ day: r.day, current: r, snapshot: snapshotById.get(String(r.id)) ?? null })),
+    ...snapshot
+      .filter((r) => !currentIds.has(String(r.id)))
+      .map((r) => ({ day: r.day, current: null, snapshot: r })),
+  ].sort((a, b) => a.day - b.day);
+
+  return {
+    snapshot: pairs.map((p) => p.snapshot),
+    current: pairs.map((p) => p.current),
+  };
+}
+
 /** Day-1 capture instant for a month: 00:00 BRT (UTC-3) on day 1 of the previous month. */
 function captureInstant(year: number, month: number): { at: Date; label: string } {
   const captureMonth = month === 1 ? 12 : month - 1;

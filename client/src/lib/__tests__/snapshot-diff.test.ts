@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { FinancialRelease, FinancialReleaseType, MonthSnapshot, SnapshotRelease } from '@/types/financial-release';
-import { diffReleases, formatCapturedAt, noSnapshotMessage, snapshotToReleases } from '@/lib/snapshot-diff';
+import { alignRows, diffReleases, formatCapturedAt, noSnapshotMessage, snapshotToReleases } from '@/lib/snapshot-diff';
 
 const E = FinancialReleaseType.Expense;
 const R = FinancialReleaseType.Receipt;
@@ -111,4 +111,25 @@ describe('correções da revisão final', () => {
     expect(noSnapshotMessage(2027, 1, new Date('2026-12-01T02:59:00Z'))).toContain('é tirado em 01/12/2026');
     expect(noSnapshotMessage(2027, 1, new Date('2026-12-01T03:00:00Z'))).toContain('não aconteceu');
   });
+});
+
+describe('alignRows', () => {
+  const ids = (rows: (FinancialRelease | null)[]) => rows.map((r) => r?.id ?? null);
+
+  it('Dezembro real: Faculdade Julia (10) e Cresol (11) ficam em linhas próprias', () => {
+    const { snapshot, current } = alignRows(snapshotExpenses, currentExpenses);
+    expect(ids(snapshot)).toEqual(['c6', 'carro23', 'empresa', 'amper', 'marcos', 'facul', null, 'ml', 'apto', 'carro6']);
+    expect(ids(current)).toEqual(['c6', 'carro23', 'empresa', 'amper', 'marcos', null, 'cresol', 'ml', 'apto', 'carro6']);
+  });
+
+  it('mesmo lançamento fica sempre na mesma linha, mesmo com o dia mudado', () => {
+    const { snapshot, current } = alignRows(
+      [rel('a', 'A', 1, 5), rel('b', 'B', 1, 9)],
+      [rel('a', 'A', 1, 12), rel('b', 'B', 1, 9)],
+    );
+    expect(ids(snapshot)).toEqual(['b', 'a']);
+    expect(ids(current)).toEqual(['b', 'a']);
+  });
+
+  it('listas vazias', () => expect(alignRows([], [])).toEqual({ snapshot: [], current: [] }));
 });

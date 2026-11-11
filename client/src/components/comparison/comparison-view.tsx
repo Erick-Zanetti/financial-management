@@ -8,6 +8,7 @@ import { useExpenses, useMonthSnapshot, useReceipts } from '@/hooks/use-releases
 import { useSettings } from '@/providers/settings-provider';
 import { FinancialReleaseType } from '@/types/financial-release';
 import {
+  alignRows,
   diffReleases,
   formatCapturedAt,
   noSnapshotMessage,
@@ -45,6 +46,8 @@ export function ComparisonView({ month, year }: ComparisonViewProps) {
     const currentBalance = round2(receiptDiff.currentTotal - expenseDiff.currentTotal);
     const snapshotBalance = round2(receiptDiff.snapshotTotal - expenseDiff.snapshotTotal);
     return {
+      receiptRows: alignRows(snapshotReceipts, receipts),
+      expenseRows: alignRows(snapshotExpenses, expenses),
       snapshotReceipts,
       snapshotExpenses,
       receiptDiff,
@@ -101,23 +104,23 @@ export function ComparisonView({ month, year }: ComparisonViewProps) {
       <div className="order-3 lg:order-none min-w-0">
         <ReleaseList title={t('receipts')} type={FinancialReleaseType.Receipt} releases={receipts}
           month={month} year={year} isLoading={isLoading} variant="receipt"
-          comparison={{ marks: view?.receiptDiff.currentMarks ?? new Map(), readOnly: true }} />
+          comparison={{ marks: view?.receiptDiff.currentMarks ?? new Map(), readOnly: true, rows: view?.receiptRows.current ?? [] }} />
       </div>
       <div className="order-7 lg:order-none min-w-0">
         <ReleaseList title={t('receipts')} type={FinancialReleaseType.Receipt} releases={view?.snapshotReceipts ?? []}
           month={month} year={year} isLoading={isLoading} variant="receipt"
-          comparison={{ marks: view?.receiptDiff.snapshotMarks ?? new Map(), readOnly: true }} />
+          comparison={{ marks: view?.receiptDiff.snapshotMarks ?? new Map(), readOnly: true, rows: view?.receiptRows.snapshot ?? [] }} />
       </div>
 
       <div className="order-4 lg:order-none min-w-0">
         <ReleaseList title={t('expenses')} type={FinancialReleaseType.Expense} releases={expenses}
           month={month} year={year} isLoading={isLoading} variant="expense"
-          comparison={{ marks: view?.expenseDiff.currentMarks ?? new Map(), readOnly: true }} />
+          comparison={{ marks: view?.expenseDiff.currentMarks ?? new Map(), readOnly: true, rows: view?.expenseRows.current ?? [] }} />
       </div>
       <div className="order-8 lg:order-none min-w-0">
         <ReleaseList title={t('expenses')} type={FinancialReleaseType.Expense} releases={view?.snapshotExpenses ?? []}
           month={month} year={year} isLoading={isLoading} variant="expense"
-          comparison={{ marks: view?.expenseDiff.snapshotMarks ?? new Map(), readOnly: true }} />
+          comparison={{ marks: view?.expenseDiff.snapshotMarks ?? new Map(), readOnly: true, rows: view?.expenseRows.snapshot ?? [] }} />
       </div>
     </div>
   );
