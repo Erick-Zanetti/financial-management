@@ -71,13 +71,13 @@ export function ComparisonView({ month, year }: ComparisonViewProps) {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up">
       <div className="space-y-4 min-w-0">
         <ColumnTitle left={t('comparisonCurrent')} />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <SummaryCard title={t('totalIncome')} value={view?.receiptDiff.currentTotal ?? 0}
             snapshotDelta={view?.receiptDiff.delta} isLoading={isLoading} variant="income" />
           <SummaryCard title={t('totalExpenses')} value={view?.expenseDiff.currentTotal ?? 0}
             snapshotDelta={view?.expenseDiff.delta} isLoading={isLoading} variant="expense" />
           <SummaryCard title={t('totalBalance')} value={view?.currentBalance ?? 0}
-            snapshotDelta={view?.balanceDelta} isLoading={isLoading} variant="balance" />
+            snapshotDelta={view?.balanceDelta} isLoading={isLoading} variant="balance" className="sm:col-span-2" />
         </div>
         <ReleaseList title={t('receipts')} type={FinancialReleaseType.Receipt} releases={receipts}
           month={month} year={year} isLoading={isLoading} variant="receipt"
@@ -92,13 +92,13 @@ export function ComparisonView({ month, year }: ComparisonViewProps) {
           left={snapshot ? `${t('comparisonSnapshot')} · ${formatCapturedAt(snapshot.capturedAt)}` : t('comparisonSnapshot')}
           right={t('readOnly')}
         />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <SummaryCard title={t('totalIncome')} value={view?.receiptDiff.snapshotTotal ?? 0}
             isLoading={isLoading} variant="income" />
           <SummaryCard title={t('totalExpenses')} value={view?.expenseDiff.snapshotTotal ?? 0}
             isLoading={isLoading} variant="expense" />
           <SummaryCard title={t('totalBalance')} value={view?.snapshotBalance ?? 0}
-            isLoading={isLoading} variant="balance" />
+            isLoading={isLoading} variant="balance" className="sm:col-span-2" />
         </div>
         <ReleaseList title={t('receipts')} type={FinancialReleaseType.Receipt} releases={view?.snapshotReceipts ?? []}
           month={month} year={year} isLoading={isLoading} variant="receipt"
