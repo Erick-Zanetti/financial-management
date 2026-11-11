@@ -97,6 +97,38 @@ router.get(
 
 /**
  * @swagger
+ * /financial-release/snapshots/{year}/{month}:
+ *   get:
+ *     summary: Month snapshot frozen on day 1 of the previous month
+ *     tags: [Financial Release]
+ *     parameters:
+ *       - in: path
+ *         name: year
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: path
+ *         name: month
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 12
+ *     responses:
+ *       200:
+ *         description: Snapshot found
+ *       400:
+ *         description: Invalid year or month
+ *       404:
+ *         description: No snapshot for this month
+ */
+router.get(
+  '/snapshots/:year/:month',
+  asyncHandler(financialReleaseController.findSnapshot.bind(financialReleaseController)),
+);
+
+/**
+ * @swagger
  * /financial-release/{id}:
  *   get:
  *     summary: Find financial release by ID

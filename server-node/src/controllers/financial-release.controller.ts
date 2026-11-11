@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { financialReleaseService } from '../services/financial-release.service';
+import { findSnapshot } from '../services/month-snapshot/month-snapshot.service';
 import {
   createFinancialReleaseSchema,
   updateFinancialReleaseSchema,
@@ -22,6 +23,23 @@ export class FinancialReleaseController {
     }
 
     res.json(release);
+  }
+
+  async findSnapshot(req: Request, res: Response): Promise<void> {
+    const year = Number(req.params.year);
+    const month = Number(req.params.month);
+    if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+      res.status(400).json({ message: 'Invalid year or month' });
+      return;
+    }
+
+    const snapshot = await findSnapshot(year, month);
+    if (!snapshot) {
+      res.status(404).json({ message: 'Snapshot not found' });
+      return;
+    }
+
+    res.json(snapshot);
   }
 
   async findAvailableMonths(_req: Request, res: Response): Promise<void> {

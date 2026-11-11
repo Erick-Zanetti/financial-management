@@ -3,10 +3,12 @@ import { connectDatabase } from './config/database.config';
 import { runMigrations } from './migrations/run-migrations';
 import { config } from './config';
 import { logger } from './config/logger.config';
+import { startSnapshotScheduler } from './services/month-snapshot/snapshot-scheduler';
 
 const startServer = async (): Promise<void> => {
   await connectDatabase();
   await runMigrations();
+  startSnapshotScheduler();
 
   const app = createApp();
 
