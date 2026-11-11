@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { FinancialRelease, FinancialReleaseType, MonthSnapshot, SnapshotRelease } from '@/types/financial-release';
-import { diffReleases, noSnapshotMessage, snapshotToReleases } from '@/lib/snapshot-diff';
+import { diffReleases, formatCapturedAt, noSnapshotMessage, snapshotToReleases } from '@/lib/snapshot-diff';
 
 const E = FinancialReleaseType.Expense;
 const R = FinancialReleaseType.Receipt;
@@ -83,4 +83,9 @@ describe('noSnapshotMessage', () => {
   it('Fev/2027 é tirado em 01/01/2027', () =>
     expect(noSnapshotMessage(2027, 2)).toBe('Ainda não há snapshot para Fev/2027 — ele é tirado em 01/01/2027.'));
   it('Jan/2027 é tirado em 01/12/2026', () => expect(noSnapshotMessage(2027, 1)).toContain('01/12/2026'));
+});
+
+describe('formatCapturedAt', () => {
+  it('mostra dd/MM HH:mm em BRT', () => expect(formatCapturedAt('2026-11-01T05:09:47Z')).toBe('01/11 02:09'));
+  it('virada de dia em BRT', () => expect(formatCapturedAt('2026-12-01T02:30:00Z')).toBe('30/11 23:30'));
 });

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
-export type ViewTab = 'releases' | 'timeline';
+export type ViewTab = 'releases' | 'timeline' | 'comparison';
 
 interface MonthContextValue {
   currentYear: number;

@@ -85,3 +85,17 @@ export function noSnapshotMessage(year: number, month: number): string {
   const captureYear = month === 1 ? year - 1 : year;
   return `Ainda não há snapshot para ${getMonthLabel(month)}/${year} — ele é tirado em 01/${pad2(captureMonth)}/${captureYear}.`;
 }
+
+const capturedAtFormat = new Intl.DateTimeFormat('pt-BR', {
+  timeZone: 'America/Sao_Paulo',
+  day: '2-digit',
+  month: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+/** `dd/MM HH:mm` in BRT, regardless of the viewer's time zone. */
+export function formatCapturedAt(iso: string): string {
+  return capturedAtFormat.format(new Date(iso)).replace(',', '');
+}

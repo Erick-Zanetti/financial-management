@@ -11,6 +11,7 @@ import { CumulativeLineChart } from '@/components/charts/bar-chart';
 import { MonthCategoryChart } from '@/components/dashboard/month-category-chart';
 import { FinancialReleaseType } from '@/types/financial-release';
 import { TimelineView } from '@/components/timeline/timeline-view';
+import { ComparisonView } from '@/components/comparison/comparison-view';
 
 export default function LancamentosPage() {
   const { currentYear: year, currentMonth: month, activeTab, currentBalance } = useMonth();
@@ -134,6 +135,8 @@ export default function LancamentosPage() {
             <MonthCategoryChart expenses={expenses} />
           </div>
         </div>
+      ) : activeTab === 'comparison' ? (
+        <ComparisonView month={month} year={year} />
       ) : (
         <TimelineView month={month} year={year} currentBalance={isCurrentMonth ? currentBalance : undefined} />
       )}

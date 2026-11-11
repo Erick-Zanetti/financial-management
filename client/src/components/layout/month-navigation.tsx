@@ -60,11 +60,14 @@ export function MonthNavigation() {
         onValueChange={(v) => setActiveTab(v as ViewTab)}
       >
         <TabsList className="w-full rounded-none h-10">
-          <TabsTrigger value="releases" className="w-1/2 rounded-sm data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary">
+          <TabsTrigger value="releases" className="w-1/3 rounded-sm data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary">
             {t('releases')}
           </TabsTrigger>
-          <TabsTrigger value="timeline" className="w-1/2 rounded-sm data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary">
+          <TabsTrigger value="timeline" className="w-1/3 rounded-sm data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary">
             {t('timeline')}
+          </TabsTrigger>
+          <TabsTrigger value="comparison" className="w-1/3 rounded-sm data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary">
+            {t('comparison')}
           </TabsTrigger>
         </TabsList>
       </Tabs>
