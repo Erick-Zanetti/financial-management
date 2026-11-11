@@ -4,12 +4,16 @@ import {
   FinancialReleaseType,
   CreateFinancialRelease,
   UpdateFinancialRelease,
-  DashboardSummaryItem
+  DashboardSummaryItem,
+  MonthSnapshot
 } from '@/types/financial-release';
 
 export const releasesApi = {
   getAvailableMonths: () =>
     apiClient.get<{ year: number; month: number }[]>('/available-months'),
+
+  getSnapshot: (year: number, month: number) =>
+    apiClient.get<MonthSnapshot>(`/snapshots/${year}/${month}`),
 
   getAll: () =>
     apiClient.get<FinancialRelease[]>(''),

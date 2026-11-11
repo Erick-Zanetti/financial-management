@@ -24,6 +24,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { PieChart } from '@/components/charts/pie-chart';
+import { RowMark } from '@/lib/snapshot-diff';
 import { ReleaseDialog } from './release-dialog';
 import { DeleteDialog } from './delete-dialog';
 
@@ -36,7 +37,21 @@ interface ReleaseListProps {
   isLoading?: boolean;
   variant: 'receipt' | 'expense';
   allMonthSettled?: boolean;
+  /** Comparison tab mode: no settled status, diff marks per row, optionally read-only. */
+  comparison?: { marks: Map<string, RowMark>; readOnly: boolean };
 }
+
+const MARK_ROW_CLASS: Record<RowMark['kind'], string> = {
+  new: 'bg-blue-500/10',
+  changed: 'bg-orange-500/10',
+  removed: 'bg-muted/40 text-muted-foreground line-through',
+};
+
+const MARK_TAG_CLASS: Record<RowMark['kind'], string> = {
+  new: 'text-blue-600 border-blue-500 dark:text-blue-400',
+  changed: 'text-orange-600 border-orange-500 dark:text-orange-400',
+  removed: 'text-muted-foreground border-muted-foreground',
+};
 
 export function ReleaseList({
   title,
@@ -47,6 +62,7 @@ export function ReleaseList({
   isLoading,
   variant,
   allMonthSettled = false,
+  comparison,
 }: ReleaseListProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -57,7 +73,10 @@ export function ReleaseList({
   const createMutation = useCreateRelease();
   const toggleSettledMutation = useToggleSettled();
 
-  const pieData = allMonthSettled
+  const showStatus = !comparison;
+  const readOnly = comparison?.readOnly ?? false;
+
+  const pieData = allMonthSettled || comparison
     ? releases
     : releases.filter((r) => !r.settled);
 
@@ -125,6 +144,13 @@ export function ReleaseList({
     setDeletingRelease(null);
   };
 
+  const markTagLabel = (mark: RowMark): string => {
+    if (mark.kind === 'new') return t('tagNew');
+    if (mark.kind === 'removed') return t('tagRemoved');
+    if (mark.valueDelta === 0) return t('tagChanged');
+    return `${mark.valueDelta > 0 ? '+' : '−'}${formatCurrency(Math.abs(mark.valueDelta))}`;
+  };
+
   const borderColor = variant === 'receipt'
     ? 'border-t-emerald-500'
     : 'border-t-red-500';
@@ -134,10 +160,12 @@ export function ReleaseList({
       <Card className={cn('border-t-2', borderColor)}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-lg font-medium">{title}</CardTitle>
-          <Button size="sm" onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">{t('add')}</span>
-          </Button>
+          {!readOnly && (
+            <Button size="sm" onClick={() => setDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">{t('add')}</span>
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -155,28 +183,31 @@ export function ReleaseList({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-10 text-center">{t('status')}</TableHead>
+                    {showStatus && <TableHead className="w-10 text-center">{t('status')}</TableHead>}
                     <TableHead className="w-12">{t('day')}</TableHead>
                     <TableHead>{t('description')}</TableHead>
                     <TableHead>{t('category')}</TableHead>
                     <TableHead className="text-right">{t('value')}</TableHead>
-                    <TableHead className="w-20"></TableHead>
+                    {!readOnly && <TableHead className="w-20"></TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {sortedReleases.map((release) => {
-                    const isSettled = !!release.settled;
+                    const isSettled = showStatus && !!release.settled;
+                    const mark = comparison?.marks.get(String(release.id));
                     return (
-                      <TableRow key={release.id} className={cn(isSettled && 'opacity-60')}>
-                        <TableCell className="text-center">
-                          <input
-                            type="checkbox"
-                            checked={isSettled}
-                            onChange={() => handleToggleSettled(release)}
-                            className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
-                            title={isSettled ? settledLabel : t('pending')}
-                          />
-                        </TableCell>
+                      <TableRow key={release.id} className={cn(isSettled && 'opacity-60', mark && MARK_ROW_CLASS[mark.kind])}>
+                        {showStatus && (
+                          <TableCell className="text-center">
+                            <input
+                              type="checkbox"
+                              checked={isSettled}
+                              onChange={() => handleToggleSettled(release)}
+                              className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+                              title={isSettled ? settledLabel : t('pending')}
+                            />
+                          </TableCell>
+                        )}
                         <TableCell className={cn('font-medium', isSettled && 'line-through')}>
                           {release.day}
                         </TableCell>
@@ -198,6 +229,16 @@ export function ReleaseList({
                                 </TooltipContent>
                               </Tooltip>
                             )}
+                            {mark && (
+                              <span
+                                className={cn(
+                                  'inline-block rounded border px-1.5 text-[10px] font-bold leading-4 tabular-nums no-underline',
+                                  MARK_TAG_CLASS[mark.kind]
+                                )}
+                              >
+                                {markTagLabel(mark)}
+                              </span>
+                            )}
                           </span>
                         </TableCell>
                         <TableCell className={cn('text-muted-foreground', isSettled && 'line-through')}>
@@ -206,35 +247,37 @@ export function ReleaseList({
                         <TableCell className={cn('text-right', isSettled && 'line-through')}>
                           {formatCurrency(release.value)}
                         </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => handleEdit(release)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => handleClone(release)}
-                              title={t('clone')}
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => handleDelete(release)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                        {!readOnly && (
+                          <TableCell>
+                            <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleEdit(release)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleClone(release)}
+                                title={t('clone')}
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleDelete(release)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })}

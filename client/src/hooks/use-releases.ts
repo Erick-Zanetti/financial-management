@@ -5,6 +5,7 @@ import { releasesApi } from '@/lib/api/releases';
 import {
   CreateFinancialRelease,
   UpdateFinancialRelease,
+  MonthSnapshot,
 } from '@/types/financial-release';
 
 export function useAvailableMonths() {
@@ -25,6 +26,24 @@ export function useReceipts(month: number, year: number) {
   return useQuery({
     queryKey: ['receipts', month, year],
     queryFn: () => releasesApi.getReceipts(month, year),
+  });
+}
+
+const isNotFound = (error: unknown): boolean =>
+  (error as { status?: number } | null)?.status === 404;
+
+/** Snapshot frozen on day 1 of the previous month; `null` when none exists (404). */
+export function useMonthSnapshot(month: number, year: number) {
+  return useQuery<MonthSnapshot | null>({
+    queryKey: ['month-snapshot', year, month],
+    queryFn: async () => {
+      try {
+        return await releasesApi.getSnapshot(year, month);
+      } catch (error) {
+        if (isNotFound(error)) return null;
+        throw error;
+      }
+    },
   });
 }
 

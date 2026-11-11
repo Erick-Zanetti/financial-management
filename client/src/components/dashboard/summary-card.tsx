@@ -11,6 +11,8 @@ interface SummaryCardProps {
   previousValue?: number;
   comparisonValue?: number;
   comparisonPreviousValue?: number;
+  /** When set, replaces the month-over-month chip with an absolute delta vs. the snapshot. */
+  snapshotDelta?: number;
   isLoading?: boolean;
   variant: 'balance' | 'income' | 'expense';
   className?: string;
@@ -22,6 +24,7 @@ export function SummaryCard({
   previousValue,
   comparisonValue,
   comparisonPreviousValue,
+  snapshotDelta,
   isLoading,
   variant,
   className,
@@ -62,6 +65,13 @@ export function SummaryCard({
     ? 'text-emerald-700 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-950'
     : 'text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-950';
 
+  const hasSnapshotDelta = snapshotDelta !== undefined && snapshotDelta !== 0;
+  const snapshotGotWorse =
+    variant === 'expense' ? (snapshotDelta ?? 0) > 0 : (snapshotDelta ?? 0) < 0;
+  const snapshotBadgeColor = snapshotGotWorse
+    ? 'text-orange-700 bg-orange-100 dark:text-orange-400 dark:bg-orange-950'
+    : 'text-emerald-700 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-950';
+
   return (
     <Card className={cn(gradientClass, className)}>
       <CardContent className="pt-5">
@@ -73,7 +83,19 @@ export function SummaryCard({
             <div className={cn('text-3xl font-bold tracking-tight tabular-nums', valueColor)}>
               {formatCurrency(Math.abs(value))}
             </div>
-            {showComparison && (
+            {snapshotDelta !== undefined ? (
+              hasSnapshotDelta && (
+                <div
+                  className={cn(
+                    'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold mt-2 tabular-nums',
+                    snapshotBadgeColor
+                  )}
+                >
+                  {snapshotDelta > 0 ? '+' : '−'}
+                  {formatCurrency(Math.abs(snapshotDelta))} {t('vsSnapshot')}
+                </div>
+              )
+            ) : showComparison && (
               <div
                 className={cn(
                   'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold mt-2',
