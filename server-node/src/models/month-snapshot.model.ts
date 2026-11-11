@@ -4,7 +4,7 @@ import { FinancialReleaseType } from '../types/financial-release.types';
 export type SnapshotSource = 'scheduled' | 'backup-import';
 
 export interface SnapshotSubcategory {
-  categoryId: Types.ObjectId;
+  categoryId: Types.ObjectId | null;
   categoryName: string;
   value: number;
 }
@@ -48,7 +48,7 @@ const snapshotReleaseSchema = new Schema<SnapshotRelease>(
     observations: { type: String },
     subcategories: [
       {
-        categoryId: { type: Schema.Types.ObjectId },
+        categoryId: { type: Schema.Types.ObjectId, default: null },
         categoryName: { type: String, default: '' },
         value: { type: Number, required: true },
         _id: false,
