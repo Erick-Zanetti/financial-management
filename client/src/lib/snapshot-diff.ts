@@ -45,7 +45,7 @@ function isChanged(before: FinancialRelease, after: FinancialRelease): boolean {
     before.name !== after.name ||
     before.value !== after.value ||
     before.day !== after.day ||
-    before.category?.id !== after.category?.id
+    (before.category?.id || '') !== (after.category?.id || '')
   );
 }
 
@@ -77,13 +77,26 @@ export function diffReleases(snapshot: FinancialRelease[], current: FinancialRel
   return { currentMarks, snapshotMarks, currentTotal, snapshotTotal, delta: round2(currentTotal - snapshotTotal) };
 }
 
-export function noSnapshotMessage(year: number, month: number): string {
+/** Day-1 capture instant for a month: 00:00 BRT (UTC-3) on day 1 of the previous month. */
+function captureInstant(year: number, month: number): { at: Date; label: string } {
+  const captureMonth = month === 1 ? 12 : month - 1;
+  const captureYear = month === 1 ? year - 1 : year;
+  return {
+    at: new Date(Date.UTC(captureYear, captureMonth - 1, 1, 3)),
+    label: `01/${pad2(captureMonth)}/${captureYear}`,
+  };
+}
+
+export function noSnapshotMessage(year: number, month: number, now: Date = new Date()): string {
   if (year * 12 + month < FIRST_SNAPSHOT_MONTH.year * 12 + FIRST_SNAPSHOT_MONTH.month) {
     return `Snapshots começam em ${getMonthLabel(FIRST_SNAPSHOT_MONTH.month)}/${FIRST_SNAPSHOT_MONTH.year}.`;
   }
-  const captureMonth = month === 1 ? 12 : month - 1;
-  const captureYear = month === 1 ? year - 1 : year;
-  return `Ainda não há snapshot para ${getMonthLabel(month)}/${year} — ele é tirado em 01/${pad2(captureMonth)}/${captureYear}.`;
+  const monthLabel = `${getMonthLabel(month)}/${year}`;
+  const capture = captureInstant(year, month);
+  if (now.getTime() >= capture.at.getTime()) {
+    return `Não há snapshot para ${monthLabel} — a captura de ${capture.label} não aconteceu.`;
+  }
+  return `Ainda não há snapshot para ${monthLabel} — ele é tirado em ${capture.label}.`;
 }
 
 const capturedAtFormat = new Intl.DateTimeFormat('pt-BR', {

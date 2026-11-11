@@ -81,11 +81,34 @@ describe('snapshotToReleases', () => {
 describe('noSnapshotMessage', () => {
   it('antes de Dez/2026', () => expect(noSnapshotMessage(2026, 11)).toBe('Snapshots começam em Dez/2026.'));
   it('Fev/2027 é tirado em 01/01/2027', () =>
-    expect(noSnapshotMessage(2027, 2)).toBe('Ainda não há snapshot para Fev/2027 — ele é tirado em 01/01/2027.'));
-  it('Jan/2027 é tirado em 01/12/2026', () => expect(noSnapshotMessage(2027, 1)).toContain('01/12/2026'));
+    expect(noSnapshotMessage(2027, 2, new Date('2026-12-15T12:00:00Z'))).toBe('Ainda não há snapshot para Fev/2027 — ele é tirado em 01/01/2027.'));
+  it('Jan/2027 é tirado em 01/12/2026', () => expect(noSnapshotMessage(2027, 1, new Date('2026-11-15T12:00:00Z'))).toContain('01/12/2026'));
 });
 
 describe('formatCapturedAt', () => {
   it('mostra dd/MM HH:mm em BRT', () => expect(formatCapturedAt('2026-11-01T05:09:47Z')).toBe('01/11 02:09'));
   it('virada de dia em BRT', () => expect(formatCapturedAt('2026-12-01T02:30:00Z')).toBe('30/11 23:30'));
+});
+
+describe('correções da revisão final', () => {
+  it('categoria apagada nos dois lados não marca ALTERADO', () => {
+    const before = rel('a', 'A', 10, 1, { category: { id: '', name: '' } });
+    const after = rel('a', 'A', 10, 1, { category: null as unknown as FinancialRelease['category'] });
+    expect(diffReleases([before], [after]).currentMarks.size).toBe(0);
+  });
+
+  it('dia 1 já passou sem captura: diz que não foi capturado', () =>
+    expect(noSnapshotMessage(2026, 12, new Date('2026-11-11T12:00:00Z'))).toBe(
+      'Não há snapshot para Dez/2026 — a captura de 01/11/2026 não aconteceu.',
+    ));
+
+  it('dia 1 ainda no futuro: promete a data', () =>
+    expect(noSnapshotMessage(2027, 2, new Date('2026-12-15T12:00:00Z'))).toBe(
+      'Ainda não há snapshot para Fev/2027 — ele é tirado em 01/01/2027.',
+    ));
+
+  it('fronteira em BRT: 01/12 00:00 BRT = 03:00Z', () => {
+    expect(noSnapshotMessage(2027, 1, new Date('2026-12-01T02:59:00Z'))).toContain('é tirado em 01/12/2026');
+    expect(noSnapshotMessage(2027, 1, new Date('2026-12-01T03:00:00Z'))).toContain('não aconteceu');
+  });
 });
