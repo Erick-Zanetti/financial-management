@@ -157,7 +157,7 @@ export function ReleaseList({
 
   return (
     <>
-      <Card className={cn('border-t-2', borderColor)}>
+      <Card className={cn('border-t-2', borderColor, comparison && 'h-full flex flex-col')}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-lg font-medium">{title}</CardTitle>
           {!readOnly && (
@@ -167,7 +167,7 @@ export function ReleaseList({
             </Button>
           )}
         </CardHeader>
-        <CardContent>
+        <CardContent className={cn(comparison && 'flex-1 flex flex-col')}>
           {isLoading ? (
             <div className="space-y-2">
               {[...Array(3)].map((_, i) => (
@@ -285,7 +285,13 @@ export function ReleaseList({
               </Table>
             </div>
           )}
-          <PieChart data={pieData} />
+          {comparison ? (
+            <div className="mt-auto pt-4 border-t">
+              <PieChart data={pieData} />
+            </div>
+          ) : (
+            <PieChart data={pieData} />
+          )}
         </CardContent>
       </Card>
 

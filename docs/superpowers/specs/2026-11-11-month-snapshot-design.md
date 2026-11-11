@@ -59,7 +59,7 @@ Todo dia 1 o app congela automaticamente os lançamentos do **mês seguinte**. P
 ### Estados da aba
 
 - Mês sem snapshot (qualquer mês antes de Dez/2026, ou um mês futuro que ainda não chegou no dia 1): a aba mostra um aviso, "Ainda não há snapshot para Fev/2027 — ele é tirado em 01/01/2027." Para meses antigos: "Snapshots começam em Dez/2026."
-- A coluna Atual continua permitindo editar e adicionar como na aba Lançamentos (reaproveita o `ReleaseList`). A comparação é recalculada quando os dados do React Query invalidam. *(decisão minha, a partir do pedido "replicando exatamente a aba de lançamentos")*
+- As duas colunas são só leitura (decisão do Erick depois do primeiro teste). Cada seção (cards, Receitas, Despesas) é uma linha de grid compartilhada pelas duas colunas, então os dois lados têm a mesma altura. O lado mais curto fica com espaço em branco, e um divisor separa a tabela do gráfico. A comparação é recalculada quando os dados do React Query invalidam.
 
 ## Modelo de dados
 
@@ -120,6 +120,6 @@ O diff é calculado **no client**, numa função pura (`diffSnapshot(snapshot, c
 3. "Alterado" considera nome, valor, dia e categoria. Observações e subcategorias não contam.
 4. O job não cria snapshot de mês anterior a Jan/2027 (Dezembro vem do backup).
 5. Catch-up tardio cria o snapshot com a data real de captura, que aparece na UI.
-6. A coluna Atual continua editável.
+6. ~~A coluna Atual continua editável.~~ Revisto pelo Erick em 2026-11-11, depois de testar: as duas colunas são só leitura (sem adicionar, editar, copiar ou excluir); a edição fica na aba Lançamentos.
 7. Uma linha que muda de tipo (R↔E) ou de mês aparece como removida + nova, sem tratamento especial.
 8. Sem alerta para falha de captura. Fica só o log e o estado visível na aba.

@@ -68,41 +68,53 @@ export function ComparisonView({ month, year }: ComparisonViewProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up">
-      <div className="space-y-4 min-w-0">
+    // One grid row per section (title, cards, receitas, despesas) so both sides share each row's
+    // height on lg; on mobile the order-* classes stack the whole Atual column before Snapshot.
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4 animate-fade-in-up">
+      <div className="order-1 lg:order-none min-w-0">
         <ColumnTitle left={t('comparisonCurrent')} />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <SummaryCard title={t('totalIncome')} value={view?.receiptDiff.currentTotal ?? 0}
-            snapshotDelta={view?.receiptDiff.delta} isLoading={isLoading} variant="income" />
-          <SummaryCard title={t('totalExpenses')} value={view?.expenseDiff.currentTotal ?? 0}
-            snapshotDelta={view?.expenseDiff.delta} isLoading={isLoading} variant="expense" />
-          <SummaryCard title={t('totalBalance')} value={view?.currentBalance ?? 0}
-            snapshotDelta={view?.balanceDelta} isLoading={isLoading} variant="balance" className="sm:col-span-2" />
-        </div>
-        <ReleaseList title={t('receipts')} type={FinancialReleaseType.Receipt} releases={receipts}
-          month={month} year={year} isLoading={isLoading} variant="receipt"
-          comparison={{ marks: view?.receiptDiff.currentMarks ?? new Map(), readOnly: false }} />
-        <ReleaseList title={t('expenses')} type={FinancialReleaseType.Expense} releases={expenses}
-          month={month} year={year} isLoading={isLoading} variant="expense"
-          comparison={{ marks: view?.expenseDiff.currentMarks ?? new Map(), readOnly: false }} />
       </div>
-
-      <div className="space-y-4 min-w-0">
+      <div className="order-5 lg:order-none min-w-0">
         <ColumnTitle
           left={snapshot ? `${t('comparisonSnapshot')} · ${formatCapturedAt(snapshot.capturedAt)}` : t('comparisonSnapshot')}
           right={t('readOnly')}
         />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <SummaryCard title={t('totalIncome')} value={view?.receiptDiff.snapshotTotal ?? 0}
-            isLoading={isLoading} variant="income" />
-          <SummaryCard title={t('totalExpenses')} value={view?.expenseDiff.snapshotTotal ?? 0}
-            isLoading={isLoading} variant="expense" />
-          <SummaryCard title={t('totalBalance')} value={view?.snapshotBalance ?? 0}
-            isLoading={isLoading} variant="balance" className="sm:col-span-2" />
-        </div>
+      </div>
+
+      <div className="order-2 lg:order-none grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
+        <SummaryCard title={t('totalIncome')} value={view?.receiptDiff.currentTotal ?? 0}
+          snapshotDelta={view?.receiptDiff.delta} isLoading={isLoading} variant="income" />
+        <SummaryCard title={t('totalExpenses')} value={view?.expenseDiff.currentTotal ?? 0}
+          snapshotDelta={view?.expenseDiff.delta} isLoading={isLoading} variant="expense" />
+        <SummaryCard title={t('totalBalance')} value={view?.currentBalance ?? 0}
+          snapshotDelta={view?.balanceDelta} isLoading={isLoading} variant="balance" className="sm:col-span-2" />
+      </div>
+      <div className="order-6 lg:order-none grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
+        <SummaryCard title={t('totalIncome')} value={view?.receiptDiff.snapshotTotal ?? 0}
+          isLoading={isLoading} variant="income" />
+        <SummaryCard title={t('totalExpenses')} value={view?.expenseDiff.snapshotTotal ?? 0}
+          isLoading={isLoading} variant="expense" />
+        <SummaryCard title={t('totalBalance')} value={view?.snapshotBalance ?? 0}
+          isLoading={isLoading} variant="balance" className="sm:col-span-2" />
+      </div>
+
+      <div className="order-3 lg:order-none min-w-0">
+        <ReleaseList title={t('receipts')} type={FinancialReleaseType.Receipt} releases={receipts}
+          month={month} year={year} isLoading={isLoading} variant="receipt"
+          comparison={{ marks: view?.receiptDiff.currentMarks ?? new Map(), readOnly: true }} />
+      </div>
+      <div className="order-7 lg:order-none min-w-0">
         <ReleaseList title={t('receipts')} type={FinancialReleaseType.Receipt} releases={view?.snapshotReceipts ?? []}
           month={month} year={year} isLoading={isLoading} variant="receipt"
           comparison={{ marks: view?.receiptDiff.snapshotMarks ?? new Map(), readOnly: true }} />
+      </div>
+
+      <div className="order-4 lg:order-none min-w-0">
+        <ReleaseList title={t('expenses')} type={FinancialReleaseType.Expense} releases={expenses}
+          month={month} year={year} isLoading={isLoading} variant="expense"
+          comparison={{ marks: view?.expenseDiff.currentMarks ?? new Map(), readOnly: true }} />
+      </div>
+      <div className="order-8 lg:order-none min-w-0">
         <ReleaseList title={t('expenses')} type={FinancialReleaseType.Expense} releases={view?.snapshotExpenses ?? []}
           month={month} year={year} isLoading={isLoading} variant="expense"
           comparison={{ marks: view?.expenseDiff.snapshotMarks ?? new Map(), readOnly: true }} />
